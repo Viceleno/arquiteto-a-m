@@ -1,0 +1,63 @@
+
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface CalculationData {
+  calculator_type: string;
+  input_data: Record<string, any>;
+  result: Record<string, any>;
+  name?: string;
+}
+
+export const saveCalculation = async (data: CalculationData) => {
+  try {
+    const { user } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const { error } = await supabase
+      .from('calculations')
+      .insert({
+        user_id: user.id,
+        calculator_type: data.calculator_type,
+        input_data: data.input_data,
+        result: data.result,
+        name: data.name,
+      });
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar cálculo:', error);
+    return false;
+  }
+};
+
+export const useCalculationService = () => {
+  const { toast } = useToast();
+
+  const saveCalculationWithToast = async (data: CalculationData) => {
+    try {
+      const success = await saveCalculation(data);
+      
+      if (success) {
+        toast({
+          title: 'Cálculo salvo',
+          description: 'Seu cálculo foi salvo com sucesso.',
+        });
+        return true;
+      } else {
+        throw new Error('Falha ao salvar cálculo');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar cálculo',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  return { saveCalculation: saveCalculationWithToast };
+};

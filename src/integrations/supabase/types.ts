@@ -9,13 +9,99 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      calculations: {
+        Row: {
+          calculator_type: string
+          created_at: string | null
+          id: string
+          input_data: Json
+          name: string | null
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          calculator_type: string
+          created_at?: string | null
+          id?: string
+          input_data: Json
+          name?: string | null
+          result: Json
+          user_id: string
+        }
+        Update: {
+          calculator_type?: string
+          created_at?: string | null
+          id?: string
+          input_data?: Json
+          name?: string | null
+          result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          language: string | null
+          theme: string | null
+          unit_preference: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          language?: string | null
+          theme?: string | null
+          unit_preference?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          language?: string | null
+          theme?: string | null
+          unit_preference?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+      }
     }
     Enums: {
       [_ in never]: never

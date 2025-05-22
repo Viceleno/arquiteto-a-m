@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calculator, Save } from 'lucide-react';
+import { useCalculationService } from '@/services/calculationService';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface AreaResult {
   shape: string;
@@ -16,6 +19,10 @@ interface AreaResult {
 }
 
 export const AreaCalculator = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { saveCalculation } = useCalculationService();
+  
   const [shape, setShape] = useState('rectangle');
   const [dimensions, setDimensions] = useState<Record<string, number>>({});
   const [result, setResult] = useState<number | null>(null);
@@ -41,21 +48,31 @@ export const AreaCalculator = () => {
     setResult(area);
   };
 
-  const saveCalculation = () => {
-    const calculation: AreaResult = {
+  const saveCalculation2 = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para salvar seu cálculo",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (result === null) return;
+    
+    const calculationData = {
       shape,
       dimensions,
-      area: result || 0,
-      unit,
-      timestamp: new Date()
+      area: result,
+      unit
     };
     
-    // Salvar no localStorage para histórico
-    const history = JSON.parse(localStorage.getItem('archiCalc_history') || '[]');
-    history.unshift(calculation);
-    localStorage.setItem('archiCalc_history', JSON.stringify(history.slice(0, 50)));
-    
-    console.log('Cálculo salvo:', calculation);
+    await saveCalculation({
+      calculator_type: 'Cálculo de Área',
+      input_data: { shape, dimensions },
+      result: { area: result, unit },
+      name: `Área ${shape} - ${result.toFixed(2)}${unit}`
+    });
   };
 
   const renderInputs = () => {
@@ -162,7 +179,7 @@ export const AreaCalculator = () => {
               {result.toFixed(2)} {unit}
             </p>
             <Button
-              onClick={saveCalculation}
+              onClick={saveCalculation2}
               variant="outline"
               size="sm"
               className="mt-2"

@@ -6,8 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { HardHat, Save } from 'lucide-react';
+import { useCalculationService } from '@/services/calculationService';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export const MaterialCalculator = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { saveCalculation } = useCalculationService();
+  
   const [material, setMaterial] = useState('concrete');
   const [area, setArea] = useState(0);
   const [thickness, setThickness] = useState(0);
@@ -57,6 +64,26 @@ export const MaterialCalculator = () => {
     }
     
     setResult(calculation);
+  };
+
+  const saveMaterialCalculation = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para salvar seu cálculo",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!result) return;
+    
+    await saveCalculation({
+      calculator_type: 'Cálculo de Materiais',
+      input_data: { material, area, thickness },
+      result,
+      name: `Material: ${material} - ${area}m²`
+    });
   };
 
   const renderMaterialInputs = () => {
@@ -163,6 +190,7 @@ export const MaterialCalculator = () => {
               variant="outline"
               size="sm"
               className="mt-3"
+              onClick={saveMaterialCalculation}
             >
               <Save className="w-4 h-4 mr-2" />
               Salvar Cálculo
