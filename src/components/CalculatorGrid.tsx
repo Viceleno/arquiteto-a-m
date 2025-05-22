@@ -4,10 +4,10 @@ import { CalculatorCard } from '@/components/CalculatorCard';
 import { 
   Calculator, 
   Home, 
-  Cube, 
+  Box, // Replace 'Cube' with 'Box'
   Palette, 
   HardHat,
-  Rulers,
+  Ruler, // Replace 'Rulers' with 'Ruler'
   ArrowRightLeft,
   DollarSign
 } from 'lucide-react';
@@ -17,7 +17,7 @@ const calculators = [
     id: 'area',
     title: 'Cálculo de Área',
     description: 'Calcule áreas de diferentes formas geométricas',
-    icon: Rulers,
+    icon: Ruler,
     color: 'bg-blue-500',
     category: 'Medidas'
   },
@@ -25,7 +25,7 @@ const calculators = [
     id: 'volume',
     title: 'Cálculo de Volume',
     description: 'Volume de ambientes e estruturas',
-    icon: Cube,
+    icon: Box,
     color: 'bg-green-500',
     category: 'Medidas'
   },
