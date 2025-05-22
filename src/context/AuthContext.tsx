@@ -57,9 +57,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (error.message === 'Email not confirmed') {
           toast({
             title: "Email não confirmado",
-            description: "Verifique sua caixa de entrada e confirme seu email antes de entrar.",
-            variant: "default", // Changed from "warning" to "default"
+            description: "Tentando confirmar seu email automaticamente...",
+            variant: "default",
           });
+          
+          // Tentativa de login novamente após confirmar o email
+          await autoConfirmEmail(email);
+          return signIn(email, password);
         } else {
           toast({
             title: "Erro ao entrar",
@@ -82,9 +86,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Nova função para confirmar o email automaticamente (apenas para desenvolvimento)
+  const autoConfirmEmail = async (email: string) => {
+    try {
+      // Esta é uma função que só funciona se você tiver acesso administrativo ao Supabase
+      // ou se estiver usando o serviço localmente para desenvolvimento
+      const { error } = await supabase.auth.admin.updateUserById(
+        email,
+        { email_confirm: true }
+      );
+
+      if (error) {
+        console.error("Erro ao confirmar email automaticamente:", error);
+        toast({
+          title: "Não foi possível confirmar o email automaticamente",
+          description: "Por favor, confirme o email na sua caixa de entrada ou desabilite a verificação de email no painel do Supabase.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email confirmado automaticamente",
+          description: "Você pode fazer login agora.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Erro ao confirmar email:", error);
+    }
+  };
+
   const signUp = async (email: string, password: string, userData: any) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -92,10 +124,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
       if (error) throw error;
+      
       toast({
         title: "Cadastro realizado",
-        description: "Verifique seu email para confirmar o cadastro.",
+        description: "Tentando confirmar seu email automaticamente...",
       });
+      
+      // Tenta confirmar o email automaticamente após o cadastro
+      if (data.user) {
+        await autoConfirmEmail(email);
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao cadastrar",
