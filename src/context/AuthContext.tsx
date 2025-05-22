@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           toast({
             title: "Email não confirmado",
             description: "Verifique sua caixa de entrada e confirme seu email antes de entrar.",
-            variant: "warning",
+            variant: "default", // Changed from "warning" to "default"
           });
         } else {
           toast({
