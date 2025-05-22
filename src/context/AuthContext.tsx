@@ -51,13 +51,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      
+      if (error) {
+        // Tratamento específico para o erro de email não confirmado
+        if (error.message === 'Email not confirmed') {
+          toast({
+            title: "Email não confirmado",
+            description: "Verifique sua caixa de entrada e confirme seu email antes de entrar.",
+            variant: "warning",
+          });
+        } else {
+          toast({
+            title: "Erro ao entrar",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+        throw error;
+      }
     } catch (error: any) {
-      toast({
-        title: "Erro ao entrar",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Esse bloco já está tratado acima para o caso específico
+      if (error.message !== 'Email not confirmed') {
+        toast({
+          title: "Erro ao entrar",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };

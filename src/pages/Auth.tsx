@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogIn, UserPlus } from 'lucide-react';
+import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Login Form Schema
 const loginSchema = z.object({
@@ -37,6 +38,8 @@ const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
   const [tab, setTab] = useState<"login" | "register">("login");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -61,8 +64,16 @@ const Auth = () => {
 
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
+    setLoginError(null);
     try {
       await signIn(data.email, data.password);
+    } catch (error: any) {
+      // Tratamento específico para o erro de email não confirmado
+      if (error.message === 'Email not confirmed') {
+        setLoginError('Por favor, verifique seu email e confirme sua conta antes de entrar.');
+      } else {
+        setLoginError(error.message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +84,9 @@ const Auth = () => {
     try {
       const { username, full_name, email, password } = data;
       await signUp(email, password, { username, full_name });
+      setRegisterSuccess(true);
       setTab("login");
+      registerForm.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -98,6 +111,19 @@ const Auth = () => {
               <TabsTrigger value="register">Cadastrar</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
+              {loginError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{loginError}</AlertDescription>
+                </Alert>
+              )}
+              {registerSuccess && tab === "login" && (
+                <Alert className="mb-4 bg-green-50 border-green-200">
+                  <AlertDescription className="text-green-800">
+                    Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.
+                  </AlertDescription>
+                </Alert>
+              )}
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 pt-4">
                   <FormField
@@ -218,10 +244,15 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex flex-col items-center space-y-4">
           <p className="text-sm text-gray-500">
             Calculadora profissional para arquitetos
           </p>
+          <Alert className="bg-amber-50 border-amber-200">
+            <AlertDescription className="text-amber-800 text-xs">
+              Para desenvolvimento: Para agilizar o teste, você pode desabilitar a verificação de email no painel do Supabase.
+            </AlertDescription>
+          </Alert>
         </CardFooter>
       </Card>
     </div>
