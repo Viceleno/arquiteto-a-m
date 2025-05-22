@@ -11,13 +11,13 @@ export interface CalculationData {
 
 export const saveCalculation = async (data: CalculationData) => {
   try {
-    const { user } = await supabase.auth.getUser();
-    if (!user) throw new Error('Usuário não autenticado');
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error('Usuário não autenticado');
 
     const { error } = await supabase
       .from('calculations')
       .insert({
-        user_id: user.id,
+        user_id: userData.user.id,
         calculator_type: data.calculator_type,
         input_data: data.input_data,
         result: data.result,
