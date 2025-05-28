@@ -119,7 +119,7 @@ const Auth = () => {
               {registerSuccess && (
                 <Alert className="mb-4 bg-green-50 border-green-200">
                   <AlertDescription className="text-green-800">
-                    Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.
+                    Cadastro realizado com sucesso! Você já pode fazer login com suas credenciais.
                   </AlertDescription>
                 </Alert>
               )}
@@ -249,7 +249,7 @@ const Auth = () => {
           </p>
           <Alert className="bg-amber-50 border-amber-200">
             <AlertDescription className="text-amber-800 text-xs">
-              Para desenvolvimento: Você pode desabilitar a verificação de email no painel do Supabase em Authentication > Settings > Email Auth > "Confirm email" para permitir login imediato.
+              Para desenvolvimento: Você pode desabilitar a verificação de email no painel do Supabase em Authentication → Settings → Email Auth → "Confirm email" para permitir login imediato.
             </AlertDescription>
           </Alert>
         </CardFooter>
