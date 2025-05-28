@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, LogIn, UserPlus, ExternalLink } from 'lucide-react';
+import { AlertCircle, LogIn, UserPlus, ExternalLink, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -68,6 +69,7 @@ const Auth = () => {
     try {
       await signIn(data.email, data.password);
     } catch (error: any) {
+      console.error('Erro no formulário de login:', error);
       setLoginError(error.message);
     } finally {
       setIsSubmitting(false);
@@ -77,6 +79,7 @@ const Auth = () => {
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
     setRegisterError(null);
+    setRegisterSuccess(false);
     try {
       const { username, full_name, email, password } = data;
       await signUp(email, password, { username, full_name });
@@ -86,6 +89,7 @@ const Auth = () => {
       // Preenche o email no formulário de login
       loginForm.setValue("email", email);
     } catch (error: any) {
+      console.error('Erro no formulário de cadastro:', error);
       setRegisterError(error.message);
     } finally {
       setIsSubmitting(false);
@@ -119,8 +123,9 @@ const Auth = () => {
               )}
               {registerSuccess && (
                 <Alert className="mb-4 bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    Cadastro realizado com sucesso! Você já pode fazer login com suas credenciais.
+                    Cadastro realizado com sucesso! Se a confirmação de email estiver habilitada, verifique sua caixa de entrada antes de fazer login.
                   </AlertDescription>
                 </Alert>
               )}
@@ -257,8 +262,9 @@ const Auth = () => {
           <Alert className="bg-blue-50 border-blue-200">
             <ExternalLink className="h-4 w-4" />
             <AlertDescription className="text-blue-800 text-xs">
-              <strong>Configuração necessária:</strong> Para permitir cadastros, habilite o "Email provider" no painel do Supabase em Authentication → Providers → Email. 
-              Para desenvolvimento, também desabilite "Confirm email" em Authentication → Settings.
+              <strong>Problema com login?</strong> Se aparecer "Email not confirmed", você precisa:
+              <br />• Confirmar seu email (verifique sua caixa de entrada)
+              <br />• OU pedir para desabilitar a confirmação nas configurações do Supabase (Authentication → Settings → "Confirm email")
             </AlertDescription>
           </Alert>
         </CardFooter>

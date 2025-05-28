@@ -25,21 +25,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up the auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Use setTimeout to avoid deadlocks when we need to fetch additional data
-        if (session?.user) {
-          setTimeout(() => {
-            console.log('Auth state changed:', event);
-          }, 0);
-        }
       }
     );
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -50,25 +45,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Tentando fazer login com:', email);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
+        console.error('Erro de login:', error);
         if (error.message === 'Email not confirmed') {
-          throw new Error("Email não confirmado. Por favor, confirme seu email ou desabilite a verificação no painel do Supabase.");
+          throw new Error("Seu email ainda não foi confirmado. Verifique sua caixa de entrada e clique no link de confirmação, ou peça para o administrador desabilitar a confirmação de email nas configurações do Supabase.");
         } else if (error.message === 'Invalid login credentials') {
-          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+          throw new Error("Email ou senha incorretos. Verifique suas credenciais e tente novamente.");
         } else {
-          throw new Error(error.message);
+          throw new Error(`Erro ao fazer login: ${error.message}`);
         }
       }
+      
+      console.log('Login realizado com sucesso');
     } catch (error: any) {
-      console.error('Erro no login:', error);
+      console.error('Erro no processo de login:', error);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      console.log('Tentando cadastrar usuário:', email);
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
@@ -78,24 +78,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        if (error.message === 'Email signups are disabled') {
-          throw new Error("Cadastros por email estão desabilitados. Ative o cadastro por email no painel do Supabase em Authentication → Providers → Email.");
+        console.error('Erro de cadastro:', error);
+        if (error.message === 'User already registered') {
+          throw new Error("Este email já está cadastrado. Tente fazer login ou use outro email.");
+        } else if (error.message === 'Signup is disabled') {
+          throw new Error("Cadastros estão desabilitados. Entre em contato com o administrador.");
         } else if (error.message.includes('duplicate key value violates unique constraint')) {
           throw new Error("Este nome de usuário já está em uso. Escolha outro nome de usuário.");
-        } else if (error.message === 'Database error saving new user') {
-          throw new Error("Erro ao salvar usuário. Verifique se o nome de usuário já não existe.");
         } else {
-          throw new Error(error.message);
+          throw new Error(`Erro ao cadastrar: ${error.message}`);
         }
       }
       
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Verifique seu email para confirmar a conta ou entre diretamente se a confirmação estiver desabilitada.",
-      });
+      if (data.user && !data.session) {
+        toast({
+          title: "Cadastro realizado!",
+          description: "Verifique seu email para confirmar a conta antes de fazer login.",
+        });
+      } else if (data.session) {
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Você já está logado e pode usar a aplicação.",
+        });
+      }
+      
+      console.log('Cadastro realizado com sucesso');
       
     } catch (error: any) {
-      console.error('Erro no cadastro:', error);
+      console.error('Erro no processo de cadastro:', error);
       throw error;
     }
   };
@@ -104,6 +114,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      toast({
+        title: "Logout realizado",
+        description: "Você saiu da aplicação com sucesso.",
+      });
     } catch (error: any) {
       toast({
         title: "Erro ao sair",
