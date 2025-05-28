@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
+import { AlertCircle, LogIn, UserPlus, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -39,6 +38,7 @@ const Auth = () => {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
   // Login form
@@ -76,6 +76,7 @@ const Auth = () => {
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
+    setRegisterError(null);
     try {
       const { username, full_name, email, password } = data;
       await signUp(email, password, { username, full_name });
@@ -85,7 +86,7 @@ const Auth = () => {
       // Preenche o email no formulário de login
       loginForm.setValue("email", email);
     } catch (error: any) {
-      console.error('Erro no cadastro:', error);
+      setRegisterError(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -163,6 +164,12 @@ const Auth = () => {
               </Form>
             </TabsContent>
             <TabsContent value="register">
+              {registerError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{registerError}</AlertDescription>
+                </Alert>
+              )}
               <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 pt-4">
                   <FormField
@@ -247,9 +254,11 @@ const Auth = () => {
           <p className="text-sm text-gray-500">
             Calculadora profissional para arquitetos
           </p>
-          <Alert className="bg-amber-50 border-amber-200">
-            <AlertDescription className="text-amber-800 text-xs">
-              Para desenvolvimento: Você pode desabilitar a verificação de email no painel do Supabase em Authentication → Settings → Email Auth → "Confirm email" para permitir login imediato.
+          <Alert className="bg-blue-50 border-blue-200">
+            <ExternalLink className="h-4 w-4" />
+            <AlertDescription className="text-blue-800 text-xs">
+              <strong>Configuração necessária:</strong> Para permitir cadastros, habilite o "Email provider" no painel do Supabase em Authentication → Providers → Email. 
+              Para desenvolvimento, também desabilite "Confirm email" em Authentication → Settings.
             </AlertDescription>
           </Alert>
         </CardFooter>

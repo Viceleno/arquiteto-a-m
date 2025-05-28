@@ -54,19 +54,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error) {
         if (error.message === 'Email not confirmed') {
-          toast({
-            title: "Email não confirmado",
-            description: "Por favor, confirme seu email na sua caixa de entrada ou desabilite a verificação de email no painel do Supabase para desenvolvimento.",
-            variant: "default",
-          });
+          throw new Error("Email não confirmado. Por favor, confirme seu email ou desabilite a verificação no painel do Supabase.");
+        } else if (error.message === 'Invalid login credentials') {
+          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
         } else {
-          toast({
-            title: "Erro ao entrar",
-            description: error.message,
-            variant: "destructive",
-          });
+          throw new Error(error.message);
         }
-        throw error;
       }
     } catch (error: any) {
       console.error('Erro no login:', error);
@@ -84,19 +77,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'Email signups are disabled') {
+          throw new Error("Cadastros por email estão desabilitados. Ative o cadastro por email no painel do Supabase em Authentication → Providers → Email.");
+        } else if (error.message.includes('duplicate key value violates unique constraint')) {
+          throw new Error("Este nome de usuário já está em uso. Escolha outro nome de usuário.");
+        } else if (error.message === 'Database error saving new user') {
+          throw new Error("Erro ao salvar usuário. Verifique se o nome de usuário já não existe.");
+        } else {
+          throw new Error(error.message);
+        }
+      }
       
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Verifique seu email para confirmar a conta ou desabilite a verificação no painel do Supabase.",
+        description: "Verifique seu email para confirmar a conta ou entre diretamente se a confirmação estiver desabilitada.",
       });
       
     } catch (error: any) {
-      toast({
-        title: "Erro ao cadastrar",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Erro no cadastro:', error);
       throw error;
     }
   };
