@@ -40,7 +40,6 @@ const Auth = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState(false);
-  const [processingMessage, setProcessingMessage] = useState<string | null>(null);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -66,18 +65,10 @@ const Auth = () => {
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     setLoginError(null);
-    setProcessingMessage("Entrando...");
     try {
       await signIn(data.email, data.password);
-      setProcessingMessage("Login bem-sucedido! Redirecionando...");
     } catch (error: any) {
-      // O erro de email não confirmado já está sendo tratado no AuthContext
-      if (error.message !== 'Email not confirmed') {
-        setLoginError(error.message);
-      } else {
-        setProcessingMessage("Tentando confirmar seu email automaticamente...");
-        // A tentativa de confirmação automática acontece no AuthContext
-      }
+      setLoginError(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -85,24 +76,16 @@ const Auth = () => {
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
-    setProcessingMessage("Cadastrando...");
     try {
       const { username, full_name, email, password } = data;
       await signUp(email, password, { username, full_name });
       setRegisterSuccess(true);
-      setProcessingMessage("Cadastro realizado! Tentando confirmar seu email automaticamente...");
       setTab("login");
       registerForm.reset();
-      
-      // Aguardar alguns segundos e então tentar fazer login automático
-      setTimeout(() => {
-        loginForm.setValue("email", email);
-        loginForm.setValue("password", password);
-        setProcessingMessage("Tentando fazer login automaticamente...");
-        onLoginSubmit({ email, password });
-      }, 2500);
+      // Preenche o email no formulário de login
+      loginForm.setValue("email", email);
     } catch (error: any) {
-      setProcessingMessage(null);
+      console.error('Erro no cadastro:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -121,14 +104,6 @@ const Auth = () => {
           <CardDescription className="text-center">Entre ou crie sua conta para salvar seus cálculos</CardDescription>
         </CardHeader>
         <CardContent>
-          {processingMessage && (
-            <Alert className="mb-4 bg-blue-50 border-blue-200">
-              <AlertDescription className="text-blue-800">
-                {processingMessage}
-              </AlertDescription>
-            </Alert>
-          )}
-          
           <Tabs defaultValue={tab} value={tab} onValueChange={(v) => setTab(v as "login" | "register")}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Entrar</TabsTrigger>
@@ -141,10 +116,10 @@ const Auth = () => {
                   <AlertDescription>{loginError}</AlertDescription>
                 </Alert>
               )}
-              {registerSuccess && tab === "login" && (
+              {registerSuccess && (
                 <Alert className="mb-4 bg-green-50 border-green-200">
                   <AlertDescription className="text-green-800">
-                    Cadastro realizado com sucesso! Tentando fazer login automaticamente...
+                    Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.
                   </AlertDescription>
                 </Alert>
               )}
@@ -177,7 +152,7 @@ const Auth = () => {
                     )}
                   />
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? "Processando..." : (
+                    {isSubmitting ? "Entrando..." : (
                       <>
                         <LogIn className="mr-2 h-4 w-4" />
                         Entrar
@@ -274,7 +249,7 @@ const Auth = () => {
           </p>
           <Alert className="bg-amber-50 border-amber-200">
             <AlertDescription className="text-amber-800 text-xs">
-              Para desenvolvimento: Você pode desabilitar a verificação de email no painel do Supabase para login mais rápido.
+              Para desenvolvimento: Você pode desabilitar a verificação de email no painel do Supabase em Authentication > Settings > Email Auth > "Confirm email" para permitir login imediato.
             </AlertDescription>
           </Alert>
         </CardFooter>
