@@ -36,6 +36,7 @@ const inputs: MaterialInput[] = [
     defaultValue: 2,
     min: 1,
     max: 4,
+    required: true,
     tooltip: 'Quantidade de demãos de tinta'
   },
   {
@@ -53,6 +54,7 @@ const inputs: MaterialInput[] = [
 ];
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
+  // Só valida campos específicos da pintura
   const validation = MaterialValidator.validateInputs(inputs, [
     { field: 'wallArea', required: true, min: 1 },
     { field: 'coats', required: true, min: 1, max: 4 },
@@ -65,7 +67,7 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const wallArea = MaterialValidator.sanitizeNumericInput(inputs.wallArea, 1);
   const openings = MaterialValidator.sanitizeNumericInput(inputs.openings);
   let coverage = MaterialValidator.sanitizeNumericInput(inputs.coverage, 8);
-  const coats = MaterialValidator.sanitizeNumericInput(inputs.coats, 1);
+  const coats = MaterialValidator.sanitizeNumericInput(inputs.coats || 2, 1);
   const paintType = inputs.paintType || 'standard';
 
   // Ajustar rendimento baseado no tipo de tinta
