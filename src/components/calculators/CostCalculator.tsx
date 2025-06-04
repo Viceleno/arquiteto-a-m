@@ -5,10 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Save } from 'lucide-react';
+import { DollarSign, Save, AlertCircle } from 'lucide-react';
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { CostCalculatorEngine } from './cost/CostCalculatorEngine';
+import { CostResultChart } from './cost/CostResultChart';
+import { CostResultDetails } from './cost/CostResultDetails';
+import { complexityFactors, materialsDatabase } from './cost/CostCalculatorTypes';
+import type { CostResult } from './cost/CostCalculatorTypes';
 
 export const CostCalculator = () => {
   const { user } = useAuth();
@@ -16,77 +21,47 @@ export const CostCalculator = () => {
   const { saveCalculation } = useCalculationService();
   
   const [material, setMaterial] = useState('concrete');
-  const [area, setArea] = useState<number>(0);
+  const [area, setArea] = useState<string>('');
   const [complexity, setComplexity] = useState('simple');
-  const [result, setResult] = useState<any>(null);
-
-  const materialUnitCosts = {
-    concrete: { price: 350, unit: 'm³' }, // R$ por m³
-    brick: { price: 1.2, unit: 'unidade' }, // R$ por tijolo
-    paint: { price: 20, unit: 'litro' }, // R$ por litro
-    ceramic: { price: 40, unit: 'm²' }, // R$ por m²
-    wood: { price: 120, unit: 'm²' }, // R$ por m²
-  };
-
-  const complexityFactors = {
-    simple: 1,
-    medium: 1.3,
-    complex: 1.8,
-  };
+  const [bdi, setBdi] = useState<string>('20');
+  const [result, setResult] = useState<CostResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const calculateCosts = () => {
-    if (!area) return;
-
-    let materialQuantity = 0;
-    let materialTotal = 0;
-    let laborTotal = 0;
-
-    const factor = complexityFactors[complexity as keyof typeof complexityFactors];
+    const areaNumber = parseFloat(area);
+    const bdiNumber = parseFloat(bdi);
     
-    switch (material) {
-      case 'concrete':
-        materialQuantity = area * 0.15; // 15cm thickness
-        materialTotal = materialQuantity * materialUnitCosts.concrete.price;
-        laborTotal = materialTotal * 0.6 * factor;
-        break;
-        
-      case 'brick':
-        materialQuantity = area * 50; // 50 bricks per m²
-        materialTotal = materialQuantity * materialUnitCosts.brick.price;
-        laborTotal = area * 35 * factor;
-        break;
-        
-      case 'paint':
-        materialQuantity = area * 0.3; // 0.3L per m²
-        materialTotal = materialQuantity * materialUnitCosts.paint.price;
-        laborTotal = area * 15 * factor;
-        break;
-        
-      case 'ceramic':
-        materialQuantity = area * 1.1; // 10% waste
-        materialTotal = materialQuantity * materialUnitCosts.ceramic.price;
-        laborTotal = area * 45 * factor;
-        break;
-        
-      case 'wood':
-        materialQuantity = area;
-        materialTotal = materialQuantity * materialUnitCosts.wood.price;
-        laborTotal = area * 75 * factor;
-        break;
+    // Validar inputs
+    const errors = CostCalculatorEngine.validateInputs(areaNumber, bdiNumber);
+    setValidationErrors(errors);
+    
+    if (errors.length > 0) {
+      return;
     }
+
+    setIsCalculating(true);
     
-    const totalCost = materialTotal + laborTotal;
-    
-    setResult({
-      materialQuantity,
-      materialUnit: materialUnitCosts[material as keyof typeof materialUnitCosts].unit,
-      materialTotal,
-      laborTotal,
-      totalCost,
-      material,
-      area,
-      complexity
-    });
+    try {
+      const calculationResult = CostCalculatorEngine.calculateCosts(
+        material,
+        areaNumber,
+        complexity as keyof typeof complexityFactors,
+        bdiNumber
+      );
+      
+      setResult(calculationResult);
+      setValidationErrors([]);
+    } catch (error) {
+      toast({
+        title: "Erro no cálculo",
+        description: "Ocorreu um erro ao calcular os custos. Tente novamente.",
+        variant: "destructive",
+      });
+      console.error('Erro no cálculo:', error);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const handleSaveCalculation = async () => {
@@ -99,112 +74,153 @@ export const CostCalculator = () => {
       return;
     }
     
+    if (!result) return;
+    
     await saveCalculation({
-      calculator_type: 'Estimativa de Custos',
+      calculator_type: 'Estimativa de Custos Detalhada',
       input_data: {
         material,
-        area,
-        complexity
+        area: parseFloat(area),
+        complexity,
+        bdi: parseFloat(bdi)
       },
       result,
-      name: `Custos de ${material} - ${area}m²`
-    });
-  };
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
+      name: `${result.material} - ${area}m² (${complexity})`
     });
   };
 
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <DollarSign className="w-5 h-5" />
-          <span>Estimativa de Custos</span>
-        </CardTitle>
-        <CardDescription>
-          Calcule o custo aproximado de materiais e mão de obra
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label>Material</Label>
-          <Select value={material} onValueChange={setMaterial}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="concrete">Concreto</SelectItem>
-              <SelectItem value="brick">Alvenaria (Tijolos)</SelectItem>
-              <SelectItem value="paint">Pintura</SelectItem>
-              <SelectItem value="ceramic">Revestimento Cerâmico</SelectItem>
-              <SelectItem value="wood">Piso de Madeira</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="area">Área (m²)</Label>
-          <Input
-            id="area"
-            type="number"
-            placeholder="Digite a área"
-            min="0"
-            step="0.01"
-            onChange={(e) => setArea(parseFloat(e.target.value) || 0)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Complexidade</Label>
-          <Select value={complexity} onValueChange={setComplexity}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="simple">Simples</SelectItem>
-              <SelectItem value="medium">Média</SelectItem>
-              <SelectItem value="complex">Complexa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Button onClick={calculateCosts} className="w-full">
-          Calcular Custos
-        </Button>
-
-        {result && (
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <h3 className="font-semibold text-green-900 mb-2">Orçamento Estimado:</h3>
-            <div className="space-y-2 text-green-800">
-              <p>
-                <strong>Material necessário:</strong> {result.materialQuantity.toFixed(2)} {result.materialUnit}
-              </p>
-              <p>
-                <strong>Custo de material:</strong> {formatCurrency(result.materialTotal)}
-              </p>
-              <p>
-                <strong>Custo de mão de obra:</strong> {formatCurrency(result.laborTotal)}
-              </p>
-              <div className="border-t border-green-200 mt-2 pt-2 font-bold">
-                <p>Total: {formatCurrency(result.totalCost)}</p>
-              </div>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <DollarSign className="w-5 h-5" />
+            <span>Estimativa de Custos Detalhada</span>
+          </CardTitle>
+          <CardDescription>
+            Calcule custos com detalhamento de materiais, insumos e mão de obra baseada em produtividade
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Material</Label>
+              <Select value={material} onValueChange={setMaterial}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(materialsDatabase).map(([key, data]) => (
+                    <SelectItem key={key} value={key}>
+                      {data.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Button
-              onClick={handleSaveCalculation}
-              variant="outline"
-              size="sm"
-              className="mt-3"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Orçamento
-            </Button>
+
+            <div className="space-y-2">
+              <Label htmlFor="area">
+                Área ({materialsDatabase[material]?.baseUnit === 'm³' ? 'da laje ' : ''}m²)
+              </Label>
+              <Input
+                id="area"
+                type="number"
+                placeholder="Digite a área"
+                min="0"
+                step="0.01"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                className={validationErrors.some(error => error.includes('Área')) ? 'border-red-500' : ''}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Complexidade</Label>
+              <Select value={complexity} onValueChange={setComplexity}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(complexityFactors).map(([key, data]) => (
+                    <SelectItem key={key} value={key}>
+                      {data.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bdi">BDI (%)</Label>
+              <Input
+                id="bdi"
+                type="number"
+                placeholder="20"
+                min="0"
+                max="100"
+                step="1"
+                value={bdi}
+                onChange={(e) => setBdi(e.target.value)}
+                className={validationErrors.some(error => error.includes('BDI')) ? 'border-red-500' : ''}
+              />
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2 text-red-800">
+                <AlertCircle className="w-4 h-4" />
+                <span className="font-medium">Corrija os seguintes erros:</span>
+              </div>
+              <ul className="mt-2 ml-6 list-disc text-red-700">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <Button 
+            onClick={calculateCosts} 
+            className="w-full" 
+            disabled={isCalculating}
+          >
+            {isCalculating ? 'Calculando...' : 'Calcular Custos Detalhados'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {result && (
+        <div className="space-y-6">
+          {/* Gráfico de Distribuição de Custos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribuição de Custos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CostResultChart result={result} />
+            </CardContent>
+          </Card>
+
+          {/* Detalhamento Completo */}
+          <CostResultDetails result={result} />
+
+          {/* Botão de Salvar */}
+          <Card>
+            <CardContent className="pt-6">
+              <Button
+                onClick={handleSaveCalculation}
+                variant="outline"
+                className="w-full"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Orçamento Detalhado
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 };
