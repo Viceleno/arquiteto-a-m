@@ -16,7 +16,7 @@ export const MaterialCalculator = () => {
   
   const [category, setCategory] = useState('flooring');
   const [inputs, setInputs] = useState<Record<string, number | string>>({});
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, any> | null>(null);
 
   const updateInput = (key: string, value: number | string) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -602,7 +602,9 @@ export const MaterialCalculator = () => {
     return (
       <div className="space-y-2">
         {Object.entries(result).map(([key, value]) => (
-          <p key={key}><strong>{formatLabel(key)}:</strong> {value}</p>
+          <p key={key}>
+            <strong>{formatLabel(key)}:</strong> {String(value)}
+          </p>
         ))}
       </div>
     );
