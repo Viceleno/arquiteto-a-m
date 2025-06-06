@@ -27,7 +27,7 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
               value={String(values[input.key] || input.defaultValue || '')} 
               onValueChange={(value) => onChange(input.key, value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-10">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
@@ -50,6 +50,7 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
               max={input.max}
               step="0.01"
               placeholder={input.unit ? `Valor em ${input.unit}` : ''}
+              className="h-10"
             />
           );
         
@@ -59,27 +60,28 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
               type="text"
               value={String(values[input.key] || input.defaultValue || '')}
               onChange={(e) => onChange(input.key, e.target.value)}
+              className="h-10"
             />
           );
       }
     };
 
     return (
-      <div key={input.key} className="space-y-2">
+      <div key={input.key} className="space-y-2 w-full">
         <div className="flex items-center space-x-2">
-          <Label htmlFor={input.key} className="text-sm font-medium">
+          <Label htmlFor={input.key} className="text-sm font-medium leading-tight">
             {input.label}
-            {input.unit && <span className="text-gray-500 ml-1">({input.unit})</span>}
-            {input.required && <span className="text-red-500 ml-1">*</span>}
+            {input.unit && <span className="text-muted-foreground ml-1">({input.unit})</span>}
+            {input.required && <span className="text-destructive ml-1">*</span>}
           </Label>
           {input.tooltip && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Info className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                  <Info className="w-4 h-4 text-muted-foreground hover:text-foreground flex-shrink-0" />
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">{input.tooltip}</p>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">{input.tooltip}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -91,7 +93,7 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {inputs.map(renderInput)}
     </div>
   );

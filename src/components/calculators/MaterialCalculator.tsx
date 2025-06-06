@@ -119,81 +119,83 @@ export const MaterialCalculator = () => {
   const currentCalculator = materialCalculators[category];
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <HardHat className="w-5 h-5" />
-          <span>Calculadora de Materiais e Dimensionamento</span>
-        </CardTitle>
-        <CardDescription>
-          Cálculos detalhados e precisos para arquitetura e construção
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Seleção de Categoria */}
-        <div className="space-y-2">
-          <Label>Categoria de Cálculo</Label>
-          <Select value={category} onValueChange={(value: MaterialCalculatorType) => setCategory(value)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(materialCalculators).map(([key, calc]) => (
-                <SelectItem key={key} value={key}>
-                  {calc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-sm text-gray-600 mt-1">
-            {currentCalculator.description}
-          </p>
-        </div>
-
-        {/* Inputs da Categoria Selecionada */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-semibold">Dados de Entrada</h3>
-            <AlertCircle className="w-4 h-4 text-gray-400" />
+    <div className="w-full max-w-none mx-auto px-2 sm:px-4">
+      <Card className="w-full">
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 text-lg sm:text-xl">
+            <HardHat className="w-5 h-5 flex-shrink-0" />
+            <span className="text-left">Calculadora de Materiais e Dimensionamento</span>
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Cálculos detalhados e precisos para arquitetura e construção
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+          {/* Seleção de Categoria */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Categoria de Cálculo</Label>
+            <Select value={category} onValueChange={(value: MaterialCalculatorType) => setCategory(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(materialCalculators).map(([key, calc]) => (
+                  <SelectItem key={key} value={key}>
+                    {calc.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              {currentCalculator.description}
+            </p>
           </div>
-          
-          <MaterialInputRenderer
-            inputs={currentCalculator.inputs}
-            values={inputs}
-            onChange={updateInput}
-          />
-        </div>
 
-        {/* Botão de Cálculo */}
-        <Button 
-          onClick={calculateMaterial} 
-          className="w-full" 
-          disabled={isCalculating}
-        >
-          <Calculator className="w-4 h-4 mr-2" />
-          {isCalculating ? 'Calculando...' : 'Calcular Materiais'}
-        </Button>
-
-        {/* Resultados */}
-        {result && Object.keys(result).length > 0 && (
+          {/* Inputs da Categoria Selecionada */}
           <div className="space-y-4">
-            <MaterialResultDisplay
-              result={result}
-              categoryName={currentCalculator.name}
-            />
+            <div className="flex items-center space-x-2">
+              <h3 className="text-base sm:text-lg font-semibold">Dados de Entrada</h3>
+              <AlertCircle className="w-4 h-4 text-muted-foreground" />
+            </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={saveMaterialCalculation}
-              className="w-full"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Cálculo
-            </Button>
+            <MaterialInputRenderer
+              inputs={currentCalculator.inputs}
+              values={inputs}
+              onChange={updateInput}
+            />
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Botão de Cálculo */}
+          <Button 
+            onClick={calculateMaterial} 
+            className="w-full h-11 text-sm sm:text-base" 
+            disabled={isCalculating}
+          >
+            <Calculator className="w-4 h-4 mr-2" />
+            {isCalculating ? 'Calculando...' : 'Calcular Materiais'}
+          </Button>
+
+          {/* Resultados */}
+          {result && Object.keys(result).length > 0 && (
+            <div className="space-y-4">
+              <MaterialResultDisplay
+                result={result}
+                categoryName={currentCalculator.name}
+              />
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={saveMaterialCalculation}
+                className="w-full h-10 text-sm"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Cálculo
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
