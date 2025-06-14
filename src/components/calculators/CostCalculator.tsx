@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Save, AlertCircle, Info, Calculator } from 'lucide-react';
+import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
@@ -24,17 +23,38 @@ export const CostCalculator = () => {
   const [material, setMaterial] = useState('');
   const [area, setArea] = useState<string>('');
   const [complexity, setComplexity] = useState('');
-  const [bdi, setBdi] = useState<string>('');
+  const [bdi, setBdi] = useState<string>('20'); // Default value of 20%
   const [result, setResult] = useState<CostResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const calculateCosts = () => {
     const areaNumber = parseFloat(area);
-    const bdiNumber = parseFloat(bdi);
+    const bdiNumber = bdi ? parseFloat(bdi) : 20; // Use default 20% if empty
     
-    // Validar inputs
-    const errors = CostCalculatorEngine.validateInputs(areaNumber, bdiNumber);
+    // Validar inputs (BDI não é mais obrigatório)
+    const errors: string[] = [];
+    
+    if (!material) {
+      errors.push('Selecione um material da obra');
+    }
+    
+    if (!area || areaNumber <= 0) {
+      errors.push('Área deve ser maior que zero');
+    }
+    
+    if (areaNumber > 10000) {
+      errors.push('Área muito grande (máximo 10.000 m²)');
+    }
+    
+    if (!complexity) {
+      errors.push('Selecione o nível de complexidade');
+    }
+    
+    if (bdi && (parseFloat(bdi) < 0 || parseFloat(bdi) > 100)) {
+      errors.push('BDI deve estar entre 0% e 100%');
+    }
+    
     setValidationErrors(errors);
     
     if (errors.length > 0) {
@@ -83,14 +103,14 @@ export const CostCalculator = () => {
         material,
         area: parseFloat(area),
         complexity,
-        bdi: parseFloat(bdi)
+        bdi: parseFloat(bdi) || 20
       },
       result,
       name: `${result.material} - ${area}m² (${complexity})`
     });
   };
 
-  const isFormValid = material && area && complexity && bdi;
+  const isFormValid = material && area && complexity;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -258,7 +278,7 @@ export const CostCalculator = () => {
                   <div className="flex items-center space-x-2">
                     <Label className="text-sm font-semibold text-foreground">
                       BDI (%)
-                      <span className="text-red-500 ml-1 text-base">*</span>
+                      <span className="text-muted-foreground ml-1 font-normal text-xs">(opcional)</span>
                     </Label>
                     <TooltipProvider>
                       <Tooltip>
@@ -275,7 +295,7 @@ export const CostCalculator = () => {
                 </div>
                 <Input
                   type="number"
-                  placeholder="Ex: 20 (padrão SINAPI)"
+                  placeholder="Padrão: 20% (deixe vazio para usar)"
                   min="0"
                   max="100"
                   step="1"
@@ -286,11 +306,71 @@ export const CostCalculator = () => {
                   }`}
                 />
                 <p className="text-xs text-muted-foreground italic">
-                  Percentual padrão: 15-25% (SINAPI recomenda ~20%)
+                  Se não informado, será usado 20% (padrão SINAPI)
                 </p>
               </CardContent>
             </Card>
           </div>
+
+          {/* Seção educativa sobre BDI */}
+          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800">
+            <CardHeader className="pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg text-amber-900 dark:text-amber-100">
+                    O que é BDI e por que é importante?
+                  </CardTitle>
+                  <CardDescription className="text-amber-700 dark:text-amber-300">
+                    Compreenda como o BDI afeta o custo final do seu projeto
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-amber-900 dark:text-amber-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    O que inclui o BDI:
+                  </h4>
+                  <ul className="space-y-1 text-xs ml-6">
+                    <li>• <strong>Administração central:</strong> Custos de escritório e gestão</li>
+                    <li>• <strong>Lucro:</strong> Margem de lucro da construtora</li>
+                    <li>• <strong>Impostos:</strong> ISS, PIS, COFINS, IRPJ, CSLL</li>
+                    <li>• <strong>Riscos:</strong> Contingências e imprevistos</li>
+                    <li>• <strong>Seguros:</strong> Seguros obrigatórios da obra</li>
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Calculator className="w-4 h-4" />
+                    Como é calculado:
+                  </h4>
+                  <div className="text-xs space-y-2 ml-6">
+                    <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="font-mono text-center">
+                        <strong>Custo Final = (Materiais + Mão de Obra) × (1 + BDI/100)</strong>
+                      </p>
+                    </div>
+                    <p>
+                      <strong>Exemplo:</strong> Se o custo direto é R$ 10.000 e o BDI é 20%, 
+                      o valor final será R$ 12.000 (R$ 10.000 × 1,20).
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-amber-200 dark:border-amber-800">
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  <strong>Dica profissional:</strong> O SINAPI (Sistema Nacional de Pesquisa de Custos) 
+                  recomenda BDI entre 15% e 25% para obras públicas. Para obras privadas, 
+                  pode variar entre 20% e 30% dependendo do porte e complexidade.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {validationErrors.length > 0 && (
             <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20">
