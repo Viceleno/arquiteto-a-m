@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -12,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, Filter, ArrowUpDown } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface Calculation {
   id: string;
@@ -94,27 +95,91 @@ const History = () => {
     }
   };
 
-  const exportCalculations = () => {
-    try {
-      const dataStr = JSON.stringify(calculations, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'historico_calculos_arquitetura.json';
-      link.click();
-      
-      toast({
-        title: 'Exportação concluída',
-        description: 'Seu histórico foi exportado com sucesso.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao exportar',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
+  const exportCalculationsPDF = () => {
+    if (!calculations.length) return;
+    const doc = new jsPDF();
+
+    // Cabeçalho estilizado
+    doc.setFontSize(16);
+    doc.setTextColor(40, 53, 147);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Histórico de Cálculos - ArquiCalc', 105, 18, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Usuário: ${user?.email || "Desconhecido"} | Gerado: ${new Date().toLocaleString("pt-BR")}`,
+      105,
+      26,
+      { align: 'center' }
+    );
+
+    // Tabela de cálculos
+    const tableColumn = [
+      { header: 'Tipo', dataKey: 'calculator_type' },
+      { header: 'Nome', dataKey: 'name' },
+      { header: 'Data', dataKey: 'created_at' },
+      { header: 'Resultado', dataKey: 'result' }
+    ];
+    const tableRows = calculations.map((calc) => {
+      let result = '-';
+      if (calc.result && typeof calc.result === 'object') {
+        if (calc.result.area) {
+          result = `${parseFloat(calc.result.area).toFixed(2)} ${calc.result.unit || 'm²'}`;
+        } else if (calc.result.volume) {
+          result = `${parseFloat(calc.result.volume).toFixed(2)} ${calc.result.unit || 'm³'}`;
+        } else if (calc.result.totalBricks) {
+          result = `${calc.result.totalBricks} tijolos`;
+        } else if (calc.result.cementBags) {
+          result = `${calc.result.cementBags} sacos`;
+        } else if (calc.result.totalCostWithBDI) {
+          result = `R$ ${parseFloat(calc.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        } else {
+          result = 'Ver detalhes';
+        }
+      }
+      return {
+        calculator_type: calc.calculator_type,
+        name: calc.name || '-',
+        created_at: formatDate(calc.created_at),
+        result
+      };
+    });
+
+    // Opções visuais da tabela
+    (doc as any).autoTable({
+      startY: 35,
+      head: [tableColumn.map(col => col.header)],
+      body: tableRows.map(row => tableColumn.map(col => row[col.dataKey])),
+      theme: 'grid',
+      styles: {
+        fontSize: 10,
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [63, 81, 181],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 243, 255]
+      },
+      margin: { left: 10, right: 10 }
+    });
+
+    // Rodapé
+    const finalY = (doc as any).lastAutoTable.finalY || doc.internal.pageSize.height - 20;
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text('Exportado com ArquiCalc', 10, doc.internal.pageSize.height - 10);
+
+    doc.save('historico_calculos_arquitetura.pdf');
+
+    toast({
+      title: 'Exportação em PDF concluída',
+      description: 'Seu PDF foi gerado e baixado com sucesso.'
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -282,7 +347,7 @@ const History = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={exportCalculations} 
+                        onClick={exportCalculationsPDF} 
                         className="bg-white/70 border-gray-200"
                         disabled={calculations.length === 0}
                       >
