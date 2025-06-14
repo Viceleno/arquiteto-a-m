@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp } from 'lucide-react';
+import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp, Zap, Clock } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
@@ -260,13 +261,18 @@ export const CostCalculator = () => {
                         value={key}
                         className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
                       >
-                        {data.name}
+                        <div className="flex items-center justify-between w-full">
+                          <span>{data.name}</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            ({data.factor}x)
+                          </span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground italic">
-                  Afeta tempo de execução e custo da mão de obra
+                  Multiplica o tempo de execução da mão de obra
                 </p>
               </CardContent>
             </Card>
@@ -311,6 +317,113 @@ export const CostCalculator = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Seção educativa sobre Complexidade */}
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+            <CardHeader className="pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg text-purple-900 dark:text-purple-100">
+                    Como a Complexidade Afeta o Custo da Obra?
+                  </CardTitle>
+                  <CardDescription className="text-purple-700 dark:text-purple-300">
+                    A complexidade determina quanto tempo e esforço será necessário para executar o serviço
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-purple-900 dark:text-purple-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Simples */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    </div>
+                    <h4 className="font-semibold">Simples (1.0x)</h4>
+                  </div>
+                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <p className="text-xs mb-2"><strong>Características:</strong></p>
+                    <ul className="text-xs space-y-1">
+                      <li>• Geometria regular e retilínea</li>
+                      <li>• Poucos ou nenhum recorte</li>
+                      <li>• Fácil acesso para equipamentos</li>
+                      <li>• Repetição de padrões</li>
+                    </ul>
+                    <p className="text-xs mt-2 font-medium text-green-700 dark:text-green-300">
+                      Exemplo: Parede reta, laje plana, piso em ambiente quadrado
+                    </p>
+                  </div>
+                </div>
+
+                {/* Média */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-yellow-100 dark:bg-yellow-900/50 rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    </div>
+                    <h4 className="font-semibold">Média (1.3x)</h4>
+                  </div>
+                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <p className="text-xs mb-2"><strong>Características:</strong></p>
+                    <ul className="text-xs space-y-1">
+                      <li>• Algumas irregularidades</li>
+                      <li>• Recortes moderados</li>
+                      <li>• Necessita mais cuidado</li>
+                      <li>• Alguns obstáculos</li>
+                    </ul>
+                    <p className="text-xs mt-2 font-medium text-yellow-700 dark:text-yellow-300">
+                      Exemplo: Parede com portas e janelas, escada reta, piso com recortes
+                    </p>
+                  </div>
+                </div>
+
+                {/* Complexa */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    </div>
+                    <h4 className="font-semibold">Complexa (1.8x)</h4>
+                  </div>
+                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <p className="text-xs mb-2"><strong>Características:</strong></p>
+                    <ul className="text-xs space-y-1">
+                      <li>• Geometria irregular</li>
+                      <li>• Muitos recortes e detalhes</li>
+                      <li>• Difícil acesso</li>
+                      <li>• Acabamentos especiais</li>
+                    </ul>
+                    <p className="text-xs mt-2 font-medium text-red-700 dark:text-red-300">
+                      Exemplo: Parede curva, escada caracol, piso com desenhos
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-purple-200 dark:border-purple-800">
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold mb-2">Como é calculado o impacto:</h4>
+                    <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                      <p className="text-xs mb-2">
+                        <strong>Tempo Real = Tempo Base × Fator de Complexidade</strong>
+                      </p>
+                      <p className="text-xs">
+                        <strong>Exemplo prático:</strong> Se um pedreiro consegue fazer 15m² de alvenaria simples por dia, 
+                        em uma obra complexa (1.8x) ele fará apenas 8.3m² por dia (15 ÷ 1.8), resultando em mais dias de trabalho 
+                        e consequentemente maior custo de mão de obra.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Seção educativa sobre BDI */}
           <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800">
