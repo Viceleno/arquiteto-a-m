@@ -71,7 +71,7 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
       blondelCheck: 'Fórmula de Blondel',
       isComfortable: 'Escada Confortável',
       totalHeight: 'Altura Total',
-      // Novos labels para alvenaria
+      // Labels para alvenaria
       mortarVolumeM3: 'Volume Argamassa Assentamento',
       cementLayingKg: 'Cimento para Assentamento',
       sandLayingKg: 'Areia para Assentamento',
@@ -89,7 +89,59 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
       renderRatio: 'Traço de Reboco',
       totalCementKg: 'Cimento Total',
       totalSandKg: 'Areia Total',
-      totalWaterL: 'Água Total'
+      totalWaterL: 'Água Total',
+      // Labels para piso e revestimento
+      installationType: 'Tipo de Instalação',
+      mortarType: 'Tipo de Argamassa',
+      spacersKg: 'Espaçadores Plásticos',
+      sealerL: 'Impermeabilizante',
+      cleanerL: 'Produto de Limpeza',
+      adhesiveKg: 'Cola Específica',
+      underlaymentM2: 'Manta Acústica',
+      transitionBarsM: 'Barras de Transição',
+      adhesiveType: 'Tipo de Adesivo',
+      // Labels para pintura
+      surfaceType: 'Tipo de Superfície',
+      paintType: 'Tipo de Tinta',
+      sealerCans: 'Galões de Selador',
+      fillerBags: 'Sacos de Massa Corrida',
+      sandpaperM2: 'Lixa para Preparação',
+      brushes: 'Pincéis',
+      rollers: 'Rolos de Pintura',
+      plasticM2: 'Lona Plástica',
+      // Labels para concreto
+      concreteType: 'Resistência FCK',
+      slumpType: 'Consistência Slump',
+      ratio: 'Traço de Concreto',
+      cementKg: 'Cimento Portland',
+      cementBags: 'Sacos de Cimento',
+      sandM3: 'Areia Média',
+      sandTons: 'Areia (Toneladas)',
+      gravelM3: 'Brita Graduada',
+      gravelTons: 'Brita (Toneladas)',
+      waterL: 'Água Potável',
+      steelBars: 'Barras de Aço',
+      wireKg: 'Arame Recozido',
+      spacersUn: 'Espaçadores de Concreto',
+      curingCompoundL: 'Composto de Cura',
+      // Labels para cobertura
+      tileType: 'Tipo de Telha',
+      ridgeLength: 'Comprimento Cumeeira',
+      raftersM: 'Caibros de Madeira',
+      tilesM: 'Ripas de Madeira',
+      ridgeBeamM: 'Viga de Cumeeira',
+      nailsKg: 'Pregos Galvanizados',
+      wireM: 'Arame de Amarração',
+      purlinM: 'Perfis Estruturais',
+      boltsUn: 'Parafusos de Fixação',
+      washersUn: 'Arruelas de Vedação',
+      sealantTubes: 'Tubos de Vedante',
+      screwsUn: 'Parafusos Autobrocantes',
+      flashingM: 'Rufos e Calhas',
+      insulationM2: 'Isolamento Térmico',
+      gutterM: 'Calhas de Drenagem',
+      downspoutM: 'Condutores Verticais',
+      membraneM2: 'Manta Sub-cobertura'
     };
     return labels[key] || key;
   };
@@ -174,82 +226,178 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
     );
   };
 
-  // Explicações didáticas específicas para alvenaria
-  const getMasonryEducationalContent = () => {
-    const hasRender = result.renderArea;
-    
-    return (
-      <div className="space-y-4">
-        <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100 text-base">
-              <BookOpen className="w-4 h-4" />
-              Explicação Técnica - Traços de Argamassa (ABNT)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-blue-900 dark:text-blue-100">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <h4 className="font-semibold mb-2">🧱 Argamassa de Assentamento (NBR 8545)</h4>
-              <ul className="space-y-1 text-xs">
-                <li><strong>Traço:</strong> 1:3 (1 parte de cimento : 3 partes de areia)</li>
-                <li><strong>Função:</strong> Fixar e unir os tijolos, garantindo estabilidade estrutural</li>
-                <li><strong>Espessura:</strong> 1,0 a 2,0 cm (recomendado 1,5 cm)</li>
-                <li><strong>Consumo:</strong> ~310 kg cimento + 1.100 kg areia por m³</li>
-              </ul>
-            </div>
-            
-            {hasRender && (
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <h4 className="font-semibold mb-2">🎨 Argamassa de Reboco (NBR 13749)</h4>
+  // Explicações didáticas específicas por categoria
+  const getEducationalContent = () => {
+    switch (categoryName) {
+      case 'Alvenaria':
+        return (
+          <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100 text-base">
+                <BookOpen className="w-4 h-4" />
+                Explicação Técnica - Traços de Argamassa (ABNT)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-blue-900 dark:text-blue-100">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🧱 Argamassa de Assentamento (NBR 8545)</h4>
                 <ul className="space-y-1 text-xs">
-                  <li><strong>Traço:</strong> 1:2:8 (1 parte de cimento : 2 partes de cal : 8 partes de areia)</li>
-                  <li><strong>Função:</strong> Revestir e regularizar a superfície da alvenaria</li>
-                  <li><strong>Espessura:</strong> 1,5 a 2,5 cm conforme NBR 13749</li>
-                  <li><strong>Cal hidratada:</strong> Melhora trabalhabilidade e retenção de água</li>
+                  <li><strong>Traço:</strong> 1:3 (1 parte de cimento : 3 partes de areia)</li>
+                  <li><strong>Função:</strong> Fixar e unir os tijolos, garantindo estabilidade estrutural</li>
+                  <li><strong>Espessura:</strong> 1,0 a 2,0 cm (recomendado 1,5 cm)</li>
+                  <li><strong>Consumo:</strong> ~310 kg cimento + 1.100 kg areia por m³</li>
                 </ul>
               </div>
-            )}
-            
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-              <h4 className="font-semibold mb-2">💡 Dicas de Execução</h4>
-              <ul className="space-y-1 text-xs">
-                <li>• Umedeça os tijolos antes do assentamento</li>
-                <li>• Mantenha as juntas uniformes e alinhadas</li>
-                <li>• Execute o reboco em duas etapas: chapisco + reboco</li>
-                <li>• Cure a argamassa mantendo-a úmida por 3-7 dias</li>
-                <li>• Adicione 10% de perda aos materiais calculados</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
+              
+              {result.renderArea && (
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <h4 className="font-semibold mb-2">🎨 Argamassa de Reboco (NBR 13749)</h4>
+                  <ul className="space-y-1 text-xs">
+                    <li><strong>Traço:</strong> 1:2:8 (1 parte de cimento : 2 partes de cal : 8 partes de areia)</li>
+                    <li><strong>Função:</strong> Revestir e regularizar a superfície da alvenaria</li>
+                    <li><strong>Espessura:</strong> 1,5 a 2,5 cm conforme NBR 13749</li>
+                    <li><strong>Cal hidratada:</strong> Melhora trabalhabilidade e retenção de água</li>
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
 
-  // Informações didáticas baseada na categoria
-  const getEducationalContent = () => {
-    if (categoryName === 'Alvenaria') {
-      return getMasonryEducationalContent();
+      case 'Piso e Revestimento':
+        return (
+          <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-green-900 dark:text-green-100 text-base">
+                <BookOpen className="w-4 h-4" />
+                Explicação Técnica - Sistemas de Assentamento (NBR 14081)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-green-900 dark:text-green-100">
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🏺 Cerâmica/Porcelanato</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Argamassa:</strong> AC-II (4kg/m²) para pisos internos, AC-III para externos</li>
+                  <li><strong>Rejunte:</strong> 0,7kg/m² - use rejunte flexível em áreas molhadas</li>
+                  <li><strong>Espaçadores:</strong> Garantem juntas uniformes (1-3mm para pisos)</li>
+                </ul>
+              </div>
+              
+              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🪨 Pedra Natural</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Argamassa específica:</strong> 6kg/m² - resistente a manchas</li>
+                  <li><strong>Impermeabilização:</strong> Obrigatória para evitar eflorescência</li>
+                  <li><strong>Limpeza:</strong> Produtos específicos para cada tipo de pedra</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'Pintura':
+        return (
+          <Card className="border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-purple-900 dark:text-purple-100 text-base">
+                <BookOpen className="w-4 h-4" />
+                Explicação Técnica - Sistemas de Pintura (NBR 15079)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-purple-900 dark:text-purple-100">
+              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🎨 Preparação da Superfície</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Lixamento:</strong> Remove imperfeições e promove aderência</li>
+                  <li><strong>Massa corrida:</strong> 0,5kg/m² para regularização</li>
+                  <li><strong>Selador:</strong> 10m²/L - uniformiza absorção da superfície</li>
+                </ul>
+              </div>
+              
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🖌️ Aplicação da Tinta</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Rendimento:</strong> Varia de 6-14 m²/L conforme superfície e tinta</li>
+                  <li><strong>Demãos:</strong> Mínimo 2 demãos com intervalo de 4h entre elas</li>
+                  <li><strong>Diluição:</strong> Primeira demão 10% de água, segunda sem diluição</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'Concreto':
+        return (
+          <Card className="border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100 text-base">
+                <BookOpen className="w-4 h-4" />
+                Explicação Técnica - Dosagem de Concreto (NBR 6118)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-gray-900 dark:text-gray-100">
+              <div className="p-3 bg-gray-100 dark:bg-gray-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🏗️ Traços por Resistência</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>FCK 20 MPa:</strong> 1:2,5:3,5 (280kg cimento/m³) - residencial leve</li>
+                  <li><strong>FCK 25 MPa:</strong> 1:2:3 (350kg cimento/m³) - uso geral</li>
+                  <li><strong>FCK 30 MPa:</strong> 1:1,5:2,5 (420kg cimento/m³) - estrutural</li>
+                </ul>
+              </div>
+              
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">⚡ Armadura e Cura</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Aço CA-50:</strong> 80-100kg/m³ conforme espessura da laje</li>
+                  <li><strong>Cura úmida:</strong> 7 dias mínimo para atingir resistência</li>
+                  <li><strong>Slump test:</strong> Controla trabalhabilidade do concreto fresco</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'Cobertura':
+        return (
+          <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-red-900 dark:text-red-100 text-base">
+                <BookOpen className="w-4 h-4" />
+                Explicação Técnica - Sistemas de Cobertura (NBR 15575)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-red-900 dark:text-red-100">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🏠 Estrutura de Madeira</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Caibros:</strong> 5x6cm espaçados a cada 50-60cm</li>
+                  <li><strong>Ripas:</strong> 2x5cm espaçadas conforme tipo de telha</li>
+                  <li><strong>Fixação:</strong> Pregos galvanizados + arame de amarração</li>
+                </ul>
+              </div>
+              
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">💧 Sistema de Drenagem</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Calhas:</strong> Dimensionadas conforme área de captação</li>
+                  <li><strong>Condutores:</strong> Diâmetro mínimo 75mm para residencial</li>
+                  <li><strong>Inclinação:</strong> Mínimo 0,5% para escoamento adequado</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return (
+          <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-blue-900 dark:text-blue-100">
+              <strong>Dica:</strong> Sempre consulte um profissional qualificado para validar os cálculos em projetos complexos e siga as normas técnicas brasileiras.
+            </p>
+          </div>
+        );
     }
-    
-    const educationalTips: Record<string, string> = {
-      'Piso e Revestimento': 'Sempre considere 10-15% de perda para recortes e quebras. Compre algumas peças extras para futuras manutenções.',
-      'Pintura': 'O rendimento da tinta varia conforme a superfície. Paredes texturizadas consomem mais tinta que superfícies lisas.',
-      'Cobertura': 'Considere a inclinação do telhado para calcular a área real. Telhados com maior inclinação precisam de mais telhas.',
-      'Drywall': 'Estruturas metálicas devem estar bem niveladas para facilitar a instalação das placas.',
-      'Iluminação': 'Distribua uniformemente os pontos de luz. Considere luz natural disponível no ambiente.',
-      'Escadas': 'A fórmula de Blondel (2h + p = 63-65cm) garante conforto e segurança na escada.',
-      'Concreto': 'Concreto deve ser aplicado em até 2 horas após o preparo. Mantenha úmido por 7 dias para cura adequada.'
-    };
-
-    return (
-      <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-        <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-        <p className="text-xs text-blue-900 dark:text-blue-100">
-          <strong>Dica:</strong> {educationalTips[categoryName] || 'Sempre consulte um profissional para validar os cálculos em projetos complexos.'}
-        </p>
-      </div>
-    );
   };
 
   return (
@@ -260,7 +408,6 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
             <CheckCircle className="w-5 h-5" />
             Resultado - {categoryName}
           </CardTitle>
-          {categoryName !== 'Alvenaria' && getEducationalContent()}
         </CardHeader>
       </Card>
       
@@ -270,7 +417,7 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
         {renderResultGroup(getCategoryTitle('info'), groupedResults.info, 'info')}
       </div>
 
-      {categoryName === 'Alvenaria' && getEducationalContent()}
+      {getEducationalContent()}
 
       {/* Aviso importante */}
       <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20">
@@ -280,9 +427,9 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
             <div className="text-xs text-amber-900 dark:text-amber-100">
               <p className="font-medium mb-1">Importante:</p>
               <p>
-                Os cálculos seguem as normas ABNT NBR 8545 (argamassa de assentamento) e NBR 13749 (reboco). 
-                Considere adicionar 5-10% de perda aos materiais. Sempre consulte um 
-                profissional qualificado para validação do projeto.
+                Os cálculos seguem as normas técnicas brasileiras (ABNT). 
+                Considere adicionar 5-10% de perda aos materiais principais. Sempre consulte um 
+                profissional qualificado para validação e detalhamento do projeto.
               </p>
             </div>
           </div>
