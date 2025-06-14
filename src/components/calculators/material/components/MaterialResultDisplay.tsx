@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle, Info, AlertTriangle, TrendingUp } from 'lucide-react';
+import { CheckCircle, Info, AlertTriangle, TrendingUp, BookOpen, Lightbulb } from 'lucide-react';
 import { MaterialResult } from '../MaterialCalculatorTypes';
 
 interface MaterialResultDisplayProps {
@@ -70,7 +70,26 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
       stepWidth: 'Largura da Escada',
       blondelCheck: 'Fórmula de Blondel',
       isComfortable: 'Escada Confortável',
-      totalHeight: 'Altura Total'
+      totalHeight: 'Altura Total',
+      // Novos labels para alvenaria
+      mortarVolumeM3: 'Volume Argamassa Assentamento',
+      cementLayingKg: 'Cimento para Assentamento',
+      sandLayingKg: 'Areia para Assentamento',
+      waterLayingL: 'Água para Assentamento',
+      layingRatio: 'Traço de Assentamento',
+      mortarThickness: 'Espessura da Junta',
+      renderArea: 'Área de Reboco',
+      renderVolumeM3: 'Volume de Reboco',
+      renderThickness: 'Espessura do Reboco',
+      faces: 'Faces da Parede',
+      cementRenderKg: 'Cimento para Reboco',
+      limeRenderKg: 'Cal Hidratada',
+      sandRenderKg: 'Areia para Reboco',
+      waterRenderL: 'Água para Reboco',
+      renderRatio: 'Traço de Reboco',
+      totalCementKg: 'Cimento Total',
+      totalSandKg: 'Areia Total',
+      totalWaterL: 'Água Total'
     };
     return labels[key] || key;
   };
@@ -155,12 +174,67 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
     );
   };
 
+  // Explicações didáticas específicas para alvenaria
+  const getMasonryEducationalContent = () => {
+    const hasRender = result.renderArea;
+    
+    return (
+      <div className="space-y-4">
+        <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100 text-base">
+              <BookOpen className="w-4 h-4" />
+              Explicação Técnica - Traços de Argamassa (ABNT)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-blue-900 dark:text-blue-100">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <h4 className="font-semibold mb-2">🧱 Argamassa de Assentamento (NBR 8545)</h4>
+              <ul className="space-y-1 text-xs">
+                <li><strong>Traço:</strong> 1:3 (1 parte de cimento : 3 partes de areia)</li>
+                <li><strong>Função:</strong> Fixar e unir os tijolos, garantindo estabilidade estrutural</li>
+                <li><strong>Espessura:</strong> 1,0 a 2,0 cm (recomendado 1,5 cm)</li>
+                <li><strong>Consumo:</strong> ~310 kg cimento + 1.100 kg areia por m³</li>
+              </ul>
+            </div>
+            
+            {hasRender && (
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <h4 className="font-semibold mb-2">🎨 Argamassa de Reboco (NBR 13749)</h4>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Traço:</strong> 1:2:8 (1 parte de cimento : 2 partes de cal : 8 partes de areia)</li>
+                  <li><strong>Função:</strong> Revestir e regularizar a superfície da alvenaria</li>
+                  <li><strong>Espessura:</strong> 1,5 a 2,5 cm conforme NBR 13749</li>
+                  <li><strong>Cal hidratada:</strong> Melhora trabalhabilidade e retenção de água</li>
+                </ul>
+              </div>
+            )}
+            
+            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+              <h4 className="font-semibold mb-2">💡 Dicas de Execução</h4>
+              <ul className="space-y-1 text-xs">
+                <li>• Umedeça os tijolos antes do assentamento</li>
+                <li>• Mantenha as juntas uniformes e alinhadas</li>
+                <li>• Execute o reboco em duas etapas: chapisco + reboco</li>
+                <li>• Cure a argamassa mantendo-a úmida por 3-7 dias</li>
+                <li>• Adicione 10% de perda aos materiais calculados</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   // Informações didáticas baseada na categoria
   const getEducationalContent = () => {
+    if (categoryName === 'Alvenaria') {
+      return getMasonryEducationalContent();
+    }
+    
     const educationalTips: Record<string, string> = {
       'Piso e Revestimento': 'Sempre considere 10-15% de perda para recortes e quebras. Compre algumas peças extras para futuras manutenções.',
       'Pintura': 'O rendimento da tinta varia conforme a superfície. Paredes texturizadas consomem mais tinta que superfícies lisas.',
-      'Alvenaria': 'A quantidade de argamassa depende da regularidade da parede e habilidade do pedreiro.',
       'Cobertura': 'Considere a inclinação do telhado para calcular a área real. Telhados com maior inclinação precisam de mais telhas.',
       'Drywall': 'Estruturas metálicas devem estar bem niveladas para facilitar a instalação das placas.',
       'Iluminação': 'Distribua uniformemente os pontos de luz. Considere luz natural disponível no ambiente.',
@@ -168,7 +242,14 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
       'Concreto': 'Concreto deve ser aplicado em até 2 horas após o preparo. Mantenha úmido por 7 dias para cura adequada.'
     };
 
-    return educationalTips[categoryName] || 'Sempre consulte um profissional para validar os cálculos em projetos complexos.';
+    return (
+      <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+        <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-blue-900 dark:text-blue-100">
+          <strong>Dica:</strong> {educationalTips[categoryName] || 'Sempre consulte um profissional para validar os cálculos em projetos complexos.'}
+        </p>
+      </div>
+    );
   };
 
   return (
@@ -179,12 +260,7 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
             <CheckCircle className="w-5 h-5" />
             Resultado - {categoryName}
           </CardTitle>
-          <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-            <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-blue-900 dark:text-blue-100">
-              <strong>Dica:</strong> {getEducationalContent()}
-            </p>
-          </div>
+          {categoryName !== 'Alvenaria' && getEducationalContent()}
         </CardHeader>
       </Card>
       
@@ -194,6 +270,8 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
         {renderResultGroup(getCategoryTitle('info'), groupedResults.info, 'info')}
       </div>
 
+      {categoryName === 'Alvenaria' && getEducationalContent()}
+
       {/* Aviso importante */}
       <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20">
         <CardContent className="p-4">
@@ -202,9 +280,9 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
             <div className="text-xs text-amber-900 dark:text-amber-100">
               <p className="font-medium mb-1">Importante:</p>
               <p>
-                Os cálculos são estimativos e podem variar conforme condições locais, 
-                qualidade dos materiais e técnicas construtivas. Sempre consulte um 
-                profissional qualificado antes de executar o projeto.
+                Os cálculos seguem as normas ABNT NBR 8545 (argamassa de assentamento) e NBR 13749 (reboco). 
+                Considere adicionar 5-10% de perda aos materiais. Sempre consulte um 
+                profissional qualificado para validação do projeto.
               </p>
             </div>
           </div>

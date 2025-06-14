@@ -35,16 +35,55 @@ const inputs: MaterialInput[] = [
     min: 0.5,
     max: 5,
     unit: 'cm',
+    defaultValue: 1.5,
     placeholder: 'Ex: 1.5',
     helpText: 'Espessura típica: 1-2cm para juntas regulares',
     tooltip: 'Espessura da junta de argamassa entre os tijolos'
+  },
+  {
+    key: 'includeRender',
+    label: 'Incluir Reboco',
+    type: 'select',
+    required: true,
+    placeholder: 'Selecione se deseja incluir reboco...',
+    options: [
+      { value: 'yes', label: 'Sim - Incluir reboco' },
+      { value: 'no', label: 'Não - Apenas assentamento' }
+    ],
+    tooltip: 'Reboco é o revestimento aplicado sobre a alvenaria'
+  },
+  {
+    key: 'renderThickness',
+    label: 'Espessura do Reboco',
+    type: 'number',
+    min: 1.0,
+    max: 3.0,
+    unit: 'cm',
+    defaultValue: 2.0,
+    placeholder: 'Ex: 2.0',
+    helpText: 'Espessura típica: 1.5-2.5cm conforme ABNT NBR 13749',
+    tooltip: 'Espessura do reboco conforme ABNT NBR 13749'
+  },
+  {
+    key: 'faces',
+    label: 'Número de Faces',
+    type: 'select',
+    required: true,
+    defaultValue: 'two',
+    options: [
+      { value: 'one', label: '1 face (parede externa ou muro)' },
+      { value: 'two', label: '2 faces (parede interna)' }
+    ],
+    tooltip: 'Quantidade de faces da parede que receberão reboco'
   }
 ];
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const validation = MaterialValidator.validateInputs(inputs, [
     { field: 'area', required: true, min: 0.1 },
-    { field: 'brickType', required: true }
+    { field: 'brickType', required: true },
+    { field: 'includeRender', required: true },
+    { field: 'faces', required: true }
   ]);
 
   if (!validation.isValid) {
@@ -53,7 +92,10 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
 
   const area = MaterialValidator.sanitizeNumericInput(inputs.area, 0.1);
   const brickType = inputs.brickType as keyof typeof MATERIAL_CONSTANTS.MASONRY.BRICK_TYPES;
-  const mortarThickness = MaterialValidator.sanitizeNumericInput(inputs.mortarThickness, 2);
+  const mortarThickness = MaterialValidator.sanitizeNumericInput(inputs.mortarThickness, 1.5);
+  const includeRender = inputs.includeRender as string;
+  const renderThickness = MaterialValidator.sanitizeNumericInput(inputs.renderThickness, 2.0);
+  const faces = inputs.faces as string;
 
   const brickData = MATERIAL_CONSTANTS.MASONRY.BRICK_TYPES[brickType];
   
@@ -63,22 +105,87 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     };
   }
 
+  // Cálculo de tijolos
   const bricksNeeded = Math.ceil(area * brickData.bricksPerM2);
-  const mortarM3 = area * (mortarThickness / 100);
-  const mortarKg = Math.ceil(mortarM3 * 1800); // Densidade da argamassa
 
-  return {
+  // Cálculo da argamassa de assentamento (NBR 8545)
+  // Volume = área × espessura da junta
+  const mortarVolumeM3 = area * (mortarThickness / 100);
+  
+  // Traço 1:3 (cimento:areia) para assentamento - NBR 8545
+  // Para 1m³ de argamassa: 310kg cimento + 1.100kg areia + 195L água
+  const cementLayingKg = Math.ceil(mortarVolumeM3 * 310);
+  const sandLayingKg = Math.ceil(mortarVolumeM3 * 1100);
+  const waterLayingL = Math.ceil(mortarVolumeM3 * 195);
+
+  let result: MaterialResult = {
+    // Informações básicas
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
-    brickType: { value: brickData.width + 'x' + brickData.height + 'x' + brickData.length + 'cm', unit: '', category: 'info' },
+    brickType: { value: `${brickData.width}x${brickData.height}x${brickData.length}cm`, unit: '', category: 'info' },
+    
+    // Materiais principais
     bricksNeeded: { value: bricksNeeded, unit: 'tijolos', highlight: true, category: 'primary' },
-    mortarKg: { value: mortarKg, unit: 'kg', highlight: true, category: 'primary' },
-    mortarM3: { value: mortarM3.toFixed(3), unit: 'm³', category: 'secondary' }
+    
+    // Argamassa de assentamento
+    mortarVolumeM3: { value: mortarVolumeM3.toFixed(3), unit: 'm³', category: 'secondary' },
+    cementLayingKg: { value: cementLayingKg, unit: 'kg', highlight: true, category: 'primary' },
+    sandLayingKg: { value: sandLayingKg, unit: 'kg', highlight: true, category: 'primary' },
+    waterLayingL: { value: waterLayingL, unit: 'L', category: 'secondary' },
+    
+    // Informações técnicas
+    layingRatio: { value: '1:3 (cimento:areia)', unit: '', category: 'info' },
+    mortarThickness: { value: mortarThickness.toFixed(1), unit: 'cm', category: 'info' }
   };
+
+  // Cálculo do reboco se solicitado
+  if (includeRender === 'yes') {
+    const numFaces = faces === 'two' ? 2 : 1;
+    const renderArea = area * numFaces;
+    
+    // Volume do reboco
+    const renderVolumeM3 = renderArea * (renderThickness / 100);
+    
+    // Traço 1:2:8 (cimento:cal:areia) para reboco - NBR 13749
+    // Para 1m³: 167kg cimento + 83kg cal + 1.200kg areia + 195L água
+    const cementRenderKg = Math.ceil(renderVolumeM3 * 167);
+    const limeRenderKg = Math.ceil(renderVolumeM3 * 83);
+    const sandRenderKg = Math.ceil(renderVolumeM3 * 1200);
+    const waterRenderL = Math.ceil(renderVolumeM3 * 195);
+    
+    // Totais consolidados
+    const totalCementKg = cementLayingKg + cementRenderKg;
+    const totalSandKg = sandLayingKg + sandRenderKg;
+    const totalWaterL = waterLayingL + waterRenderL;
+
+    result = {
+      ...result,
+      
+      // Reboco
+      renderArea: { value: renderArea.toFixed(2), unit: 'm²', category: 'info' },
+      renderVolumeM3: { value: renderVolumeM3.toFixed(3), unit: 'm³', category: 'secondary' },
+      renderThickness: { value: renderThickness.toFixed(1), unit: 'cm', category: 'info' },
+      faces: { value: numFaces === 2 ? '2 faces' : '1 face', unit: '', category: 'info' },
+      
+      cementRenderKg: { value: cementRenderKg, unit: 'kg', category: 'primary' },
+      limeRenderKg: { value: limeRenderKg, unit: 'kg', highlight: true, category: 'primary' },
+      sandRenderKg: { value: sandRenderKg, unit: 'kg', category: 'primary' },
+      waterRenderL: { value: waterRenderL, unit: 'L', category: 'secondary' },
+      
+      renderRatio: { value: '1:2:8 (cimento:cal:areia)', unit: '', category: 'info' },
+      
+      // Totais consolidados
+      totalCementKg: { value: totalCementKg, unit: 'kg', highlight: true, category: 'primary' },
+      totalSandKg: { value: totalSandKg, unit: 'kg', highlight: true, category: 'primary' },
+      totalWaterL: { value: totalWaterL, unit: 'L', category: 'secondary' }
+    };
+  }
+
+  return result;
 };
 
 export const masonryCalculator: CalculationConfig = {
   inputs,
   calculate,
   name: 'Alvenaria',
-  description: 'Cálculo de tijolos e argamassa para paredes'
+  description: 'Cálculo completo de tijolos, argamassa de assentamento e reboco conforme ABNT'
 };
