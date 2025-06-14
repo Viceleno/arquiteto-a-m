@@ -119,6 +119,99 @@ const History = () => {
     });
   };
 
+  const exportCalculationsTXT = () => {
+    if (!calculations.length) return;
+    
+    const currentDate = new Date().toLocaleString('pt-BR');
+    const userName = user?.email || 'Usuário desconhecido';
+    
+    let txtContent = '';
+    
+    // Cabeçalho
+    txtContent += '═══════════════════════════════════════════════════════════════\n';
+    txtContent += '                    HISTÓRICO DE CÁLCULOS - ARQUICALC\n';
+    txtContent += '═══════════════════════════════════════════════════════════════\n\n';
+    txtContent += `Usuário: ${userName}\n`;
+    txtContent += `Data de exportação: ${currentDate}\n`;
+    txtContent += `Total de cálculos: ${calculations.length}\n\n`;
+    
+    // Estatísticas rápidas
+    const uniqueTypes = new Set(calculations.map(c => c.calculator_type));
+    txtContent += '───────────────────────────────────────────────────────────────\n';
+    txtContent += '                        RESUMO ESTATÍSTICO\n';
+    txtContent += '───────────────────────────────────────────────────────────────\n';
+    txtContent += `• Tipos de calculadoras utilizadas: ${uniqueTypes.size}\n`;
+    txtContent += `• Último cálculo realizado: ${calculations.length > 0 ? formatDate(calculations[0].created_at) : 'N/A'}\n\n`;
+    
+    // Lista detalhada dos cálculos
+    txtContent += '───────────────────────────────────────────────────────────────\n';
+    txtContent += '                      DETALHES DOS CÁLCULOS\n';
+    txtContent += '───────────────────────────────────────────────────────────────\n\n';
+    
+    calculations.forEach((calc, index) => {
+      txtContent += `${index + 1}. ${calc.calculator_type.toUpperCase()}\n`;
+      txtContent += `   Nome: ${calc.name || 'Sem nome'}\n`;
+      txtContent += `   Data: ${formatDate(calc.created_at)}\n`;
+      
+      // Formatação do resultado
+      let resultDisplay = '';
+      if (calc.result && typeof calc.result === 'object') {
+        if (calc.result.area) {
+          resultDisplay = `${parseFloat(calc.result.area).toFixed(2)} ${calc.result.unit || 'm²'}`;
+        } else if (calc.result.volume) {
+          resultDisplay = `${parseFloat(calc.result.volume).toFixed(2)} ${calc.result.unit || 'm³'}`;
+        } else if (calc.result.totalBricks) {
+          resultDisplay = `${calc.result.totalBricks} tijolos`;
+        } else if (calc.result.cementBags) {
+          resultDisplay = `${calc.result.cementBags} sacos de cimento`;
+        } else if (calc.result.totalCostWithBDI) {
+          resultDisplay = `R$ ${parseFloat(calc.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        } else {
+          resultDisplay = 'Resultado complexo - verificar detalhes no sistema';
+        }
+      } else {
+        resultDisplay = 'Sem resultado disponível';
+      }
+      
+      txtContent += `   Resultado: ${resultDisplay}\n`;
+      
+      // Dados de entrada (se disponíveis)
+      if (calc.input_data && typeof calc.input_data === 'object') {
+        txtContent += `   Dados de entrada:\n`;
+        Object.entries(calc.input_data).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== '') {
+            txtContent += `     - ${key}: ${value}\n`;
+          }
+        });
+      }
+      
+      txtContent += '\n';
+      if (index < calculations.length - 1) {
+        txtContent += '   ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n';
+      }
+    });
+    
+    // Rodapé
+    txtContent += '\n═══════════════════════════════════════════════════════════════\n';
+    txtContent += '              Arquivo gerado pelo ArquiCalc\n';
+    txtContent += '          Sistema de Cálculos para Arquitetura\n';
+    txtContent += '═══════════════════════════════════════════════════════════════\n';
+    
+    // Download do arquivo
+    const dataBlob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `historico_calculos_${new Date().toISOString().split('T')[0]}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Exportação concluída',
+      description: 'Seus dados foram exportados em formato TXT com layout organizado.',
+    });
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -284,7 +377,7 @@ const History = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={exportCalculationsJSON} 
+                        onClick={exportCalculationsTXT} 
                         className="bg-white/70 border-gray-200"
                         disabled={calculations.length === 0}
                       >
