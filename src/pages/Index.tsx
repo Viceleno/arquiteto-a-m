@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calculator, History, FileText, User, ChevronRight, TrendingUp, Clock, BookOpen, Zap } from 'lucide-react';
+import { Calculator, History, User, TrendingUp, Clock, BookOpen, Zap } from 'lucide-react';
 import { CalculatorGrid } from '@/components/CalculatorGrid';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
@@ -83,7 +83,7 @@ const Index = () => {
               </div>
             </div>
             
-            {/* User Authentication Card */}
+            {/* User Authentication Card - Only show if not logged in */}
             {!user && (
               <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
                 <CardHeader className="pb-4">
@@ -111,59 +111,34 @@ const Index = () => {
               </Card>
             )}
 
-            {/* User Dashboard */}
+            {/* User Welcome Message - Simple and Clean */}
             {user && (
               <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Olá, {user.email?.split('@')[0]}! 👋</h2>
-                    <p className="text-gray-600">Continue de onde parou ou explore novas ferramentas</p>
-                  </div>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <Clock className="w-3 h-3 mr-1" />
-                    Conta Ativa
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm bg-white/80 backdrop-blur-sm" onClick={() => navigate('/history')}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <History className="w-5 h-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg text-gray-900">Histórico de Cálculos</CardTitle>
-                            <CardDescription className="text-sm">Acesse seus cálculos anteriores</CardDescription>
-                          </div>
+                <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200 shadow-sm">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                          <User className="w-6 h-6 text-white" />
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-200" />
-                      </div>
-                    </CardHeader>
-                  </Card>
-
-                  <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm bg-white/80 backdrop-blur-sm" onClick={() => navigate('/settings')}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-gray-600" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg text-gray-900">Configurações</CardTitle>
-                            <CardDescription className="text-sm">Personalize sua experiência</CardDescription>
-                          </div>
+                        <div>
+                          <CardTitle className="text-green-900 text-xl">Olá, {user.email?.split('@')[0]}! 👋</CardTitle>
+                          <CardDescription className="text-green-700 text-base">
+                            Seus cálculos são salvos automaticamente. Use as calculadoras abaixo para começar.
+                          </CardDescription>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-200" />
                       </div>
-                    </CardHeader>
-                  </Card>
-                </div>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Conta Ativa
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                </Card>
               </div>
             )}
             
-            {/* Calculator Grid */}
+            {/* Calculator Grid - Main Focus */}
             <div>
               <div className="mb-6">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Calculadoras Disponíveis</h2>
