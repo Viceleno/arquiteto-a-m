@@ -147,6 +147,43 @@ const Settings = () => {
     }
   }, [settings, form]);
 
+  // Handle individual setting changes for instant feedback
+  const handleSettingChange = async (field: keyof SettingsFormValues, value: any) => {
+    try {
+      if (['theme', 'language', 'unit_preference', 'default_margin', 'auto_save_calculations', 'decimal_places', 'email_notifications', 'push_notifications', 'calculation_reminders', 'share_calculations', 'data_analytics'].includes(field)) {
+        await updateSettings({ [field]: value });
+        
+        // Show success feedback for important changes
+        if (field === 'theme') {
+          toast({
+            title: '🎨 Tema alterado',
+            description: `Tema alterado para ${value === 'light' ? 'claro' : value === 'dark' ? 'escuro' : 'sistema'}`,
+            duration: 2000,
+          });
+        } else if (field === 'language') {
+          toast({
+            title: '🌍 Idioma alterado',
+            description: `Idioma alterado para ${value === 'pt-BR' ? 'Português' : value === 'en-US' ? 'English' : 'Español'}`,
+            duration: 2000,
+          });
+        } else if (field === 'unit_preference') {
+          toast({
+            title: '📏 Sistema de unidades alterado',
+            description: `Sistema alterado para ${value === 'metric' ? 'métrico' : 'imperial'}`,
+            duration: 2000,
+          });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: '❌ Erro ao salvar',
+        description: error.message,
+        variant: 'destructive',
+        duration: 3000,
+      });
+    }
+  };
+
   const onSubmit = async (values: SettingsFormValues) => {
     if (!user || isSaving) return;
     
@@ -228,17 +265,17 @@ const Settings = () => {
 
   if (authLoading || (user && (isLoading || settingsLoading))) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="text-gray-600 animate-pulse">Carregando configurações...</p>
+          <p className="text-gray-600 dark:text-gray-400 animate-pulse">Carregando configurações...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <Header />
       <div className="flex">
         <Sidebar />
@@ -247,12 +284,12 @@ const Settings = () => {
             {/* Header Section */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <SettingsIcon className="w-6 h-6 text-blue-600" />
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <SettingsIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-                  <p className="text-gray-600 mt-1">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Configurações</h1>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">
                     Personalize a aplicação de acordo com suas preferências
                   </p>
                 </div>
@@ -260,24 +297,24 @@ const Settings = () => {
             </div>
             
             <Tabs defaultValue="general" className="space-y-8">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1 bg-white shadow-sm border">
-                <TabsTrigger value="general" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1 bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-700">
+                <TabsTrigger value="general" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <Palette className="w-4 h-4" />
                   <span className="hidden sm:inline">Geral</span>
                 </TabsTrigger>
-                <TabsTrigger value="calculations" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+                <TabsTrigger value="calculations" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <Calculator className="w-4 h-4" />
                   <span className="hidden sm:inline">Cálculos</span>
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+                <TabsTrigger value="notifications" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <Bell className="w-4 h-4" />
                   <span className="hidden sm:inline">Notificações</span>
                 </TabsTrigger>
-                <TabsTrigger value="privacy" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+                <TabsTrigger value="privacy" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <Shield className="w-4 h-4" />
                   <span className="hidden sm:inline">Privacidade</span>
                 </TabsTrigger>
-                <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+                <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <User className="w-4 h-4" />
                   <span className="hidden sm:inline">Perfil</span>
                 </TabsTrigger>
@@ -287,15 +324,15 @@ const Settings = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   
                   <TabsContent value="general" className="space-y-6">
-                    <Card className="shadow-sm border-0 bg-white">
+                    <Card className="shadow-sm border-0 bg-white dark:bg-gray-800 dark:border-gray-700">
                       <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-purple-100 rounded-lg">
-                            <Palette className="w-5 h-5 text-purple-600" />
+                          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                            <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                           </div>
                           <div>
-                            <CardTitle className="text-xl">Preferências Gerais</CardTitle>
-                            <CardDescription className="text-gray-600">
+                            <CardTitle className="text-xl dark:text-white">Preferências Gerais</CardTitle>
+                            <CardDescription className="text-gray-600 dark:text-gray-400">
                               Configure a aparência e idioma da aplicação
                             </CardDescription>
                           </div>
@@ -308,13 +345,19 @@ const Settings = () => {
                             name="theme"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="flex items-center gap-2 text-sm font-medium">
+                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
                                   <Palette className="w-4 h-4" />
                                   Tema
                                 </FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    handleSettingChange('theme', value);
+                                  }} 
+                                  value={field.value}
+                                >
                                   <FormControl>
-                                    <SelectTrigger className="h-11">
+                                    <SelectTrigger className="h-11 dark:bg-gray-700 dark:border-gray-600">
                                       <SelectValue placeholder="Selecione um tema" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -324,7 +367,7 @@ const Settings = () => {
                                     <SelectItem value="system">💻 Sistema</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <FormDescription className="text-xs text-gray-500">
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
                                   Escolha entre tema claro, escuro ou automático
                                 </FormDescription>
                                 <FormMessage />
@@ -337,13 +380,19 @@ const Settings = () => {
                             name="language"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="flex items-center gap-2 text-sm font-medium">
+                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
                                   <Globe className="w-4 h-4" />
                                   Idioma
                                 </FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    handleSettingChange('language', value);
+                                  }} 
+                                  value={field.value}
+                                >
                                   <FormControl>
-                                    <SelectTrigger className="h-11">
+                                    <SelectTrigger className="h-11 dark:bg-gray-700 dark:border-gray-600">
                                       <SelectValue placeholder="Selecione um idioma" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -353,7 +402,7 @@ const Settings = () => {
                                     <SelectItem value="es">🇪🇸 Español</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <FormDescription className="text-xs text-gray-500">
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
                                   Idioma da interface da aplicação
                                 </FormDescription>
                                 <FormMessage />
@@ -367,13 +416,19 @@ const Settings = () => {
                           name="unit_preference"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="flex items-center gap-2 text-sm font-medium">
+                              <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
                                 <Ruler className="w-4 h-4" />
                                 Sistema de unidades
                               </FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  handleSettingChange('unit_preference', value);
+                                }} 
+                                value={field.value}
+                              >
                                 <FormControl>
-                                  <SelectTrigger className="h-11">
+                                  <SelectTrigger className="h-11 dark:bg-gray-700 dark:border-gray-600">
                                     <SelectValue placeholder="Selecione um sistema" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -382,7 +437,7 @@ const Settings = () => {
                                   <SelectItem value="imperial">📐 Imperial (ft, ft², ft³)</SelectItem>
                                 </SelectContent>
                               </Select>
-                              <FormDescription className="text-xs text-gray-500">
+                              <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
                                 Sistema de medidas usado nos cálculos
                               </FormDescription>
                               <FormMessage />
@@ -390,23 +445,29 @@ const Settings = () => {
                           )}
                         />
 
-                        <div className="pt-4 border-t border-gray-100">
-                          <div className="flex items-center gap-2 mb-2">
+                        <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <div className="flex items-center gap-2 mb-4">
                             <Info className="w-4 h-4 text-blue-500" />
-                            <span className="text-sm font-medium text-gray-700">Status das configurações</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status das configurações</span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                              <Check className="w-4 h-4 text-green-600" />
-                              <span className="text-green-700">Tema: {settings?.theme || 'Carregando...'}</span>
+                            <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                              <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                              <span className="text-green-700 dark:text-green-300">
+                                Tema: {settings?.theme === 'light' ? '🌞 Claro' : settings?.theme === 'dark' ? '🌙 Escuro' : '💻 Sistema'}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                              <Check className="w-4 h-4 text-blue-600" />
-                              <span className="text-blue-700">Idioma: {settings?.language || 'Carregando...'}</span>
+                            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                              <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <span className="text-blue-700 dark:text-blue-300">
+                                Idioma: {settings?.language === 'pt-BR' ? '🇧🇷 PT' : settings?.language === 'en-US' ? '🇺🇸 EN' : '🇪🇸 ES'}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg">
-                              <Check className="w-4 h-4 text-purple-600" />
-                              <span className="text-purple-700">Unidades: {settings?.unit_preference || 'Carregando...'}</span>
+                            <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                              <Check className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                              <span className="text-purple-700 dark:text-purple-300">
+                                Unidades: {settings?.unit_preference === 'metric' ? '📏 Métrico' : '📐 Imperial'}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -693,11 +754,11 @@ const Settings = () => {
                     </Card>
                   </TabsContent>
 
-                  <div className="flex justify-end pt-6 border-t border-gray-200">
+                  <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
                     <Button 
                       type="submit" 
                       disabled={isSaving}
-                      className="w-full lg:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                      className="w-full lg:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
                     >
                       {isSaving ? (
                         <>
