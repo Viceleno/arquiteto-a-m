@@ -1,5 +1,2 @@
 
-// Fixes "Cannot find module 'jspdf'" and "jspdf-autotable" errors in TypeScript
-
-declare module 'jspdf';
-declare module 'jspdf-autotable';
+// This file can be used for any custom module declarations if needed in the future
