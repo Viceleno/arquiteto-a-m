@@ -25,11 +25,11 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
         case 'select':
           return (
             <Select 
-              value={String(values[input.key] || input.defaultValue || '')} 
+              value={String(values[input.key] || '')} 
               onValueChange={(value) => onChange(input.key, value)}
             >
               <SelectTrigger className="h-11 bg-background border-input hover:border-primary/50 transition-colors">
-                <SelectValue placeholder="Selecione uma opção" />
+                <SelectValue placeholder={input.placeholder || "Selecione uma opção..."} />
               </SelectTrigger>
               <SelectContent className="bg-background border-border">
                 {input.options?.map((option) => (
@@ -49,7 +49,7 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
           return (
             <Input
               type="number"
-              value={values[input.key] ?? input.defaultValue ?? ''}
+              value={values[input.key] ?? ''}
               onChange={(e) => {
                 const value = e.target.value;
                 onChange(input.key, value === '' ? '' : parseFloat(value) || 0);
@@ -57,7 +57,7 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
               min={input.min}
               max={input.max}
               step="0.01"
-              placeholder={input.unit ? `Digite o valor em ${input.unit}` : 'Digite o valor'}
+              placeholder={input.placeholder || `Digite o valor${input.unit ? ` em ${input.unit}` : ''}...`}
               className="h-11 bg-background border-input hover:border-primary/50 focus:border-primary transition-colors"
             />
           );
@@ -66,10 +66,10 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
           return (
             <Input
               type="text"
-              value={String(values[input.key] || input.defaultValue || '')}
+              value={String(values[input.key] || '')}
               onChange={(e) => onChange(input.key, e.target.value)}
               className="h-11 bg-background border-input hover:border-primary/50 focus:border-primary transition-colors"
-              placeholder="Digite o valor"
+              placeholder={input.placeholder || "Digite o valor..."}
             />
           );
       }
@@ -83,7 +83,7 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
               <Label htmlFor={input.key} className="text-sm font-semibold text-foreground leading-tight">
                 {input.label}
                 {input.unit && <span className="text-muted-foreground ml-1 font-normal">({input.unit})</span>}
-                {input.required && <span className="text-destructive ml-1">*</span>}
+                {input.required && <span className="text-red-500 ml-1 text-base">*</span>}
               </Label>
               {input.tooltip && (
                 <TooltipProvider>
@@ -103,6 +103,11 @@ export const MaterialInputRenderer: React.FC<MaterialInputRendererProps> = ({
             <Calculator className="w-4 h-4 text-muted-foreground" />
           </div>
           {inputElement()}
+          {input.helpText && (
+            <p className="text-xs text-muted-foreground italic">
+              {input.helpText}
+            </p>
+          )}
           {input.min !== undefined && input.max !== undefined && (
             <p className="text-xs text-muted-foreground">
               Valor entre {input.min} e {input.max} {input.unit || ''}

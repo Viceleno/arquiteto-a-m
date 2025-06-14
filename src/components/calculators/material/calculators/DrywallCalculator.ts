@@ -6,36 +6,39 @@ import { MaterialValidator } from '../MaterialValidation';
 const inputs: MaterialInput[] = [
   {
     key: 'area',
-    label: 'Área da Parede (m²)',
+    label: 'Área da Parede',
     type: 'number',
     required: true,
     min: 0.1,
-    tooltip: 'Área total da parede em drywall'
+    unit: 'm²',
+    placeholder: 'Ex: 15.5',
+    helpText: 'Informe a área total da parede em drywall',
+    tooltip: 'Área total da parede que será revestida com drywall'
   },
   {
     key: 'plateThickness',
-    label: 'Espessura da Placa (mm)',
+    label: 'Espessura da Placa',
     type: 'select',
-    defaultValue: '12.5',
     required: true,
+    placeholder: 'Selecione a espessura...',
     options: [
-      { value: '9.5', label: '9,5mm - Standard' },
+      { value: '9.5', label: '9,5mm - Standard (áreas secas)' },
       { value: '12.5', label: '12,5mm - Resistente à umidade' },
       { value: '15', label: '15mm - Resistente ao fogo' }
     ],
-    tooltip: 'Espessura da placa de drywall'
+    tooltip: 'A espessura varia conforme o ambiente e necessidades específicas'
   },
   {
     key: 'sides',
     label: 'Número de Faces',
     type: 'select',
-    defaultValue: '2',
     required: true,
+    placeholder: 'Selecione o número de faces...',
     options: [
-      { value: '1', label: '1 face (revestimento)' },
-      { value: '2', label: '2 faces (parede completa)' }
+      { value: '1', label: '1 face (revestimento de parede)' },
+      { value: '2', label: '2 faces (parede divisória completa)' }
     ],
-    tooltip: 'Quantidade de faces a revestir'
+    tooltip: 'Define se é revestimento de parede existente ou parede nova'
   }
 ];
 

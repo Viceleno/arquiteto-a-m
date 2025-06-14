@@ -6,33 +6,38 @@ import { MaterialValidator } from '../MaterialValidation';
 const inputs: MaterialInput[] = [
   {
     key: 'area',
-    label: 'Área do Ambiente (m²)',
+    label: 'Área do Ambiente',
     type: 'number',
     required: true,
     min: 0.1,
-    tooltip: 'Área total do ambiente a ser iluminado'
+    unit: 'm²',
+    placeholder: 'Ex: 25.5',
+    helpText: 'Informe a área total do ambiente que será iluminado',
+    tooltip: 'Área total do ambiente a ser iluminado em metros quadrados'
   },
   {
     key: 'ambientType',
     label: 'Tipo de Ambiente',
     type: 'select',
-    defaultValue: 'regular',
     required: true,
+    placeholder: 'Selecione o tipo de ambiente...',
     options: [
-      { value: 'excellent', label: 'Escritório/Cozinha (excelente)' },
-      { value: 'good', label: 'Sala/Quarto (boa)' },
-      { value: 'regular', label: 'Corredor/Banheiro (regular)' }
+      { value: 'excellent', label: 'Escritório/Cozinha (excelente iluminação)' },
+      { value: 'good', label: 'Sala/Quarto (boa iluminação)' },
+      { value: 'regular', label: 'Corredor/Banheiro (iluminação regular)' }
     ],
-    tooltip: 'Nível de iluminação necessário'
+    tooltip: 'Cada ambiente requer um nível diferente de iluminação conforme NBR 5413'
   },
   {
     key: 'lampPower',
-    label: 'Potência da Lâmpada (W)',
+    label: 'Potência da Lâmpada',
     type: 'number',
-    defaultValue: 9,
     min: 1,
     max: 100,
-    tooltip: 'Potência individual de cada lâmpada LED'
+    unit: 'W',
+    placeholder: 'Ex: 9',
+    helpText: 'Potência individual de cada lâmpada LED que será utilizada',
+    tooltip: 'Potência individual de cada lâmpada LED em watts'
   }
 ];
 

@@ -5,33 +5,39 @@ import { MaterialValidator } from '../MaterialValidation';
 const inputs: MaterialInput[] = [
   {
     key: 'area',
-    label: 'Área (m²)',
+    label: 'Área a Concretar',
     type: 'number',
     required: true,
     min: 0.1,
-    tooltip: 'Área a ser concretada'
+    unit: 'm²',
+    placeholder: 'Ex: 50.0',
+    helpText: 'Informe a área total que receberá o concreto',
+    tooltip: 'Área em metros quadrados que será concretada'
   },
   {
     key: 'thickness',
-    label: 'Espessura (cm)',
+    label: 'Espessura da Laje',
     type: 'number',
-    defaultValue: 10,
+    required: true,
     min: 5,
     max: 50,
-    tooltip: 'Espessura da laje de concreto'
+    unit: 'cm',
+    placeholder: 'Ex: 12',
+    helpText: 'Espessura típica: 10-15cm para lajes residenciais',
+    tooltip: 'Espessura da laje de concreto em centímetros'
   },
   {
     key: 'concreteType',
-    label: 'Tipo de Concreto',
+    label: 'Resistência do Concreto',
     type: 'select',
-    defaultValue: 'fck25',
     required: true,
+    placeholder: 'Selecione a resistência...',
     options: [
-      { value: 'fck20', label: 'FCK 20 MPa' },
-      { value: 'fck25', label: 'FCK 25 MPa' },
-      { value: 'fck30', label: 'FCK 30 MPa' }
+      { value: 'fck20', label: 'FCK 20 MPa (uso residencial)' },
+      { value: 'fck25', label: 'FCK 25 MPa (uso geral)' },
+      { value: 'fck30', label: 'FCK 30 MPa (uso estrutural)' }
     ],
-    tooltip: 'Resistência do concreto'
+    tooltip: 'FCK é a resistência característica do concreto à compressão'
   }
 ];
 

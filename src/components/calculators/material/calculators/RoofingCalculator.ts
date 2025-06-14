@@ -6,34 +6,39 @@ import { MaterialValidator } from '../MaterialValidation';
 const inputs: MaterialInput[] = [
   {
     key: 'area',
-    label: 'Área do Telhado (m²)',
+    label: 'Área do Telhado',
     type: 'number',
     required: true,
     min: 0.1,
-    tooltip: 'Área total do telhado'
+    unit: 'm²',
+    placeholder: 'Ex: 80.5',
+    helpText: 'Informe a área total da superfície do telhado',
+    tooltip: 'Área total do telhado em metros quadrados, incluindo beirais'
   },
   {
     key: 'tileType',
     label: 'Tipo de Telha',
     type: 'select',
-    defaultValue: 'ceramic',
     required: true,
+    placeholder: 'Selecione o tipo de telha...',
     options: [
-      { value: 'ceramic', label: 'Cerâmica' },
-      { value: 'concrete', label: 'Concreto' },
-      { value: 'fiber', label: 'Fibrocimento' },
-      { value: 'metal', label: 'Metálica' }
+      { value: 'ceramic', label: 'Cerâmica (16 telhas/m²)' },
+      { value: 'concrete', label: 'Concreto (10,5 telhas/m²)' },
+      { value: 'fiber', label: 'Fibrocimento (5,1 telhas/m²)' },
+      { value: 'metal', label: 'Metálica (4 telhas/m²)' }
     ],
-    tooltip: 'Material da telha'
+    tooltip: 'Cada tipo de telha tem uma quantidade específica por metro quadrado'
   },
   {
     key: 'slope',
-    label: 'Inclinação (%)',
+    label: 'Inclinação do Telhado',
     type: 'number',
-    defaultValue: 30,
     min: 5,
     max: 100,
-    tooltip: 'Inclinação do telhado em percentual'
+    unit: '%',
+    placeholder: 'Ex: 30',
+    helpText: 'Inclinação recomendada: 25-35% para telhas cerâmicas',
+    tooltip: 'Inclinação do telhado em percentual - afeta a quantidade de materiais'
   }
 ];
 

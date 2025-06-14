@@ -6,33 +6,38 @@ import { MaterialValidator } from '../MaterialValidation';
 const inputs: MaterialInput[] = [
   {
     key: 'area',
-    label: 'Área da Parede (m²)',
+    label: 'Área da Parede',
     type: 'number',
     required: true,
     min: 0.1,
-    tooltip: 'Área total da parede a ser construída'
+    unit: 'm²',
+    placeholder: 'Ex: 20.0',
+    helpText: 'Informe a área total da parede a ser construída',
+    tooltip: 'Área total da parede em metros quadrados, descontando portas e janelas'
   },
   {
     key: 'brickType',
     label: 'Tipo de Tijolo',
     type: 'select',
-    defaultValue: 'ceramic',
     required: true,
+    placeholder: 'Selecione o tipo de tijolo...',
     options: [
-      { value: 'ceramic', label: 'Cerâmico comum (9x19x19cm)' },
-      { value: 'ceramic6holes', label: 'Cerâmico 6 furos (11x14x24cm)' },
-      { value: 'concrete', label: 'Concreto (14x19x39cm)' }
+      { value: 'ceramic', label: 'Cerâmico comum 9x19x19cm (48 un/m²)' },
+      { value: 'ceramic6holes', label: 'Cerâmico 6 furos 11x14x24cm (25 un/m²)' },
+      { value: 'concrete', label: 'Concreto 14x19x39cm (12,5 un/m²)' }
     ],
-    tooltip: 'Tipo e dimensões do tijolo'
+    tooltip: 'Cada tipo de tijolo tem dimensões e quantidades específicas por m²'
   },
   {
     key: 'mortarThickness',
-    label: 'Espessura da Argamassa (cm)',
+    label: 'Espessura da Argamassa',
     type: 'number',
-    defaultValue: 2,
     min: 0.5,
     max: 5,
-    tooltip: 'Espessura da junta de argamassa'
+    unit: 'cm',
+    placeholder: 'Ex: 1.5',
+    helpText: 'Espessura típica: 1-2cm para juntas regulares',
+    tooltip: 'Espessura da junta de argamassa entre os tijolos'
   }
 ];
 

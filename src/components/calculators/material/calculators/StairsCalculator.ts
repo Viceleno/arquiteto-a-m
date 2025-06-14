@@ -6,30 +6,38 @@ import { MaterialValidator } from '../MaterialValidation';
 const inputs: MaterialInput[] = [
   {
     key: 'totalHeight',
-    label: 'Altura Total (cm)',
+    label: 'Altura Total',
     type: 'number',
     required: true,
     min: 50,
     max: 500,
-    tooltip: 'Altura total que a escada deve vencer'
+    unit: 'cm',
+    placeholder: 'Ex: 280',
+    helpText: 'Altura total do piso inferior ao superior',
+    tooltip: 'Altura total que a escada deve vencer, do piso térreo ao piso superior'
   },
   {
     key: 'availableLength',
-    label: 'Comprimento Disponível (cm)',
+    label: 'Comprimento Disponível',
     type: 'number',
     required: true,
     min: 100,
     max: 1000,
-    tooltip: 'Comprimento disponível para a escada'
+    unit: 'cm',
+    placeholder: 'Ex: 350',
+    helpText: 'Espaço disponível para construção da escada',
+    tooltip: 'Comprimento total disponível para a construção da escada'
   },
   {
     key: 'stepWidth',
-    label: 'Largura do Degrau (cm)',
+    label: 'Largura do Degrau',
     type: 'number',
-    defaultValue: 80,
     min: 60,
     max: 150,
-    tooltip: 'Largura útil da escada'
+    unit: 'cm',
+    placeholder: 'Ex: 80',
+    helpText: 'Largura mínima recomendada: 80cm residencial',
+    tooltip: 'Largura útil da escada - mínimo 80cm para uso residencial'
   }
 ];
 

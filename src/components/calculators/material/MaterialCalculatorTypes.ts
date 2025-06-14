@@ -1,4 +1,3 @@
-
 export interface MaterialInput {
   key: string;
   label: string;
@@ -10,6 +9,8 @@ export interface MaterialInput {
   required?: boolean;
   options?: { value: string; label: string }[];
   tooltip?: string;
+  placeholder?: string;
+  helpText?: string;
 }
 
 export interface MaterialResult {
