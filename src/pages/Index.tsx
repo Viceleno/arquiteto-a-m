@@ -5,9 +5,8 @@ import { Calculator, History, User, TrendingUp, Clock, BookOpen, Zap } from 'luc
 import { CalculatorGrid } from '@/components/CalculatorGrid';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
@@ -53,12 +52,12 @@ const Index = () => {
                   Plataforma Profissional
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 leading-tight">
-                  Calculadora de
-                  <span className="text-blue-600 block sm:inline sm:ml-3">Arquitetura</span>
+                  Bem-vindo ao
+                  <span className="text-blue-600 block sm:inline sm:ml-3">ArqCalc</span>
                 </h1>
                 <p className="text-lg text-gray-600 max-w-2xl">
-                  Ferramentas profissionais para cálculos arquitetônicos, estimativas de materiais e conversões. 
-                  Desenvolvido com base em normas técnicas brasileiras.
+                  Suas ferramentas profissionais para cálculos arquitetônicos estão prontas para uso. 
+                  Desenvolvido com base em normas técnicas brasileiras para resultados precisos.
                 </p>
               </div>
 
@@ -82,61 +81,33 @@ const Index = () => {
                 ))}
               </div>
             </div>
-            
-            {/* User Authentication Card - Only show if not logged in */}
-            {!user && (
-              <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
+
+            {/* User Welcome Message */}
+            <div className="mb-8">
+              <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200 shadow-sm">
                 <CardHeader className="pb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                      <User className="w-6 h-6 text-white" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-green-900 text-xl">
+                          Olá, {user?.email?.split('@')[0]}! 👋
+                        </CardTitle>
+                        <CardDescription className="text-green-700 text-base">
+                          Seus cálculos são salvos automaticamente. Escolha uma calculadora abaixo para começar.
+                        </CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-blue-900 text-xl">Maximize seu potencial</CardTitle>
-                      <CardDescription className="text-blue-700 text-base">
-                        Crie uma conta para salvar seus cálculos e acessar recursos exclusivos
-                      </CardDescription>
-                    </div>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Conta Ativa
+                    </Badge>
                   </div>
                 </CardHeader>
-                <CardFooter className="pt-0">
-                  <Button 
-                    onClick={() => navigate('/auth')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 h-auto text-base font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    <User className="mr-2 h-5 w-5" />
-                    Criar conta gratuita
-                  </Button>
-                </CardFooter>
               </Card>
-            )}
-
-            {/* User Welcome Message - Simple and Clean */}
-            {user && (
-              <div className="mb-8">
-                <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200 shadow-sm">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
-                          <User className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-green-900 text-xl">Olá, {user.email?.split('@')[0]}! 👋</CardTitle>
-                          <CardDescription className="text-green-700 text-base">
-                            Seus cálculos são salvos automaticamente. Use as calculadoras abaixo para começar.
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        <Clock className="w-3 h-3 mr-1" />
-                        Conta Ativa
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                </Card>
-              </div>
-            )}
+            </div>
             
             {/* Calculator Grid - Main Focus */}
             <div>
