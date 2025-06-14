@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, History, FileText, Settings, Home, Ruler, HardHat, DollarSign } from 'lucide-react';
+import { Calculator, History, Settings, Home, Ruler, HardHat, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
