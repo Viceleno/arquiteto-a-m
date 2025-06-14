@@ -64,10 +64,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       if (data) {
+        // Safe type casting with validation
+        const theme = ['light', 'dark', 'system'].includes(data.theme) ? data.theme as 'light' | 'dark' | 'system' : defaultSettings.theme;
+        const language = ['pt-BR', 'en-US', 'es'].includes(data.language) ? data.language as 'pt-BR' | 'en-US' | 'es' : defaultSettings.language;
+        const unit_preference = ['metric', 'imperial'].includes(data.unit_preference) ? data.unit_preference as 'metric' | 'imperial' : defaultSettings.unit_preference;
+        
         setSettings({
-          theme: data.theme || defaultSettings.theme,
-          language: data.language || defaultSettings.language,
-          unit_preference: data.unit_preference || defaultSettings.unit_preference,
+          theme,
+          language,
+          unit_preference,
           default_margin: data.default_margin ?? defaultSettings.default_margin,
           auto_save_calculations: data.auto_save_calculations ?? defaultSettings.auto_save_calculations,
           decimal_places: data.decimal_places ?? defaultSettings.decimal_places,

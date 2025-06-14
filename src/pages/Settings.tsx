@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -105,10 +104,21 @@ const Settings = () => {
         }
 
         if (settingsData || profileData) {
+          // Safe type casting with validation
+          const theme = settingsData?.theme && ['light', 'dark', 'system'].includes(settingsData.theme) 
+            ? settingsData.theme as 'light' | 'dark' | 'system' 
+            : 'light';
+          const language = settingsData?.language && ['pt-BR', 'en-US', 'es'].includes(settingsData.language) 
+            ? settingsData.language as 'pt-BR' | 'en-US' | 'es' 
+            : 'pt-BR';
+          const unit_preference = settingsData?.unit_preference && ['metric', 'imperial'].includes(settingsData.unit_preference) 
+            ? settingsData.unit_preference as 'metric' | 'imperial' 
+            : 'metric';
+
           form.reset({
-            theme: settingsData?.theme || 'light',
-            language: settingsData?.language || 'pt-BR',
-            unit_preference: settingsData?.unit_preference || 'metric',
+            theme,
+            language,
+            unit_preference,
             default_margin: settingsData?.default_margin || 10,
             auto_save_calculations: settingsData?.auto_save_calculations ?? true,
             decimal_places: settingsData?.decimal_places || 2,

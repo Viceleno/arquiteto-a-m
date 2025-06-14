@@ -42,6 +42,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          company: string | null
           full_name: string | null
           id: string
           updated_at: string | null
@@ -49,6 +51,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
           full_name?: string | null
           id: string
           updated_at?: string | null
@@ -56,6 +60,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string | null
@@ -65,21 +71,45 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          auto_save_calculations: boolean | null
+          calculation_reminders: boolean | null
+          data_analytics: boolean | null
+          decimal_places: number | null
+          default_margin: number | null
+          email_notifications: boolean | null
           language: string | null
+          push_notifications: boolean | null
+          share_calculations: boolean | null
           theme: string | null
           unit_preference: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          auto_save_calculations?: boolean | null
+          calculation_reminders?: boolean | null
+          data_analytics?: boolean | null
+          decimal_places?: number | null
+          default_margin?: number | null
+          email_notifications?: boolean | null
           language?: string | null
+          push_notifications?: boolean | null
+          share_calculations?: boolean | null
           theme?: string | null
           unit_preference?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          auto_save_calculations?: boolean | null
+          calculation_reminders?: boolean | null
+          data_analytics?: boolean | null
+          decimal_places?: number | null
+          default_margin?: number | null
+          email_notifications?: boolean | null
           language?: string | null
+          push_notifications?: boolean | null
+          share_calculations?: boolean | null
           theme?: string | null
           unit_preference?: string | null
           updated_at?: string | null
@@ -96,6 +126,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           avatar_url: string | null
+          bio: string | null
+          company: string | null
           full_name: string | null
           id: string
           updated_at: string | null
