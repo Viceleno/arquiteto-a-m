@@ -1,73 +1,71 @@
-# Welcome to your Lovable project
+# Bem-vindo ao seu projeto Lovable
 
-## Project info
+## Informações do projeto
 
-**URL**: https://lovable.dev/projects/90d4a580-cf78-4bf7-827a-7dc181389b9c
+**URL:** https://lovable.dev/projects/90d4a580-cf78-4bf7-827a-7dc181389b9c
 
-## How can I edit this code?
+## Como editar este código?
 
-There are several ways of editing your application.
+Existem várias maneiras de editar sua aplicação:
 
-**Use Lovable**
+### Usando o Lovable
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/90d4a580-cf78-4bf7-827a-7dc181389b9c) and start prompting.
+* Acesse o **Lovable Project** e comece a enviar *prompts*.
+* As alterações feitas pelo Lovable serão commitadas automaticamente neste repositório.
 
-Changes made via Lovable will be committed automatically to this repo.
+### Usando sua IDE preferida
 
-**Use your preferred IDE**
+Se preferir trabalhar localmente, clone o repositório e envie as alterações via Git. As mudanças serão refletidas no Lovable.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Requisito:** Ter Node.js e npm instalados (recomendado usar nvm).
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Passos:
 
-Follow these steps:
+```bash
+# Passo 1: Clone o repositório usando a URL Git do projeto.
+git clone <SUA_URL_GIT>
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Passo 2: Acesse a pasta do projeto.
+cd <NOME_DO_SEU_PROJETO>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+# Passo 3: Instale as dependências.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Passo 4: Inicie o servidor de desenvolvimento (com recarregamento automático).
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Editar diretamente no GitHub
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Navegue até o arquivo desejado.
+2. Clique no botão "Edit" (ícone de lápis) no canto superior direito.
+3. Faça as alterações e commit.
 
-**Use GitHub Codespaces**
+### Usar GitHub Codespaces
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Acesse a página principal do repositório.
+2. Clique no botão "Code" (verde) no canto superior direito.
+3. Selecione a aba "Codespaces".
+4. Clique em "New codespace" para abrir um ambiente de edição online.
+5. Edite os arquivos e faça commit/push quando terminar.
 
-## What technologies are used for this project?
+## Quais tecnologias são usadas neste projeto?
 
-This project is built with:
+O projeto foi construído com:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+* **Vite**
+* **TypeScript**
+* **React**
+* **shadcn-ui**
+* **Tailwind CSS**
 
-## How can I deploy this project?
+## Como fazer o deploy deste projeto?
 
-Simply open [Lovable](https://lovable.dev/projects/90d4a580-cf78-4bf7-827a-7dc181389b9c) and click on Share -> Publish.
+Basta abrir o Lovable e clicar em **Share → Publish**.
 
-## Can I connect a custom domain to my Lovable project?
+## Posso conectar um domínio personalizado ao meu projeto Lovable?
 
-Yes, you can!
+**Sim!**
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+* Acesse **Project > Settings > Domains** e clique em **Connect Domain**.
+* Leia mais aqui: [Setting up a custom domain](https://docs.lovable.dev/tips/custom-domain)
