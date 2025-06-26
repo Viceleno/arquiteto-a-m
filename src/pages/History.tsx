@@ -1,7 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
+import { CalculationDetailModal } from '@/components/CalculationDetailModal';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, ArrowUpDown } from 'lucide-react';
+import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, ArrowUpDown, Eye } from 'lucide-react';
 
 interface Calculation {
   id: string;
@@ -30,6 +32,8 @@ const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'type' | 'name'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedCalculation, setSelectedCalculation] = useState<Calculation | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -38,7 +42,7 @@ const History = () => {
     }
   }, [user, loading, navigate]);
 
-  // Load calculations
+  // Load calculations from Supabase
   useEffect(() => {
     const fetchCalculations = async () => {
       if (!user) return;
@@ -54,6 +58,7 @@ const History = () => {
 
         setCalculations(data || []);
       } catch (error: any) {
+        console.error('Erro ao carregar histórico:', error);
         toast({
           title: 'Erro ao carregar histórico',
           description: error.message,
@@ -91,6 +96,11 @@ const History = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const viewCalculation = (calculation: Calculation) => {
+    setSelectedCalculation(calculation);
+    setIsDetailModalOpen(true);
   };
 
   const exportCalculationsJSON = () => {
@@ -135,7 +145,6 @@ const History = () => {
     txtContent += `Data de exportação: ${currentDate}\n`;
     txtContent += `Total de cálculos: ${calculations.length}\n\n`;
     
-    // Estatísticas rápidas
     const uniqueTypes = new Set(calculations.map(c => c.calculator_type));
     txtContent += '───────────────────────────────────────────────────────────────\n';
     txtContent += '                        RESUMO ESTATÍSTICO\n';
@@ -143,7 +152,6 @@ const History = () => {
     txtContent += `• Tipos de calculadoras utilizadas: ${uniqueTypes.size}\n`;
     txtContent += `• Último cálculo realizado: ${calculations.length > 0 ? formatDate(calculations[0].created_at) : 'N/A'}\n\n`;
     
-    // Lista detalhada dos cálculos
     txtContent += '───────────────────────────────────────────────────────────────\n';
     txtContent += '                      DETALHES DOS CÁLCULOS\n';
     txtContent += '───────────────────────────────────────────────────────────────\n\n';
@@ -153,7 +161,6 @@ const History = () => {
       txtContent += `   Nome: ${calc.name || 'Sem nome'}\n`;
       txtContent += `   Data: ${formatDate(calc.created_at)}\n`;
       
-      // Formatação do resultado
       let resultDisplay = '';
       if (calc.result && typeof calc.result === 'object') {
         if (calc.result.area) {
@@ -175,7 +182,6 @@ const History = () => {
       
       txtContent += `   Resultado: ${resultDisplay}\n`;
       
-      // Dados de entrada (se disponíveis)
       if (calc.input_data && typeof calc.input_data === 'object') {
         txtContent += `   Dados de entrada:\n`;
         Object.entries(calc.input_data).forEach(([key, value]) => {
@@ -191,13 +197,11 @@ const History = () => {
       }
     });
     
-    // Rodapé
     txtContent += '\n═══════════════════════════════════════════════════════════════\n';
     txtContent += '              Arquivo gerado pelo ArquiCalc\n';
     txtContent += '          Sistema de Cálculos para Arquitetura\n';
     txtContent += '═══════════════════════════════════════════════════════════════\n';
     
-    // Download do arquivo
     const dataBlob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -422,7 +426,6 @@ const History = () => {
                       </TableHeader>
                       <TableBody>
                         {filteredCalculations.map((calc) => {
-                          // Format the result for display
                           let resultDisplay = '';
                           if (calc.result && typeof calc.result === 'object') {
                             if (calc.result.area) {
@@ -458,14 +461,24 @@ const History = () => {
                                 {resultDisplay}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => deleteCalculation(calc.id)}
-                                  className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <div className="flex justify-end space-x-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => viewCalculation(calc)}
+                                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => deleteCalculation(calc.id)}
+                                    className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           );
@@ -479,6 +492,15 @@ const History = () => {
           </div>
         </main>
       </div>
+
+      <CalculationDetailModal
+        calculation={selectedCalculation}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedCalculation(null);
+        }}
+      />
     </div>
   );
 };

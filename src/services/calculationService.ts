@@ -43,7 +43,7 @@ export const useCalculationService = () => {
       if (success) {
         toast({
           title: 'Cálculo salvo',
-          description: 'Seu cálculo foi salvo com sucesso.',
+          description: 'Seu cálculo foi salvo com sucesso no banco de dados.',
         });
         return true;
       } else {
