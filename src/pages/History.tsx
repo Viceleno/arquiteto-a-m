@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { CalculationDetailModal } from '@/components/CalculationDetailModal';
+import { HistorySkeleton } from '@/components/skeletons/HistorySkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -331,16 +332,9 @@ const History = () => {
     )
   );
 
-  // Prevent flash of empty data
+  // Prevent flash of empty data - show skeleton while loading
   if (loading || (user && isLoading)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando histórico...</p>
-        </div>
-      </div>
-    );
+    return <HistorySkeleton />;
   }
 
   return (

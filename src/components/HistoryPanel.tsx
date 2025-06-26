@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { History, FileText, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { HistoryPanelSkeleton } from '@/components/skeletons/HistoryPanelSkeleton';
 
 export const HistoryPanel = () => {
   const [calculationCount, setCalculationCount] = useState(0);
@@ -38,6 +38,11 @@ export const HistoryPanel = () => {
 
     fetchCalculationCount();
   }, [user]);
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <HistoryPanelSkeleton />;
+  }
 
   return (
     <Card className="w-full max-w-2xl">

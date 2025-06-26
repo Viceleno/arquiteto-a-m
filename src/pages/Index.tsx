@@ -1,17 +1,22 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calculator, History, User, TrendingUp, Clock, BookOpen, Zap } from 'lucide-react';
 import { CalculatorGrid } from '@/components/CalculatorGrid';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
+import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Show skeleton while auth is loading
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   const quickStats = [
     { 
