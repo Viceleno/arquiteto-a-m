@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -73,6 +72,91 @@ const History = () => {
       fetchCalculations();
     }
   }, [user, toast]);
+
+  // Função para formatar o resultado para exibição na tabela
+  const formatResultDisplay = (calc: Calculation): string => {
+    if (!calc.result || typeof calc.result !== 'object') {
+      return 'Sem resultado';
+    }
+
+    const result = calc.result;
+
+    // Área
+    if (result.area) {
+      const area = parseFloat(result.area);
+      return `${area.toFixed(2)} m²`;
+    }
+
+    // Volume
+    if (result.volume) {
+      const volume = parseFloat(result.volume);
+      return `${volume.toFixed(2)} m³`;
+    }
+
+    // Custo total com BDI
+    if (result.totalCostWithBDI) {
+      const cost = parseFloat(result.totalCostWithBDI);
+      return `R$ ${cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    // Custo total sem BDI
+    if (result.totalCost) {
+      const cost = parseFloat(result.totalCost);
+      return `R$ ${cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    // Materiais - mostra o primeiro material com quantidade
+    if (result.materials && typeof result.materials === 'object') {
+      const materials = Object.entries(result.materials);
+      if (materials.length > 0) {
+        const [materialName, materialData] = materials[0];
+        if (typeof materialData === 'object' && materialData !== null && (materialData as any).quantity) {
+          return `${(materialData as any).quantity} ${(materialData as any).unit || ''} de ${materialName}`;
+        } else {
+          return `${String(materialData)} ${materialName}`;
+        }
+      }
+    }
+
+    // Tijolos
+    if (result.totalBricks) {
+      return `${result.totalBricks} tijolos`;
+    }
+
+    // Sacos de cimento
+    if (result.cementBags) {
+      return `${result.cementBags} sacos de cimento`;
+    }
+
+    // Latas de tinta
+    if (result.paintCans) {
+      return `${result.paintCans} latas de tinta`;
+    }
+
+    // Se houver outros resultados numéricos, mostra o primeiro
+    const numericResults = Object.entries(result).filter(([key, value]) => {
+      return typeof value === 'number' || (!isNaN(parseFloat(String(value))) && isFinite(parseFloat(String(value))));
+    });
+
+    if (numericResults.length > 0) {
+      const [key, value] = numericResults[0];
+      const numValue = parseFloat(String(value));
+      
+      // Verifica se é um valor monetário
+      if (key.toLowerCase().includes('cost') || key.toLowerCase().includes('custo')) {
+        return `R$ ${numValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      }
+      
+      // Verifica se é porcentagem
+      if (key.toLowerCase().includes('bdi') || key.toLowerCase().includes('margin')) {
+        return `${numValue}%`;
+      }
+      
+      return `${numValue.toFixed(2)}`;
+    }
+
+    return 'Ver detalhes';
+  };
 
   const deleteCalculation = async (id: string) => {
     try {
@@ -160,27 +244,7 @@ const History = () => {
       txtContent += `${index + 1}. ${calc.calculator_type.toUpperCase()}\n`;
       txtContent += `   Nome: ${calc.name || 'Sem nome'}\n`;
       txtContent += `   Data: ${formatDate(calc.created_at)}\n`;
-      
-      let resultDisplay = '';
-      if (calc.result && typeof calc.result === 'object') {
-        if (calc.result.area) {
-          resultDisplay = `${parseFloat(calc.result.area).toFixed(2)} ${calc.result.unit || 'm²'}`;
-        } else if (calc.result.volume) {
-          resultDisplay = `${parseFloat(calc.result.volume).toFixed(2)} ${calc.result.unit || 'm³'}`;
-        } else if (calc.result.totalBricks) {
-          resultDisplay = `${calc.result.totalBricks} tijolos`;
-        } else if (calc.result.cementBags) {
-          resultDisplay = `${calc.result.cementBags} sacos de cimento`;
-        } else if (calc.result.totalCostWithBDI) {
-          resultDisplay = `R$ ${parseFloat(calc.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        } else {
-          resultDisplay = 'Resultado complexo - verificar detalhes no sistema';
-        }
-      } else {
-        resultDisplay = 'Sem resultado disponível';
-      }
-      
-      txtContent += `   Resultado: ${resultDisplay}\n`;
+      txtContent += `   Resultado: ${formatResultDisplay(calc)}\n`;
       
       if (calc.input_data && typeof calc.input_data === 'object') {
         txtContent += `   Dados de entrada:\n`;
@@ -426,23 +490,6 @@ const History = () => {
                       </TableHeader>
                       <TableBody>
                         {filteredCalculations.map((calc) => {
-                          let resultDisplay = '';
-                          if (calc.result && typeof calc.result === 'object') {
-                            if (calc.result.area) {
-                              resultDisplay = `${parseFloat(calc.result.area).toFixed(2)} ${calc.result.unit || 'm²'}`;
-                            } else if (calc.result.volume) {
-                              resultDisplay = `${parseFloat(calc.result.volume).toFixed(2)} ${calc.result.unit || 'm³'}`;
-                            } else if (calc.result.totalBricks) {
-                              resultDisplay = `${calc.result.totalBricks} tijolos`;
-                            } else if (calc.result.cementBags) {
-                              resultDisplay = `${calc.result.cementBags} sacos`;
-                            } else if (calc.result.totalCostWithBDI) {
-                              resultDisplay = `R$ ${parseFloat(calc.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                            } else {
-                              resultDisplay = 'Ver detalhes';
-                            }
-                          }
-                          
                           return (
                             <TableRow key={calc.id} className="hover:bg-blue-50/50 transition-colors border-gray-100">
                               <TableCell>
@@ -458,7 +505,7 @@ const History = () => {
                                 {formatDate(calc.created_at)}
                               </TableCell>
                               <TableCell className="font-medium text-gray-900">
-                                {resultDisplay}
+                                {formatResultDisplay(calc)}
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end space-x-2">

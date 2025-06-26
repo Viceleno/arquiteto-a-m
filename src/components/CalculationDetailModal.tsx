@@ -53,6 +53,76 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
     return <Badge variant="outline">{type}</Badge>;
   };
 
+  const formatInputLabel = (key: string) => {
+    const labelMap: { [key: string]: string } = {
+      length: 'Comprimento (m)',
+      width: 'Largura (m)',
+      height: 'Altura (m)',
+      diameter: 'Diâmetro (m)',
+      radius: 'Raio (m)',
+      thickness: 'Espessura (m)',
+      area: 'Área (m²)',
+      rooms: 'Número de Cômodos',
+      windows: 'Número de Janelas',
+      doors: 'Número de Portas',
+      wallHeight: 'Altura da Parede (m)',
+      wallLength: 'Comprimento da Parede (m)',
+      brickType: 'Tipo de Tijolo',
+      mortarType: 'Tipo de Argamassa',
+      cementType: 'Tipo de Cimento',
+      flooringType: 'Tipo de Piso',
+      paintType: 'Tipo de Tinta',
+      roofType: 'Tipo de Telhado',
+      quantity: 'Quantidade',
+      unitCost: 'Custo Unitário (R$)',
+      laborCost: 'Custo de Mão de Obra (R$)',
+      bdi: 'BDI (%)',
+      margin: 'Margem (%)',
+      materialType: 'Tipo de Material',
+      calculationType: 'Tipo de Cálculo'
+    };
+    
+    return labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+  };
+
+  const formatInputValue = (key: string, value: any) => {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    
+    // Valores monetários
+    if (key.toLowerCase().includes('cost') || key.toLowerCase().includes('custo')) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        return `R$ ${numValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      }
+    }
+    
+    // Porcentagens
+    if (key.toLowerCase().includes('bdi') || key.toLowerCase().includes('margin') || key.toLowerCase().includes('margem')) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        return `${numValue}%`;
+      }
+    }
+    
+    // Medidas
+    if (['length', 'width', 'height', 'diameter', 'radius', 'thickness', 'wallHeight', 'wallLength'].includes(key)) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        return `${numValue} m`;
+      }
+    }
+    
+    // Área
+    if (key === 'area') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        return `${numValue} m²`;
+      }
+    }
+    
+    return String(value);
+  };
+
   const renderInputData = () => {
     if (!calculation.input_data || typeof calculation.input_data !== 'object') {
       return <p className="text-gray-500">Dados de entrada não disponíveis</p>;
@@ -65,10 +135,10 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           
           return (
             <div key={key} className="flex justify-between items-center py-2 border-b">
-              <span className="font-medium text-gray-700 capitalize">
-                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+              <span className="font-medium text-gray-700">
+                {formatInputLabel(key)}:
               </span>
-              <span className="text-gray-900">{String(value)}</span>
+              <span className="text-gray-900 font-semibold">{formatInputValue(key, value)}</span>
             </div>
           );
         })}
@@ -83,25 +153,27 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
 
     return (
       <div className="space-y-4">
-        {/* Resultado Principal */}
+        {/* Área Calculada */}
         {calculation.result.area && (
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2">Área Calculada</h4>
+            <h4 className="font-semibold text-blue-900 mb-2">Área Total</h4>
             <p className="text-2xl font-bold text-blue-800">
-              {parseFloat(calculation.result.area).toFixed(2)} {calculation.result.unit || 'm²'}
+              {parseFloat(calculation.result.area).toFixed(2)} m²
             </p>
           </div>
         )}
 
+        {/* Volume Calculado */}
         {calculation.result.volume && (
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2">Volume Calculado</h4>
+            <h4 className="font-semibold text-blue-900 mb-2">Volume Total</h4>
             <p className="text-2xl font-bold text-blue-800">
-              {parseFloat(calculation.result.volume).toFixed(2)} {calculation.result.unit || 'm³'}
+              {parseFloat(calculation.result.volume).toFixed(2)} m³
             </p>
           </div>
         )}
 
+        {/* Custo Total com BDI */}
         {calculation.result.totalCostWithBDI && (
           <div className="bg-green-50 p-4 rounded-lg">
             <h4 className="font-semibold text-green-900 mb-2">Custo Total com BDI</h4>
@@ -111,32 +183,108 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           </div>
         )}
 
-        {/* Materiais */}
-        {calculation.result.materials && (
+        {/* Custo Total sem BDI */}
+        {calculation.result.totalCost && (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-gray-900 mb-2">Custo Total</h4>
+            <p className="text-xl font-bold text-gray-800">
+              R$ {parseFloat(calculation.result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        )}
+
+        {/* Materiais Necessários */}
+        {calculation.result.materials && Object.keys(calculation.result.materials).length > 0 && (
           <div className="bg-orange-50 p-4 rounded-lg">
             <h4 className="font-semibold text-orange-900 mb-3">Materiais Necessários</h4>
             <div className="space-y-2">
-              {Object.entries(calculation.result.materials).map(([material, quantity]) => (
-                <div key={material} className="flex justify-between items-center">
-                  <span className="text-orange-800 capitalize">{material}:</span>
-                  <span className="font-semibold text-orange-900">{String(quantity)}</span>
-                </div>
-              ))}
+              {Object.entries<any>(calculation.result.materials).map(([material, data]) => {
+                if (typeof data === 'object' && data !== null) {
+                  return (
+                    <div key={material} className="border-b pb-2 last:border-b-0">
+                      <div className="font-medium text-orange-800 capitalize mb-1">{material}:</div>
+                      <div className="ml-2 space-y-1">
+                        {data.quantity && (
+                          <div className="text-sm text-orange-700">
+                            Quantidade: <span className="font-semibold">{data.quantity} {data.unit || ''}</span>
+                          </div>
+                        )}
+                        {data.cost && (
+                          <div className="text-sm text-orange-700">
+                            Custo: <span className="font-semibold">R$ {parseFloat(data.cost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={material} className="flex justify-between items-center">
+                      <span className="text-orange-800 capitalize">{material}:</span>
+                      <span className="font-semibold text-orange-900">{String(data)}</span>
+                    </div>
+                  );
+                }
+              })}
             </div>
           </div>
         )}
 
-        {/* Outros resultados */}
+        {/* Resultados específicos para diferentes tipos de cálculo */}
+        {calculation.result.totalBricks && (
+          <div className="bg-red-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-red-900 mb-2">Tijolos Necessários</h4>
+            <p className="text-xl font-bold text-red-800">
+              {calculation.result.totalBricks} unidades
+            </p>
+          </div>
+        )}
+
+        {calculation.result.cementBags && (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-gray-900 mb-2">Sacos de Cimento</h4>
+            <p className="text-xl font-bold text-gray-800">
+              {calculation.result.cementBags} sacos
+            </p>
+          </div>
+        )}
+
+        {calculation.result.paintCans && (
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-yellow-900 mb-2">Latas de Tinta</h4>
+            <p className="text-xl font-bold text-yellow-800">
+              {calculation.result.paintCans} latas
+            </p>
+          </div>
+        )}
+
+        {/* Outros resultados detalhados */}
         {Object.entries(calculation.result).map(([key, value]) => {
-          if (['area', 'volume', 'totalCostWithBDI', 'materials', 'unit'].includes(key)) return null;
+          if (['area', 'volume', 'totalCostWithBDI', 'totalCost', 'materials', 'totalBricks', 'cementBags', 'paintCans'].includes(key)) return null;
           if (value === null || value === undefined) return null;
+
+          const isNumeric = !isNaN(Number(value));
+          const isCost = key.toLowerCase().includes('cost') || key.toLowerCase().includes('custo');
+          const isPercentage = key.toLowerCase().includes('bdi') || key.toLowerCase().includes('margin');
+
+          let displayValue = String(value);
+          if (isNumeric) {
+            const numValue = parseFloat(String(value));
+            if (isCost) {
+              displayValue = `R$ ${numValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+            } else if (isPercentage) {
+              displayValue = `${numValue}%`;
+            } else {
+              displayValue = numValue.toFixed(2);
+            }
+          }
 
           return (
             <div key={key} className="flex justify-between items-center py-2 border-b">
               <span className="font-medium text-gray-700 capitalize">
-                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                {formatInputLabel(key)}:
               </span>
-              <span className="text-gray-900 font-semibold">{String(value)}</span>
+              <span className="text-gray-900 font-semibold">{displayValue}</span>
             </div>
           );
         })}
