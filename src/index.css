@@ -90,6 +90,42 @@
   }
 }
 
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* Touch targets */
+  button, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile-first responsive utilities */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

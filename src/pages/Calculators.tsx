@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { Sidebar } from '@/components/Sidebar';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { AreaCalculator } from '@/components/calculators/AreaCalculator';
 import { MaterialCalculator } from '@/components/calculators/MaterialCalculator';
 import { CostCalculator } from '@/components/calculators/CostCalculator';
@@ -54,13 +53,8 @@ const Calculators = () => {
   const currentInfo = type ? calculatorInfo[type as keyof typeof calculatorInfo] : null;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/20">
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
-      <div className="flex-1 w-full">
-        <Header />
-        <main className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+    <ResponsiveLayout>
+      <div className="w-full space-y-6">{/* ... keep existing code */}
           {type && currentInfo ? (
             <div className="w-full space-y-6">
               {/* Calculator Header */}
@@ -186,9 +180,8 @@ const Calculators = () => {
               </div>
             </div>
           )}
-        </main>
       </div>
-    </div>
+    </ResponsiveLayout>
   );
 };
 

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { Sidebar } from '@/components/Sidebar';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { CalculationDetailModal } from '@/components/CalculationDetailModal';
 import { ShareCalculationModal } from '@/components/ShareCalculationModal';
 import { HistorySkeleton } from '@/components/skeletons/HistorySkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useMobile } from '@/hooks/useMobile';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ interface Calculation {
 
 const History = () => {
   const { user, loading } = useAuth();
+  const isMobile = useMobile();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [calculations, setCalculations] = useState<Calculation[]>([]);
@@ -345,208 +346,259 @@ const History = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-4 sm:p-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Page Header */}
-            <div className="mb-8">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <HistoryIcon className="w-8 h-8 text-white" />
+    <ResponsiveLayout>
+      <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-6 lg:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
+              <HistoryIcon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                Histórico de Cálculos
+              </h1>
+              <p className="text-gray-600 text-base lg:text-lg">
+                Acesse e gerencie todos os seus cálculos anteriores
+              </p>
+            </div>
+          </div>
+          
+          {calculations.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Calculator className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">{calculations.length}</div>
+                      <div className="text-sm text-gray-600">Cálculos realizados</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {calculations.length > 0 ? formatDate(calculations[0].created_at).split(' ')[0] : '-'}
+                      </div>
+                      <div className="text-sm text-gray-600">Último cálculo</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {new Set(calculations.map(c => c.calculator_type)).size}
+                      </div>
+                      <div className="text-sm text-gray-600">Tipos diferentes</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+
+        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+              <CardTitle className="text-xl font-bold text-gray-900">Seus Cálculos</CardTitle>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Pesquisar cálculos..."
+                    className="pl-10 w-full sm:w-[250px] bg-white/70 border-gray-200"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-                    Histórico de Cálculos
-                  </h1>
-                  <p className="text-gray-600 text-lg">
-                    Acesse e gerencie todos os seus cálculos anteriores
-                  </p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    }}
+                    className="bg-white/70 border-gray-200"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportCalculationsTXT} 
+                    className="bg-white/70 border-gray-200"
+                    disabled={calculations.length === 0}
+                  >
+                    <FileDown className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              
-              {calculations.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Calculator className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900">{calculations.length}</div>
-                          <div className="text-sm text-gray-600">Cálculos realizados</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                          <Calendar className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {calculations.length > 0 ? formatDate(calculations[0].created_at).split(' ')[0] : '-'}
-                          </div>
-                          <div className="text-sm text-gray-600">Último cálculo</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {new Set(calculations.map(c => c.calculator_type)).size}
-                          </div>
-                          <div className="text-sm text-gray-600">Tipos diferentes</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
             </div>
-
-            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
-                  <CardTitle className="text-xl font-bold text-gray-900">Seus Cálculos</CardTitle>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Pesquisar cálculos..."
-                        className="pl-10 w-full sm:w-[250px] bg-white/70 border-gray-200"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                        }}
-                        className="bg-white/70 border-gray-200"
-                      >
-                        <ArrowUpDown className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={exportCalculationsTXT} 
-                        className="bg-white/70 border-gray-200"
-                        disabled={calculations.length === 0}
-                      >
-                        <FileDown className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredCalculations.length === 0 ? (
+              <div className="text-center py-12 lg:py-16">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-8 h-8 lg:w-10 lg:h-10 text-gray-300" />
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {filteredCalculations.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                      <FileText className="w-10 h-10 text-gray-300" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {calculations.length > 0 ? 'Nenhum resultado encontrado' : 'Nenhum cálculo encontrado'}
-                    </h3>
-                    <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                      {calculations.length > 0 
-                        ? 'Tente uma pesquisa diferente ou limpe os filtros para ver todos os cálculos' 
-                        : 'Seus cálculos aparecerão aqui automaticamente quando você usar nossas calculadoras'}
-                    </p>
-                    {calculations.length === 0 && (
-                      <Button onClick={() => navigate('/calculators')} className="bg-blue-600 hover:bg-blue-700">
-                        <Calculator className="w-4 h-4 mr-2" />
-                        Fazer primeiro cálculo
-                      </Button>
-                    )}
+                <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">
+                  {calculations.length > 0 ? 'Nenhum resultado encontrado' : 'Nenhum cálculo encontrado'}
+                </h3>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto px-4">
+                  {calculations.length > 0 
+                    ? 'Tente uma pesquisa diferente ou limpe os filtros para ver todos os cálculos' 
+                    : 'Seus cálculos aparecerão aqui automaticamente quando você usar nossas calculadoras'}
+                </p>
+                {calculations.length === 0 && (
+                  <Button onClick={() => navigate('/calculators')} className="bg-blue-600 hover:bg-blue-700">
+                    <Calculator className="w-4 h-4 mr-2" />
+                    Fazer primeiro cálculo
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-auto">
+                {isMobile ? (
+                  // Mobile card view
+                  <div className="p-4 space-y-3">
+                    {filteredCalculations.map((calc) => (
+                      <Card key={calc.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-2 flex-1 min-w-0">
+                              {getCalculatorTypeIcon(calc.calculator_type)}
+                              {getCalculatorTypeBadge(calc.calculator_type)}
+                            </div>
+                            <div className="flex space-x-1 ml-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => viewCalculation(calc)}
+                                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => shareCalculation(calc)}
+                                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+                              >
+                                <Share2 className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => deleteCalculation(calc.id)}
+                                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div>
+                              <div className="text-sm text-gray-500">Nome</div>
+                              <div className="font-medium text-gray-900 truncate">{calc.name || '-'}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500">Resultado</div>
+                              <div className="font-medium text-gray-900">{formatResultDisplay(calc)}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500">Data</div>
+                              <div className="text-sm text-gray-600">{formatDate(calc.created_at)}</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 ) : (
-                  <div className="overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-gray-100">
-                          <TableHead className="font-semibold text-gray-700">Tipo</TableHead>
-                          <TableHead className="font-semibold text-gray-700">Nome</TableHead>
-                          <TableHead className="font-semibold text-gray-700">Data</TableHead>
-                          <TableHead className="font-semibold text-gray-700">Resultado</TableHead>
-                          <TableHead className="text-right font-semibold text-gray-700">Ações</TableHead>
+                  // Desktop table view
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-gray-100">
+                        <TableHead className="font-semibold text-gray-700">Tipo</TableHead>
+                        <TableHead className="font-semibold text-gray-700">Nome</TableHead>
+                        <TableHead className="font-semibold text-gray-700">Data</TableHead>
+                        <TableHead className="font-semibold text-gray-700">Resultado</TableHead>
+                        <TableHead className="text-right font-semibold text-gray-700">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCalculations.map((calc) => (
+                        <TableRow key={calc.id} className="hover:bg-blue-50/50 transition-colors border-gray-100">
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              {getCalculatorTypeIcon(calc.calculator_type)}
+                              {getCalculatorTypeBadge(calc.calculator_type)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium text-gray-900">
+                            {calc.name || '-'}
+                          </TableCell>
+                          <TableCell className="text-gray-600">
+                            {formatDate(calc.created_at)}
+                          </TableCell>
+                          <TableCell className="font-medium text-gray-900">
+                            {formatResultDisplay(calc)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => viewCalculation(calc)}
+                                className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => shareCalculation(calc)}
+                                className="hover:bg-green-50 hover:text-green-600 transition-colors"
+                              >
+                                <Share2 className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => deleteCalculation(calc.id)}
+                                className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredCalculations.map((calc) => {
-                          return (
-                            <TableRow key={calc.id} className="hover:bg-blue-50/50 transition-colors border-gray-100">
-                              <TableCell>
-                                <div className="flex items-center space-x-3">
-                                  {getCalculatorTypeIcon(calc.calculator_type)}
-                                  {getCalculatorTypeBadge(calc.calculator_type)}
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-medium text-gray-900">
-                                {calc.name || '-'}
-                              </TableCell>
-                              <TableCell className="text-gray-600">
-                                {formatDate(calc.created_at)}
-                              </TableCell>
-                              <TableCell className="font-medium text-gray-900">
-                                {formatResultDisplay(calc)}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                   <Button 
-                                     variant="ghost" 
-                                     size="sm" 
-                                     onClick={() => viewCalculation(calc)}
-                                     className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                   >
-                                     <Eye className="h-4 w-4" />
-                                   </Button>
-                                   <Button 
-                                     variant="ghost" 
-                                     size="sm" 
-                                     onClick={() => shareCalculation(calc)}
-                                     className="hover:bg-green-50 hover:text-green-600 transition-colors"
-                                   >
-                                     <Share2 className="h-4 w-4" />
-                                   </Button>
-                                   <Button 
-                                     variant="ghost" 
-                                     size="sm" 
-                                     onClick={() => deleteCalculation(calc.id)}
-                                     className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                                   >
-                                     <Trash2 className="h-4 w-4" />
-                                   </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <CalculationDetailModal
@@ -567,7 +619,7 @@ const History = () => {
           setSelectedCalculation(null);
         }}
       />
-    </div>
+    </ResponsiveLayout>
   );
 };
 
