@@ -69,6 +69,47 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_calculations: {
+        Row: {
+          calculation_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          share_token: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          calculation_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          share_token?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          calculation_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          share_token?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_calculations_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           auto_save_calculations: boolean | null
@@ -133,6 +174,23 @@ export type Database = {
           updated_at: string | null
           username: string | null
         }
+      }
+      get_shared_calculation: {
+        Args: { token: string }
+        Returns: {
+          calculation_id: string
+          calculator_type: string
+          name: string
+          input_data: Json
+          result: Json
+          created_at: string
+          share_expires_at: string
+          is_active: boolean
+        }[]
+      }
+      increment_share_view_count: {
+        Args: { token: string }
+        Returns: undefined
       }
     }
     Enums: {

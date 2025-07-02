@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, Calendar, User, FileText, Download } from 'lucide-react';
+import { Calculator, Calendar, User, FileText, Download, Share2 } from 'lucide-react';
+import { ShareCalculationModal } from '@/components/ShareCalculationModal';
 
 interface Calculation {
   id: string;
@@ -20,13 +21,17 @@ interface CalculationDetailModalProps {
   calculation: Calculation | null;
   isOpen: boolean;
   onClose: () => void;
+  showShareButton?: boolean;
 }
 
 export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
   calculation,
   isOpen,
   onClose,
+  showShareButton = true,
 }) => {
+  const [showShareModal, setShowShareModal] = React.useState(false);
+  
   if (!calculation) return null;
 
   const formatDate = (dateString: string) => {
@@ -376,6 +381,12 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
 
           {/* Ações */}
           <div className="flex justify-end space-x-3 pt-4">
+            {showShareButton && (
+              <Button variant="outline" onClick={() => setShowShareModal(true)}>
+                <Share2 className="w-4 h-4 mr-2" />
+                Compartilhar
+              </Button>
+            )}
             <Button variant="outline" onClick={exportCalculation}>
               <Download className="w-4 h-4 mr-2" />
               Exportar Cálculo
@@ -386,6 +397,14 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           </div>
         </div>
       </DialogContent>
+
+      {/* Modal de compartilhamento */}
+      <ShareCalculationModal
+        calculationId={calculation.id}
+        calculationName={calculation.name || 'Cálculo sem nome'}
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+      />
     </Dialog>
   );
 };

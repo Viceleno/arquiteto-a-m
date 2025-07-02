@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { CalculationDetailModal } from '@/components/CalculationDetailModal';
+import { ShareCalculationModal } from '@/components/ShareCalculationModal';
 import { HistorySkeleton } from '@/components/skeletons/HistorySkeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, ArrowUpDown, Eye } from 'lucide-react';
+import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, ArrowUpDown, Eye, Share2 } from 'lucide-react';
 
 interface Calculation {
   id: string;
@@ -34,6 +35,7 @@ const History = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedCalculation, setSelectedCalculation] = useState<Calculation | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -186,6 +188,11 @@ const History = () => {
   const viewCalculation = (calculation: Calculation) => {
     setSelectedCalculation(calculation);
     setIsDetailModalOpen(true);
+  };
+
+  const shareCalculation = (calculation: Calculation) => {
+    setSelectedCalculation(calculation);
+    setIsShareModalOpen(true);
   };
 
   const exportCalculationsJSON = () => {
@@ -503,22 +510,30 @@ const History = () => {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end space-x-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => viewCalculation(calc)}
-                                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => deleteCalculation(calc.id)}
-                                    className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                   <Button 
+                                     variant="ghost" 
+                                     size="sm" 
+                                     onClick={() => viewCalculation(calc)}
+                                     className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                   >
+                                     <Eye className="h-4 w-4" />
+                                   </Button>
+                                   <Button 
+                                     variant="ghost" 
+                                     size="sm" 
+                                     onClick={() => shareCalculation(calc)}
+                                     className="hover:bg-green-50 hover:text-green-600 transition-colors"
+                                   >
+                                     <Share2 className="h-4 w-4" />
+                                   </Button>
+                                   <Button 
+                                     variant="ghost" 
+                                     size="sm" 
+                                     onClick={() => deleteCalculation(calc.id)}
+                                     className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                                   >
+                                     <Trash2 className="h-4 w-4" />
+                                   </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -539,6 +554,16 @@ const History = () => {
         isOpen={isDetailModalOpen}
         onClose={() => {
           setIsDetailModalOpen(false);
+          setSelectedCalculation(null);
+        }}
+      />
+
+      <ShareCalculationModal
+        calculationId={selectedCalculation?.id || null}
+        calculationName={selectedCalculation?.name || 'Cálculo sem nome'}
+        isOpen={isShareModalOpen}
+        onClose={() => {
+          setIsShareModalOpen(false);
           setSelectedCalculation(null);
         }}
       />
