@@ -21,13 +21,18 @@ export const HistoryPanel = () => {
       }
 
       try {
+        console.log('HistoryPanel: Buscando cálculos para user_id:', user.id);
         const { count, error } = await supabase
           .from('calculations')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('HistoryPanel: Erro na query:', error);
+          throw error;
+        }
 
+        console.log('HistoryPanel: Contagem de cálculos encontrada:', count);
         setCalculationCount(count || 0);
       } catch (error) {
         console.error('Erro ao buscar contagem de cálculos:', error);

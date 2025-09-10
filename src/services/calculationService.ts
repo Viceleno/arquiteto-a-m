@@ -14,6 +14,9 @@ export const saveCalculation = async (data: CalculationData) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error('Usuário não autenticado');
 
+    console.log('calculationService: Salvando cálculo para user_id:', userData.user.id);
+    console.log('calculationService: Dados do cálculo:', data);
+
     const { error } = await supabase
       .from('calculations')
       .insert({
@@ -24,8 +27,12 @@ export const saveCalculation = async (data: CalculationData) => {
         name: data.name,
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('calculationService: Erro na inserção:', error);
+      throw error;
+    }
 
+    console.log('calculationService: Cálculo salvo com sucesso');
     return true;
   } catch (error) {
     console.error('Erro ao salvar cálculo:', error);
