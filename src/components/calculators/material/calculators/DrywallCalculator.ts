@@ -57,7 +57,9 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const sides = MaterialValidator.sanitizeNumericInput(inputs.sides, 2);
   
   const plateArea = MATERIAL_CONSTANTS.DRYWALL.PLATE_SIZE.width * MATERIAL_CONSTANTS.DRYWALL.PLATE_SIZE.height;
-  const totalArea = area * sides;
+  // Aplicar fator de perdas de 10% para drywall
+  const adjustedArea = area * 1.10;
+  const totalArea = adjustedArea * sides;
   
   const platesNeeded = Math.ceil(totalArea / plateArea);
   const screwsNeeded = platesNeeded * MATERIAL_CONSTANTS.DRYWALL.SCREWS_PER_PLATE;
@@ -65,7 +67,8 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
 
   return {
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
-    totalArea: { value: totalArea.toFixed(2), unit: 'm²', category: 'info' },
+    adjustedArea: { value: adjustedArea.toFixed(2), unit: 'm² (com perdas)', category: 'info' },
+    totalArea: { value: totalArea.toFixed(2), unit: 'm² total', category: 'info' },
     platesNeeded: { value: platesNeeded, unit: 'placas', highlight: true, category: 'primary' },
     screwsNeeded: { value: screwsNeeded, unit: 'parafusos', category: 'secondary' },
     massaKg: { value: massaKg, unit: 'kg massa', category: 'secondary' },

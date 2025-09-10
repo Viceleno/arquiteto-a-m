@@ -88,7 +88,9 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const surfaceType = inputs.surfaceType as string;
   const paintType = inputs.paintType as string;
 
-  const paintableArea = Math.max(0, wallArea - openings);
+  const netArea = Math.max(0, wallArea - openings);
+  // Aplicar fator de perdas de 5% para pintura (NBR 15079)
+  const paintableArea = netArea * 1.05;
 
   // Definir rendimento baseado no tipo de tinta e superfície
   let coverage = 12; // m²/L padrão
@@ -129,7 +131,8 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   
   let result: MaterialResult = {
     // Informações básicas
-    paintableArea: { value: paintableArea.toFixed(2), unit: 'm²', category: 'info' },
+    netArea: { value: netArea.toFixed(2), unit: 'm²', category: 'info' },
+    paintableArea: { value: paintableArea.toFixed(2), unit: 'm² (com perdas)', category: 'info' },
     coats: { value: coats, unit: 'demãos', category: 'info' },
     coverage: { value: coverage, unit: 'm²/L', category: 'info' },
     surfaceType: { value: surfaceType, unit: '', category: 'info' },

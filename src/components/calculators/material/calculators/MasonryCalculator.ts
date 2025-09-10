@@ -97,6 +97,9 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const renderThickness = MaterialValidator.sanitizeNumericInput(inputs.renderThickness, 2.0);
   const faces = inputs.faces as string;
 
+  // Aplicar fator de perdas de 5% para alvenaria (NBR 15270)
+  const adjustedArea = area * 1.05;
+
   const brickData = MATERIAL_CONSTANTS.MASONRY.BRICK_TYPES[brickType];
   
   if (!brickData) {
@@ -105,12 +108,12 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     };
   }
 
-  // Cálculo de tijolos
-  const bricksNeeded = Math.ceil(area * brickData.bricksPerM2);
+  // Cálculo de tijolos com perdas
+  const bricksNeeded = Math.ceil(adjustedArea * brickData.bricksPerM2);
 
   // Cálculo da argamassa de assentamento (NBR 8545)
-  // Volume = área × espessura da junta
-  const mortarVolumeM3 = area * (mortarThickness / 100);
+  // Volume = área × espessura da junta (com perdas)
+  const mortarVolumeM3 = adjustedArea * (mortarThickness / 100);
   
   // Traço 1:3 (cimento:areia) para assentamento - NBR 8545
   // Para 1m³ de argamassa: 310kg cimento + 1.100kg areia + 195L água
@@ -121,6 +124,7 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   let result: MaterialResult = {
     // Informações básicas
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
+    adjustedArea: { value: adjustedArea.toFixed(2), unit: 'm² (com perdas)', category: 'info' },
     brickType: { value: `${brickData.width}x${brickData.height}x${brickData.length}cm`, unit: '', category: 'info' },
     
     // Materiais principais
@@ -137,10 +141,10 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     mortarThickness: { value: mortarThickness.toFixed(1), unit: 'cm', category: 'info' }
   };
 
-  // Cálculo do reboco se solicitado
+  // Cálculo do reboco se necessário
   if (includeRender === 'yes') {
-    const numFaces = faces === 'two' ? 2 : 1;
-    const renderArea = area * numFaces;
+    const facesMultiplier = faces === 'one' ? 1 : 2;
+    const renderArea = adjustedArea * facesMultiplier;
     
     // Volume do reboco
     const renderVolumeM3 = renderArea * (renderThickness / 100);
@@ -164,7 +168,7 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
       renderArea: { value: renderArea.toFixed(2), unit: 'm²', category: 'info' },
       renderVolumeM3: { value: renderVolumeM3.toFixed(3), unit: 'm³', category: 'secondary' },
       renderThickness: { value: renderThickness.toFixed(1), unit: 'cm', category: 'info' },
-      faces: { value: numFaces === 2 ? '2 faces' : '1 face', unit: '', category: 'info' },
+      faces: { value: facesMultiplier === 2 ? '2 faces' : '1 face', unit: '', category: 'info' },
       
       cementRenderKg: { value: cementRenderKg, unit: 'kg', category: 'primary' },
       limeRenderKg: { value: limeRenderKg, unit: 'kg', highlight: true, category: 'primary' },
