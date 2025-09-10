@@ -51,19 +51,14 @@ const History = () => {
       if (!user) return;
 
       try {
-        console.log('History: Buscando cálculos para user_id:', user.id);
         const { data, error } = await supabase
           .from('calculations')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('History: Erro na query:', error);
-          throw error;
-        }
+        if (error) throw error;
 
-        console.log('History: Cálculos encontrados:', data?.length || 0);
         setCalculations(data || []);
       } catch (error: any) {
         console.error('Erro ao carregar histórico:', error);

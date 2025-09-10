@@ -84,7 +84,9 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
       bdi: 'BDI (%)',
       margin: 'Margem (%)',
       materialType: 'Tipo de Material',
-      calculationType: 'Tipo de Cálculo'
+      calculationType: 'Tipo de Cálculo',
+      material: 'Material',
+      complexity: 'Complexidade'
     };
     
     return labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
@@ -198,8 +200,78 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           </div>
         )}
 
-        {/* Materiais Necessários */}
-        {calculation.result.materials && Object.keys(calculation.result.materials).length > 0 && (
+        {/* Detalhes dos Materiais - Nova estrutura com materialDetails */}
+        {calculation.result.materialDetails && Array.isArray(calculation.result.materialDetails) && (
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-orange-900 mb-3">Detalhamento de Materiais</h4>
+            <div className="space-y-4">
+              {/* Resumo por categoria */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="bg-blue-100 p-3 rounded">
+                  <h5 className="font-semibold text-blue-900 text-sm">Total de Materiais</h5>
+                  <p className="text-xl font-bold text-blue-800">
+                    R$ {(calculation.result.materialTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <div className="bg-green-100 p-3 rounded">
+                  <h5 className="font-semibold text-green-900 text-sm">Mão de Obra</h5>
+                  <p className="text-xl font-bold text-green-800">
+                    R$ {(calculation.result.laborTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <div className="bg-gray-100 p-3 rounded">
+                  <h5 className="font-semibold text-gray-900 text-sm">Custo por m²</h5>
+                  <p className="text-xl font-bold text-gray-800">
+                    R$ {(calculation.result.costPerM2 || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Lista detalhada de materiais */}
+              <div className="space-y-3">
+                {calculation.result.materialDetails.map((item: any, index: number) => (
+                  <div key={index} className="bg-white border border-orange-200 rounded-lg p-3 shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h6 className="font-semibold text-gray-900">{item.name}</h6>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {item.category === 'material' ? '🧱 Material Principal' : 
+                           item.category === 'auxiliary' ? '🔧 Material Auxiliar' : '📋 Item'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-lg text-gray-900">
+                          R$ {item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Quantidade:</span>
+                        <div className="font-semibold">{item.quantity.toLocaleString('pt-BR')} {item.unit}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Preço Unit.:</span>
+                        <div className="font-semibold">R$ {item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                      </div>
+                      <div className="md:col-span-2">
+                        <div className="bg-gray-100 rounded p-2">
+                          <div className="text-xs text-gray-600">Cálculo:</div>
+                          <div className="font-mono text-xs">
+                            {item.quantity.toLocaleString('pt-BR')} × R$ {item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = R$ {item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Materiais Necessários - Estrutura antiga (fallback) */}
+        {!calculation.result.materialDetails && calculation.result.materials && Object.keys(calculation.result.materials).length > 0 && (
           <div className="bg-orange-50 p-4 rounded-lg">
             <h4 className="font-semibold text-orange-900 mb-3">Materiais Necessários</h4>
             <div className="space-y-2">
@@ -263,10 +335,16 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           </div>
         )}
 
-        {/* Outros resultados detalhados */}
+         {/* Outros resultados detalhados */}
         {Object.entries(calculation.result).map(([key, value]) => {
-          if (['area', 'volume', 'totalCostWithBDI', 'totalCost', 'materials', 'totalBricks', 'cementBags', 'paintCans'].includes(key)) return null;
-          if (value === null || value === undefined) return null;
+          // Ignora campos já exibidos ou campos internos
+          const excludedFields = [
+            'area', 'volume', 'totalCostWithBDI', 'totalCost', 'materials', 'materialDetails',
+            'totalBricks', 'cementBags', 'paintCans', 'materialTotal', 'laborTotal', 
+            'subtotal', 'bdiAmount', 'costPerM2'
+          ];
+          
+          if (excludedFields.includes(key) || value === null || value === undefined) return null;
 
           const isNumeric = !isNaN(Number(value));
           const isCost = key.toLowerCase().includes('cost') || key.toLowerCase().includes('custo');
@@ -282,6 +360,11 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             } else {
               displayValue = numValue.toFixed(2);
             }
+          }
+
+          // Traduz valores específicos
+          if (key === 'complexity') {
+            displayValue = displayValue === 'simple' ? 'Simples' : displayValue === 'complex' ? 'Complexa' : displayValue;
           }
 
           return (
