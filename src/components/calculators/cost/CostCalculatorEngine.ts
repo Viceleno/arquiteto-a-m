@@ -6,7 +6,8 @@ export class CostCalculatorEngine {
     materialKey: string,
     area: number,
     complexity: keyof typeof complexityFactors,
-    bdiPercentage: number = 20
+    bdiPercentage: number = 20,
+    customPrices: Record<string, number> = {}
   ): CostResult {
     const materialData = materialsDatabase[materialKey];
     if (!materialData) {
@@ -25,15 +26,17 @@ export class CostCalculatorEngine {
     const quantityWithWaste = quantity * (1 + materialData.wastePercentage / 100);
 
     // Calcular materiais e insumos
-    const materialDetails = materialData.compositions.map(item => {
+    const materialDetails = materialData.compositions.map((item, index) => {
       const itemQuantity = quantityWithWaste * item.consumption;
-      const total = itemQuantity * item.unitPrice;
+      const customPriceKey = `${materialKey}_${index}`;
+      const unitPrice = customPrices[customPriceKey] || item.unitPrice;
+      const total = itemQuantity * unitPrice;
       
       return {
         name: item.name,
         quantity: Number(itemQuantity.toFixed(3)),
         unit: item.unit,
-        unitPrice: item.unitPrice,
+        unitPrice: unitPrice,
         total: Number(total.toFixed(2)),
         category: item.category,
       };

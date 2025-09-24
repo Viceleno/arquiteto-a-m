@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp, Zap, Clock } from 'lucide-react';
+import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp, Zap, Clock, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +28,8 @@ export const CostCalculator = () => {
   const [result, setResult] = useState<CostResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
+  const [showCustomPrices, setShowCustomPrices] = useState(false);
 
   const calculateCosts = () => {
     const areaNumber = parseFloat(area);
@@ -69,7 +71,8 @@ export const CostCalculator = () => {
         material,
         areaNumber,
         complexity as keyof typeof complexityFactors,
-        bdiNumber
+        bdiNumber,
+        customPrices
       );
       
       setResult(calculationResult);
@@ -100,12 +103,13 @@ export const CostCalculator = () => {
     
     await saveCalculation({
       calculator_type: 'Estimativa de Custos Detalhada',
-      input_data: {
-        material,
-        area: parseFloat(area),
-        complexity,
-        bdi: parseFloat(bdi) || 20
-      },
+        input_data: {
+          material,
+          area: parseFloat(area),
+          complexity,
+          bdi: parseFloat(bdi) || 20,
+          customPrices
+        },
       result,
       name: `${result.material} - ${area}m² (${complexity})`
     });
@@ -317,6 +321,84 @@ export const CostCalculator = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Customização de Preços */}
+          {material && (
+            <Card className="border-orange-200 dark:border-orange-800">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-xl flex items-center justify-center">
+                      <Edit3 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-orange-900 dark:text-orange-100">
+                        Valores Regionais
+                      </CardTitle>
+                      <CardDescription className="text-orange-700 dark:text-orange-300">
+                        Personalize os preços dos materiais conforme sua região
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCustomPrices(!showCustomPrices)}
+                    className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                  >
+                    {showCustomPrices ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <span className="ml-1">{showCustomPrices ? 'Ocultar' : 'Personalizar'}</span>
+                  </Button>
+                </div>
+              </CardHeader>
+              
+              {showCustomPrices && (
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <p className="text-sm text-orange-800 dark:text-orange-200 mb-3">
+                      <strong>Dica:</strong> Os valores padrão são baseados na tabela SINAPI. 
+                      Ajuste conforme os preços praticados em sua região.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {materialsDatabase[material]?.compositions.map((item, index) => (
+                      <Card key={index} className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20">
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-sm font-semibold">{item.name}</Label>
+                            <p className="text-xs text-muted-foreground">{item.unit}</p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-muted-foreground">R$</span>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder={item.unitPrice.toFixed(2)}
+                              value={customPrices[`${material}_${index}`] || ''}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                setCustomPrices(prev => ({
+                                  ...prev,
+                                  [`${material}_${index}`]: value
+                                }));
+                              }}
+                              className="h-9 text-sm"
+                            />
+                            <span className="text-xs text-muted-foreground">/{item.unit}</span>
+                          </div>
+                          <p className="text-xs text-orange-600 dark:text-orange-400">
+                            Padrão: R$ {item.unitPrice.toFixed(2)}
+                          </p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          )}
 
           {/* Seção educativa sobre Complexidade */}
           <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
