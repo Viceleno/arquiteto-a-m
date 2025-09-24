@@ -90,7 +90,19 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     return {};
   }
 
-  const area = MaterialValidator.sanitizeNumericInput(inputs.area, 0.1);
+  // Garantir que o valor da área seja corretamente processado
+  const inputArea = inputs.area;
+  let area: number;
+  
+  if (typeof inputArea === 'string') {
+    area = parseFloat(inputArea.replace(',', '.')) || 0.1;
+  } else {
+    area = Number(inputArea) || 0.1;
+  }
+  
+  // Garantir valor mínimo
+  area = Math.max(0.1, area);
+  
   const brickType = inputs.brickType as keyof typeof MATERIAL_CONSTANTS.MASONRY.BRICK_TYPES;
   const mortarThickness = MaterialValidator.sanitizeNumericInput(inputs.mortarThickness, 1.5);
   const includeRender = inputs.includeRender as string;
