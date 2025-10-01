@@ -59,7 +59,8 @@ const inputs: MaterialInput[] = [
       { value: 'ceramic6holes', label: 'Cerâmico 6 furos 11x14x24cm (25 un/m²)' },
       { value: 'concrete', label: 'Concreto 14x19x39cm (12,5 un/m²)' }
     ],
-    tooltip: 'Cada tipo de tijolo tem dimensões e quantidades específicas por m²'
+    helpText: 'CERÂMICO COMUM: Mais barato, paredes internas. CERÂMICO 6 FUROS: Melhor isolamento térmico/acústico, parede de vedação. CONCRETO: Mais resistente, estrutural, menos tijolos por m².',
+    tooltip: 'Escolha conforme função: vedação simples (comum), conforto (6 furos) ou estrutura (concreto)'
   },
   {
     key: 'mortarThickness',

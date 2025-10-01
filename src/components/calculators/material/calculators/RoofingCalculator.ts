@@ -38,7 +38,8 @@ const inputs: MaterialInput[] = [
       { value: 'fiber', label: 'Fibrocimento (5,1 telhas/m²)' },
       { value: 'metal', label: 'Metálica (4 telhas/m²)' }
     ],
-    tooltip: 'Cada tipo de telha tem quantidade específica por m² e estrutura diferente'
+    helpText: 'CERÂMICA: Tradicional, bonita, precisa estrutura de madeira robusta. CONCRETO: Mais durável que cerâmica, pesada. FIBROCIMENTO: Econômica, galpões, esquenta mais. METÁLICA: Leve, rápida, moderna, ideal para grandes vãos.',
+    tooltip: 'Escolha por: estética e tradição (cerâmica), economia (fibro), rapidez e leveza (metálica)'
   },
   {
     key: 'slope',

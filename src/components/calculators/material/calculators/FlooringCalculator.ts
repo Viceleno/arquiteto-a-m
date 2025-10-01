@@ -80,7 +80,8 @@ const inputs: MaterialInput[] = [
       { value: 'stone', label: 'Pedra Natural (argamassa + impermeabilizante)' },
       { value: 'vinyl', label: 'Vinílico/Laminado (cola específica)' }
     ],
-    tooltip: 'Tipo de material e método de instalação'
+    helpText: 'CERÂMICA/PORCELANATO: Ideal para cozinhas, banheiros e áreas molhadas. Durável e fácil de limpar. PEDRA NATURAL: Para áreas sofisticadas, requer impermeabilização. VINÍLICO: Econômico, confortável, ideal para quartos e salas.',
+    tooltip: 'Escolha conforme uso: áreas molhadas (cerâmica), alto padrão (pedra), conforto (vinílico)'
   }
 ];
 

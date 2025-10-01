@@ -61,7 +61,8 @@ const inputs: MaterialInput[] = [
       { value: 'wood', label: 'Madeira' },
       { value: 'metal', label: 'Metal/Ferro' }
     ],
-    tooltip: 'Tipo de superfície afeta o consumo de tinta e preparação'
+    helpText: 'LISA: Paredes internas com acabamento fino. TEXTURIZADA: Esconde imperfeições, moderna. CONCRETO: Estilo industrial, precisa selador. MADEIRA: Portas, janelas. METAL: Portões, grades.',
+    tooltip: 'Identifique o material da superfície - isso define preparação e consumo de tinta'
   },
   {
     key: 'paintType',
@@ -76,7 +77,8 @@ const inputs: MaterialInput[] = [
       { value: 'enamel', label: 'Esmalte sintético' },
       { value: 'epoxy', label: 'Tinta epóxi' }
     ],
-    tooltip: 'Cada tipo de tinta tem rendimento e aplicação específicos'
+    helpText: 'ACRÍLICA INTERNA: Quartos, salas (sem chuva). ACRÍLICA EXTERNA: Fachadas, muros. LÁTEX: Econômica para interiores. ESMALTE: Madeira e metal. EPÓXI: Pisos, áreas industriais.',
+    tooltip: 'Escolha conforme local: interno seco, externo com chuva, madeira/metal ou piso'
   },
   {
     key: 'coats',

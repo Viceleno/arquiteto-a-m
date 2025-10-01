@@ -59,7 +59,8 @@ const inputs: MaterialInput[] = [
       { value: '12.5', label: '12,5mm - Resistente à umidade' },
       { value: '15', label: '15mm - Resistente ao fogo' }
     ],
-    tooltip: 'A espessura varia conforme o ambiente e necessidades específicas'
+    helpText: '9,5mm: Quartos, salas, escritórios (áreas secas). 12,5mm: Banheiros, cozinhas, lavanderias (locais úmidos). 15mm: Escadas, garagens, saídas de emergência (proteção contra fogo).',
+    tooltip: 'Escolha por ambiente: seco (9,5mm), úmido (12,5mm) ou com exigência de segurança contra fogo (15mm)'
   },
   {
     key: 'sides',
