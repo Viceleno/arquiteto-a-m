@@ -5,15 +5,26 @@ import { MaterialValidator } from '../MaterialValidation';
 
 const inputs: MaterialInput[] = [
   {
-    key: 'area',
-    label: 'Área do Telhado',
+    key: 'length',
+    label: 'Comprimento do Telhado',
     type: 'number',
     required: true,
     min: 0.1,
-    unit: 'm²',
-    placeholder: 'Ex: 120.0',
-    helpText: 'Informe a área total da superfície do telhado',
-    tooltip: 'Área total do telhado em metros quadrados, incluindo beirais'
+    unit: 'm',
+    placeholder: 'Ex: 10.0',
+    helpText: 'Comprimento do telhado',
+    tooltip: 'Medida do comprimento incluindo beirais'
+  },
+  {
+    key: 'width',
+    label: 'Largura do Telhado',
+    type: 'number',
+    required: true,
+    min: 0.1,
+    unit: 'm',
+    placeholder: 'Ex: 8.0',
+    helpText: 'Largura do telhado',
+    tooltip: 'Medida da largura incluindo beirais'
   },
   {
     key: 'tileType',
@@ -54,7 +65,8 @@ const inputs: MaterialInput[] = [
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const validation = MaterialValidator.validateInputs(inputs, [
-    { field: 'area', required: true, min: 0.1 },
+    { field: 'length', required: true, min: 0.1 },
+    { field: 'width', required: true, min: 0.1 },
     { field: 'tileType', required: true }
   ]);
 
@@ -62,7 +74,9 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     return {};
   }
 
-  const area = MaterialValidator.sanitizeNumericInput(inputs.area, 0.1);
+  const length = MaterialValidator.sanitizeNumericInput(inputs.length, 0.1);
+  const width = MaterialValidator.sanitizeNumericInput(inputs.width, 0.1);
+  const area = length * width;
   const tileType = inputs.tileType as keyof typeof MATERIAL_CONSTANTS.ROOFING.TILE_TYPES;
   const slope = MaterialValidator.sanitizeNumericInput(inputs.slope, 30);
   const ridgeLength = MaterialValidator.sanitizeNumericInput(inputs.ridgeLength, 0);
@@ -89,6 +103,7 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
 
   let result: MaterialResult = {
     // Informações básicas
+    dimensions: { value: `${length.toFixed(2)} x ${width.toFixed(2)}`, unit: 'm', category: 'info' },
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
     adjustedArea: { value: adjustedArea.toFixed(2), unit: 'm²', category: 'info' },
     slope: { value: slope, unit: '%', category: 'info' },

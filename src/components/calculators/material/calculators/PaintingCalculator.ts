@@ -5,26 +5,48 @@ import { MaterialValidator } from '../MaterialValidation';
 
 const inputs: MaterialInput[] = [
   {
-    key: 'wallArea',
-    label: 'Área das Paredes',
+    key: 'length',
+    label: 'Comprimento Total das Paredes',
     type: 'number',
     required: true,
-    min: 1,
-    unit: 'm²',
-    placeholder: 'Ex: 120.0',
-    helpText: 'Área total das paredes a serem pintadas',
-    tooltip: 'Área total das paredes em metros quadrados'
+    min: 0.1,
+    unit: 'm',
+    placeholder: 'Ex: 24.0',
+    helpText: 'Soma de todos os comprimentos de paredes a pintar',
+    tooltip: 'Comprimento total de todas as paredes em metros'
   },
   {
-    key: 'openings',
-    label: 'Área de Vãos',
+    key: 'height',
+    label: 'Altura das Paredes',
     type: 'number',
-    defaultValue: 0,
+    required: true,
+    min: 0.1,
+    unit: 'm',
+    placeholder: 'Ex: 2.8',
+    helpText: 'Altura das paredes (pé-direito)',
+    tooltip: 'Altura padrão das paredes em metros'
+  },
+  {
+    key: 'doorCount',
+    label: 'Quantidade de Portas',
+    type: 'number',
     min: 0,
-    unit: 'm²',
-    placeholder: 'Ex: 15.0',
-    helpText: 'Área de portas e janelas (será descontada)',
-    tooltip: 'Área total de portas e janelas que não receberão tinta'
+    defaultValue: 0,
+    unit: 'unidades',
+    placeholder: 'Ex: 3',
+    helpText: 'Número total de portas (1,68m² cada)',
+    tooltip: 'Área de cada porta será descontada'
+  },
+  {
+    key: 'windowCount',
+    label: 'Quantidade de Janelas',
+    type: 'number',
+    min: 0,
+    defaultValue: 0,
+    unit: 'unidades',
+    placeholder: 'Ex: 2',
+    helpText: 'Número total de janelas (1,20m² cada)',
+    tooltip: 'Área de cada janela será descontada'
   },
   {
     key: 'surfaceType',
@@ -72,7 +94,8 @@ const inputs: MaterialInput[] = [
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const validation = MaterialValidator.validateInputs(inputs, [
-    { field: 'wallArea', required: true, min: 1 },
+    { field: 'length', required: true, min: 0.1 },
+    { field: 'height', required: true, min: 0.1 },
     { field: 'surfaceType', required: true },
     { field: 'paintType', required: true },
     { field: 'coats', required: true, min: 1, max: 4 }
@@ -82,13 +105,20 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     return {};
   }
 
-  const wallArea = MaterialValidator.sanitizeNumericInput(inputs.wallArea, 1);
-  const openings = MaterialValidator.sanitizeNumericInput(inputs.openings);
+  const length = MaterialValidator.sanitizeNumericInput(inputs.length, 0.1);
+  const height = MaterialValidator.sanitizeNumericInput(inputs.height, 0.1);
+  const doorCount = MaterialValidator.sanitizeNumericInput(inputs.doorCount, 0);
+  const windowCount = MaterialValidator.sanitizeNumericInput(inputs.windowCount, 0);
   const coats = MaterialValidator.sanitizeNumericInput(inputs.coats || 2, 1);
   const surfaceType = inputs.surfaceType as string;
   const paintType = inputs.paintType as string;
 
-  const netArea = Math.max(0, wallArea - openings);
+  // Cálculo da área
+  const totalArea = length * height;
+  const doorArea = 1.68; // área padrão de porta
+  const windowArea = 1.20; // área padrão de janela
+  const discountArea = (doorCount * doorArea) + (windowCount * windowArea);
+  const netArea = Math.max(0.1, totalArea - discountArea);
   // Aplicar fator de perdas de 5% para pintura (NBR 15079)
   const paintableArea = netArea * 1.05;
 
@@ -131,7 +161,10 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   
   let result: MaterialResult = {
     // Informações básicas
-    netArea: { value: netArea.toFixed(2), unit: 'm²', category: 'info' },
+    dimensions: { value: `${length.toFixed(2)} x ${height.toFixed(2)}`, unit: 'm', category: 'info' },
+    totalArea: { value: totalArea.toFixed(2), unit: 'm²', category: 'info' },
+    discountArea: { value: discountArea.toFixed(2), unit: 'm²', category: 'info' },
+    netArea: { value: netArea.toFixed(2), unit: 'm² (líquida)', category: 'info' },
     paintableArea: { value: paintableArea.toFixed(2), unit: 'm² (com perdas)', category: 'info' },
     coats: { value: coats, unit: 'demãos', category: 'info' },
     coverage: { value: coverage, unit: 'm²/L', category: 'info' },

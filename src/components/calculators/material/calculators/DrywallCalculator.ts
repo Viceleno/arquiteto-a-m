@@ -5,15 +5,48 @@ import { MaterialValidator } from '../MaterialValidation';
 
 const inputs: MaterialInput[] = [
   {
-    key: 'area',
-    label: 'Área da Parede',
+    key: 'length',
+    label: 'Comprimento da Parede',
     type: 'number',
     required: true,
     min: 0.1,
-    unit: 'm²',
-    placeholder: 'Ex: 15.5',
-    helpText: 'Informe a área total da parede em drywall',
-    tooltip: 'Área total da parede que será revestida com drywall'
+    unit: 'm',
+    placeholder: 'Ex: 8.0',
+    helpText: 'Comprimento da parede de drywall',
+    tooltip: 'Medida do comprimento em metros'
+  },
+  {
+    key: 'height',
+    label: 'Altura da Parede',
+    type: 'number',
+    required: true,
+    min: 0.1,
+    unit: 'm',
+    placeholder: 'Ex: 2.8',
+    helpText: 'Altura da parede (pé-direito)',
+    tooltip: 'Medida da altura em metros'
+  },
+  {
+    key: 'doorCount',
+    label: 'Quantidade de Portas',
+    type: 'number',
+    min: 0,
+    defaultValue: 0,
+    unit: 'unidades',
+    placeholder: 'Ex: 1',
+    helpText: 'Número de portas na parede (1,68m² cada)',
+    tooltip: 'Área descontada por porta'
+  },
+  {
+    key: 'windowCount',
+    label: 'Quantidade de Janelas',
+    type: 'number',
+    min: 0,
+    defaultValue: 0,
+    unit: 'unidades',
+    placeholder: 'Ex: 1',
+    helpText: 'Número de janelas na parede (1,20m² cada)',
+    tooltip: 'Área descontada por janela'
   },
   {
     key: 'plateThickness',
@@ -44,7 +77,8 @@ const inputs: MaterialInput[] = [
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const validation = MaterialValidator.validateInputs(inputs, [
-    { field: 'area', required: true, min: 0.1 },
+    { field: 'length', required: true, min: 0.1 },
+    { field: 'height', required: true, min: 0.1 },
     { field: 'plateThickness', required: true },
     { field: 'sides', required: true }
   ]);
@@ -53,22 +87,32 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     return {};
   }
 
-  const area = MaterialValidator.sanitizeNumericInput(inputs.area, 0.1);
+  const length = MaterialValidator.sanitizeNumericInput(inputs.length, 0.1);
+  const height = MaterialValidator.sanitizeNumericInput(inputs.height, 0.1);
+  const doorCount = MaterialValidator.sanitizeNumericInput(inputs.doorCount, 0);
+  const windowCount = MaterialValidator.sanitizeNumericInput(inputs.windowCount, 0);
   const sides = MaterialValidator.sanitizeNumericInput(inputs.sides, 2);
+  
+  const totalAreaBeforeDiscount = length * height;
+  const discountArea = (doorCount * 1.68) + (windowCount * 1.20);
+  const area = Math.max(0.1, totalAreaBeforeDiscount - discountArea);
   
   const plateArea = MATERIAL_CONSTANTS.DRYWALL.PLATE_SIZE.width * MATERIAL_CONSTANTS.DRYWALL.PLATE_SIZE.height;
   // Aplicar fator de perdas de 10% para drywall
   const adjustedArea = area * 1.10;
-  const totalArea = adjustedArea * sides;
+  const totalAreaCovered = adjustedArea * sides;
   
-  const platesNeeded = Math.ceil(totalArea / plateArea);
+  const platesNeeded = Math.ceil(totalAreaCovered / plateArea);
   const screwsNeeded = platesNeeded * MATERIAL_CONSTANTS.DRYWALL.SCREWS_PER_PLATE;
-  const massaKg = Math.ceil(totalArea * 0.5); // Aproximação para massa de rejunte
+  const massaKg = Math.ceil(totalAreaCovered * 0.5); // Aproximação para massa de rejunte
 
   return {
-    area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
+    dimensions: { value: `${length.toFixed(2)} x ${height.toFixed(2)}`, unit: 'm', category: 'info' },
+    totalAreaBeforeDiscount: { value: totalAreaBeforeDiscount.toFixed(2), unit: 'm²', category: 'info' },
+    discountArea: { value: discountArea.toFixed(2), unit: 'm²', category: 'info' },
+    area: { value: area.toFixed(2), unit: 'm² (líquida)', category: 'info' },
     adjustedArea: { value: adjustedArea.toFixed(2), unit: 'm² (com perdas)', category: 'info' },
-    totalArea: { value: totalArea.toFixed(2), unit: 'm² total', category: 'info' },
+    totalAreaCovered: { value: totalAreaCovered.toFixed(2), unit: 'm² total', category: 'info' },
     platesNeeded: { value: platesNeeded, unit: 'placas', highlight: true, category: 'primary' },
     screwsNeeded: { value: screwsNeeded, unit: 'parafusos', category: 'secondary' },
     massaKg: { value: massaKg, unit: 'kg massa', category: 'secondary' },

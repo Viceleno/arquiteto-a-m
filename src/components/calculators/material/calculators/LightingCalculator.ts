@@ -5,15 +5,26 @@ import { MaterialValidator } from '../MaterialValidation';
 
 const inputs: MaterialInput[] = [
   {
-    key: 'area',
-    label: 'Área do Ambiente',
+    key: 'length',
+    label: 'Comprimento do Ambiente',
     type: 'number',
     required: true,
     min: 0.1,
-    unit: 'm²',
-    placeholder: 'Ex: 25.5',
-    helpText: 'Informe a área total do ambiente que será iluminado',
-    tooltip: 'Área total do ambiente a ser iluminado em metros quadrados'
+    unit: 'm',
+    placeholder: 'Ex: 5.0',
+    helpText: 'Comprimento do ambiente em metros',
+    tooltip: 'Medida do comprimento do ambiente'
+  },
+  {
+    key: 'width',
+    label: 'Largura do Ambiente',
+    type: 'number',
+    required: true,
+    min: 0.1,
+    unit: 'm',
+    placeholder: 'Ex: 4.0',
+    helpText: 'Largura do ambiente em metros',
+    tooltip: 'Medida da largura do ambiente'
   },
   {
     key: 'ambientType',
@@ -44,7 +55,8 @@ const inputs: MaterialInput[] = [
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const validation = MaterialValidator.validateInputs(inputs, [
-    { field: 'area', required: true, min: 0.1 },
+    { field: 'length', required: true, min: 0.1 },
+    { field: 'width', required: true, min: 0.1 },
     { field: 'ambientType', required: true }
   ]);
 
@@ -52,7 +64,9 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     return {};
   }
 
-  const area = MaterialValidator.sanitizeNumericInput(inputs.area, 0.1);
+  const length = MaterialValidator.sanitizeNumericInput(inputs.length, 0.1);
+  const width = MaterialValidator.sanitizeNumericInput(inputs.width, 0.1);
+  const area = length * width;
   const ambientType = inputs.ambientType as keyof typeof MATERIAL_CONSTANTS.LIGHTING.RATIOS;
   const lampPower = MaterialValidator.sanitizeNumericInput(inputs.lampPower, 9);
 
@@ -74,6 +88,7 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   };
 
   return {
+    dimensions: { value: `${length.toFixed(2)} x ${width.toFixed(2)}`, unit: 'm', category: 'info' },
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
     ambientType: { value: ambientLabels[ambientType] || ambientType, unit: '', category: 'info' },
     totalPowerNeeded: { value: totalPowerNeeded.toFixed(0), unit: 'W total', category: 'secondary' },

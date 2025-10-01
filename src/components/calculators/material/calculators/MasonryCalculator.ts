@@ -5,15 +5,48 @@ import { MaterialValidator } from '../MaterialValidation';
 
 const inputs: MaterialInput[] = [
   {
-    key: 'area',
-    label: 'Área da Parede',
+    key: 'length',
+    label: 'Comprimento da Parede',
     type: 'number',
     required: true,
     min: 0.1,
-    unit: 'm²',
-    placeholder: 'Ex: 20.0',
-    helpText: 'Informe a área total da parede a ser construída',
-    tooltip: 'Área total da parede em metros quadrados, descontando portas e janelas'
+    unit: 'm',
+    placeholder: 'Ex: 8.0',
+    helpText: 'Comprimento total da parede',
+    tooltip: 'Medida do comprimento da parede em metros'
+  },
+  {
+    key: 'height',
+    label: 'Altura da Parede',
+    type: 'number',
+    required: true,
+    min: 0.1,
+    unit: 'm',
+    placeholder: 'Ex: 2.8',
+    helpText: 'Altura da parede (pé-direito)',
+    tooltip: 'Medida da altura da parede em metros'
+  },
+  {
+    key: 'doorCount',
+    label: 'Quantidade de Portas',
+    type: 'number',
+    min: 0,
+    defaultValue: 0,
+    unit: 'unidades',
+    placeholder: 'Ex: 2',
+    helpText: 'Número de portas (2,10m x 0,80m cada = 1,68m²)',
+    tooltip: 'Área de cada porta será descontada do total'
+  },
+  {
+    key: 'windowCount',
+    label: 'Quantidade de Janelas',
+    type: 'number',
+    min: 0,
+    defaultValue: 0,
+    unit: 'unidades',
+    placeholder: 'Ex: 1',
+    helpText: 'Número de janelas (1,20m x 1,00m cada = 1,20m²)',
+    tooltip: 'Área de cada janela será descontada do total'
   },
   {
     key: 'brickType',
@@ -80,7 +113,8 @@ const inputs: MaterialInput[] = [
 
 const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const validation = MaterialValidator.validateInputs(inputs, [
-    { field: 'area', required: true, min: 0.1 },
+    { field: 'length', required: true, min: 0.1 },
+    { field: 'height', required: true, min: 0.1 },
     { field: 'brickType', required: true },
     { field: 'includeRender', required: true },
     { field: 'faces', required: true }
@@ -90,18 +124,23 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
     return {};
   }
 
-  // Garantir que o valor da área seja corretamente processado
-  const inputArea = inputs.area;
-  let area: number;
+  const length = MaterialValidator.sanitizeNumericInput(inputs.length, 0.1);
+  const height = MaterialValidator.sanitizeNumericInput(inputs.height, 0.1);
+  const doorCount = MaterialValidator.sanitizeNumericInput(inputs.doorCount, 0);
+  const windowCount = MaterialValidator.sanitizeNumericInput(inputs.windowCount, 0);
   
-  if (typeof inputArea === 'string') {
-    area = parseFloat(inputArea.replace(',', '.')) || 0.1;
-  } else {
-    area = Number(inputArea) || 0.1;
-  }
+  // Cálculo da área total
+  const totalArea = length * height;
   
-  // Garantir valor mínimo
-  area = Math.max(0.1, area);
+  // Áreas padrão de aberturas
+  const doorArea = 2.10 * 0.80; // 1.68 m² por porta
+  const windowArea = 1.20 * 1.00; // 1.20 m² por janela
+  
+  // Área de desconto
+  const discountArea = (doorCount * doorArea) + (windowCount * windowArea);
+  
+  // Área líquida (não pode ser negativa)
+  let area = Math.max(0.1, totalArea - discountArea);
   
   const brickType = inputs.brickType as keyof typeof MATERIAL_CONSTANTS.MASONRY.BRICK_TYPES;
   const mortarThickness = MaterialValidator.sanitizeNumericInput(inputs.mortarThickness, 1.5);
@@ -135,7 +174,10 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
 
   let result: MaterialResult = {
     // Informações básicas
-    area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
+    dimensions: { value: `${length.toFixed(2)} x ${height.toFixed(2)}`, unit: 'm', category: 'info' },
+    totalArea: { value: totalArea.toFixed(2), unit: 'm²', category: 'info' },
+    discountArea: { value: discountArea.toFixed(2), unit: 'm²', category: 'info' },
+    area: { value: area.toFixed(2), unit: 'm² (líquida)', category: 'info' },
     adjustedArea: { value: adjustedArea.toFixed(2), unit: 'm² (com perdas)', category: 'info' },
     brickType: { value: `${brickData.width}x${brickData.height}x${brickData.length}cm`, unit: '', category: 'info' },
     
