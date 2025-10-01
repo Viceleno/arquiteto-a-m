@@ -26,7 +26,8 @@ const inputs: MaterialInput[] = [
       { value: 'good', label: 'Sala/Quarto (boa iluminação)' },
       { value: 'regular', label: 'Corredor/Banheiro (iluminação regular)' }
     ],
-    tooltip: 'Cada ambiente requer um nível diferente de iluminação conforme NBR 5413'
+    helpText: 'Cada atividade exige iluminação específica: trabalho precisa de 500 lux (excelente), convivência 150 lux (boa), circulação 100 lux (regular). Iluminação inadequada causa fadiga visual e reduz produtividade.',
+    tooltip: 'A NBR 5413 estabelece os níveis de iluminância (lux) adequados para cada tipo de ambiente conforme a atividade realizada'
   },
   {
     key: 'lampPower',
@@ -36,8 +37,8 @@ const inputs: MaterialInput[] = [
     max: 100,
     unit: 'W',
     placeholder: 'Ex: 9',
-    helpText: 'Potência individual de cada lâmpada LED que será utilizada',
-    tooltip: 'Potência individual de cada lâmpada LED em watts'
+    helpText: 'LEDs são 80% mais eficientes que incandescentes. Uma LED de 9W equivale a 60W incandescente. Prefira LEDs de 6500K (branco frio) para trabalho e 3000K (branco quente) para ambientes de descanso.',
+    tooltip: 'A potência define o consumo e a eficiência luminosa. LEDs modernos entregam 80-100 lumens por watt, muito superior às lâmpadas antigas'
   }
 ];
 
@@ -66,12 +67,23 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   const totalPowerNeeded = area * ratio * 1000; // Convertendo para W
   const lampsNeeded = Math.ceil(totalPowerNeeded / lampPower);
 
+  const ambientLabels = {
+    excellent: 'Excelente (Escritório/Cozinha)',
+    good: 'Boa (Sala/Quarto)',
+    regular: 'Regular (Corredor/Banheiro)'
+  };
+
   return {
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
-    ambientType: { value: ambientType, unit: '', category: 'info' },
-    totalPowerNeeded: { value: totalPowerNeeded.toFixed(0), unit: 'W', category: 'secondary' },
-    lampsNeeded: { value: lampsNeeded, unit: 'lâmpadas', highlight: true, category: 'primary' },
-    lampPower: { value: lampPower, unit: 'W cada', category: 'info' }
+    ambientType: { value: ambientLabels[ambientType] || ambientType, unit: '', category: 'info' },
+    totalPowerNeeded: { value: totalPowerNeeded.toFixed(0), unit: 'W total', category: 'secondary' },
+    lampsNeeded: { value: lampsNeeded, unit: 'lâmpadas LED', highlight: true, category: 'primary' },
+    lampPower: { value: lampPower, unit: 'W cada', category: 'info' },
+    recommendation: { 
+      value: `Distribua as ${lampsNeeded} lâmpadas uniformemente no ambiente. Para melhor resultado, use lâmpadas com ângulo de abertura de 120° e instale a cada ${Math.sqrt(area / lampsNeeded).toFixed(1)}m.`, 
+      unit: '', 
+      category: 'info' 
+    }
   };
 };
 
