@@ -270,6 +270,88 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           </div>
         )}
 
+        {/* Resultados de MaterialCalculator - Estrutura MaterialResult */}
+        {(() => {
+          // Verifica se é um resultado de MaterialCalculator (formato MaterialResult)
+          const materialResultEntries = Object.entries(calculation.result).filter(([key, value]) => {
+            return value && typeof value === 'object' && 'value' in value && 'unit' in value && 'category' in value;
+          });
+
+          if (materialResultEntries.length > 0) {
+            // Agrupa por categoria
+            const primaryItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'primary');
+            const secondaryItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'secondary');
+            const infoItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'info');
+
+            return (
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-orange-900 mb-3">Materiais e Quantitativos</h4>
+                <div className="space-y-4">
+                  {/* Informações gerais */}
+                  {infoItems.length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-2">📋 Informações Gerais</h5>
+                      {infoItems.map(([key, data]: [string, any]) => (
+                        <div key={key} className="bg-blue-50 border border-blue-200 rounded p-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-blue-900 font-medium capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                            </span>
+                            <span className={`font-bold text-lg ${data.highlight ? 'text-blue-700' : 'text-blue-600'}`}>
+                              {data.value} {data.unit}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Materiais principais */}
+                  {primaryItems.length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-2">🧱 Materiais Principais</h5>
+                      {primaryItems.map(([key, data]: [string, any]) => (
+                        <div key={key} className="bg-white border border-orange-300 rounded p-3 shadow-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-700 font-medium capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                            </span>
+                            <span className={`font-bold text-lg ${data.highlight ? 'text-orange-700' : 'text-orange-600'}`}>
+                              {data.value} {data.unit}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Materiais secundários/auxiliares */}
+                  {secondaryItems.length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-2">🔧 Materiais Auxiliares</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {secondaryItems.map(([key, data]: [string, any]) => (
+                          <div key={key} className="bg-gray-50 border border-gray-300 rounded p-2">
+                            <div className="flex flex-col">
+                              <span className="text-xs text-gray-600 capitalize">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                              <span className="font-semibold text-gray-800">
+                                {data.value} {data.unit}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         {/* Materiais Necessários - Estrutura antiga (fallback) */}
         {!calculation.result.materialDetails && calculation.result.materials && Object.keys(calculation.result.materials).length > 0 && (
           <div className="bg-orange-50 p-4 rounded-lg">
@@ -345,6 +427,11 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           ];
           
           if (excludedFields.includes(key) || value === null || value === undefined) return null;
+
+          // Ignora se for um MaterialResult (já tratado acima)
+          if (value && typeof value === 'object' && 'value' in value && 'unit' in value && 'category' in value) {
+            return null;
+          }
 
           const isNumeric = !isNaN(Number(value));
           const isCost = key.toLowerCase().includes('cost') || key.toLowerCase().includes('custo');

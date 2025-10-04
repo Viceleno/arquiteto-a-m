@@ -122,6 +122,28 @@ const History = () => {
       }
     }
 
+    // MaterialResult format (usado pelos calculadores de material)
+    // Verifica se há campos com a estrutura { value, unit, highlight, category }
+    const materialResultEntries = Object.entries(result).filter(([key, value]) => {
+      return value && typeof value === 'object' && 'value' in value && 'unit' in value;
+    });
+
+    if (materialResultEntries.length > 0) {
+      // Prioriza campos marcados como highlight e category 'primary'
+      const highlighted = materialResultEntries.find(([_, val]: [string, any]) => 
+        val.highlight && val.category === 'primary'
+      );
+      
+      if (highlighted) {
+        const [key, data] = highlighted as [string, any];
+        return `${data.value} ${data.unit || ''}`;
+      }
+      
+      // Se não houver destacado, pega o primeiro
+      const [key, data] = materialResultEntries[0] as [string, any];
+      return `${data.value} ${data.unit || ''}`;
+    }
+
     // Tijolos
     if (result.totalBricks) {
       return `${result.totalBricks} tijolos`;
