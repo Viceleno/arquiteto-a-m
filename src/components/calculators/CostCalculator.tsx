@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import { CostCalculatorEngine } from './cost/CostCalculatorEngine';
 import { CostResultChart } from './cost/CostResultChart';
 import { CostResultDetails } from './cost/CostResultDetails';
 import { complexityFactors, materialsDatabase } from './cost/CostCalculatorTypes';
-import type { CostResult } from './cost/CostCalculatorTypes';
+import type { CostResult, MaterialInputField } from './cost/CostCalculatorTypes';
 
 export const CostCalculator = () => {
   const { user } = useAuth();
@@ -22,40 +21,128 @@ export const CostCalculator = () => {
   const { saveCalculation } = useCalculationService();
   
   const [material, setMaterial] = useState('');
-  const [area, setArea] = useState<string>('');
+  const [materialInputs, setMaterialInputs] = useState<Record<string, number | string>>({});
   const [complexity, setComplexity] = useState('');
-  const [bdi, setBdi] = useState<string>('20'); // Default value of 20%
+  const [bdi, setBdi] = useState<string>('20');
   const [result, setResult] = useState<CostResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
   const [showCustomPrices, setShowCustomPrices] = useState(false);
 
-  const calculateCosts = () => {
-    const areaNumber = parseFloat(area);
-    const bdiNumber = bdi ? parseFloat(bdi) : 20; // Use default 20% if empty
+  const handleMaterialChange = (newMaterial: string) => {
+    setMaterial(newMaterial);
+    // Reset inputs when material changes
+    const materialData = materialsDatabase[newMaterial];
+    if (materialData) {
+      const initialInputs: Record<string, number | string> = {};
+      materialData.inputFields.forEach(field => {
+        if (field.defaultValue !== undefined) {
+          initialInputs[field.key] = field.defaultValue;
+        }
+      });
+      setMaterialInputs(initialInputs);
+    }
+    setResult(null);
+    setValidationErrors([]);
+  };
+
+  const handleInputChange = (key: string, value: number | string) => {
+    setMaterialInputs(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const renderMaterialInputs = () => {
+    if (!material) return null;
     
-    // Validar inputs (BDI não é mais obrigatório)
-    const errors: string[] = [];
+    const materialData = materialsDatabase[material];
+    if (!materialData) return null;
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {materialData.inputFields.map((field: MaterialInputField) => (
+          <Card key={field.key} className="p-4 bg-card border-border hover:shadow-md transition-shadow">
+            <CardContent className="p-0 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Label className="text-sm font-semibold text-foreground">
+                    {field.label}
+                    {field.unit && (
+                      <span className="text-muted-foreground ml-1 font-normal">({field.unit})</span>
+                    )}
+                    {field.required && (
+                      <span className="text-red-500 ml-1 text-base">*</span>
+                    )}
+                  </Label>
+                  {field.tooltip && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p className="text-xs">{field.tooltip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+                <Calculator className="w-4 h-4 text-muted-foreground" />
+              </div>
+
+              {field.type === 'number' ? (
+                <Input
+                  type="number"
+                  placeholder={field.placeholder || `Ex: ${field.defaultValue || 0}`}
+                  min={field.min}
+                  max={field.max}
+                  step={field.step || 0.01}
+                  value={materialInputs[field.key] || ''}
+                  onChange={(e) => handleInputChange(field.key, e.target.value)}
+                  className="h-11 bg-background border-input hover:border-primary/50 focus:border-primary transition-colors"
+                />
+              ) : field.type === 'select' ? (
+                <Select 
+                  value={String(materialInputs[field.key] || field.defaultValue || '')} 
+                  onValueChange={(value) => handleInputChange(field.key, value)}
+                >
+                  <SelectTrigger className="h-11 bg-background border-input hover:border-primary/50 transition-colors">
+                    <SelectValue placeholder={field.placeholder || 'Selecione...'} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    {field.options?.map(option => (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value}
+                        className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : null}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  const calculateCosts = () => {
+    const bdiNumber = bdi ? parseFloat(bdi) : 20;
+    
+    // Validar inputs usando a nova função do engine
+    const errors = CostCalculatorEngine.validateInputs(material, materialInputs, bdiNumber);
     
     if (!material) {
-      errors.push('Selecione um material da obra');
-    }
-    
-    if (!area || areaNumber <= 0) {
-      errors.push('Área deve ser maior que zero');
-    }
-    
-    if (areaNumber > 10000) {
-      errors.push('Área muito grande (máximo 10.000 m²)');
+      errors.unshift('Selecione um material da obra');
     }
     
     if (!complexity) {
       errors.push('Selecione o nível de complexidade');
-    }
-    
-    if (bdi && (parseFloat(bdi) < 0 || parseFloat(bdi) > 100)) {
-      errors.push('BDI deve estar entre 0% e 100%');
     }
     
     setValidationErrors(errors);
@@ -69,7 +156,7 @@ export const CostCalculator = () => {
     try {
       const calculationResult = CostCalculatorEngine.calculateCosts(
         material,
-        areaNumber,
+        materialInputs,
         complexity as keyof typeof complexityFactors,
         bdiNumber,
         customPrices
@@ -103,19 +190,19 @@ export const CostCalculator = () => {
     
     await saveCalculation({
       calculator_type: 'Estimativa de Custos Detalhada',
-        input_data: {
-          material,
-          area: parseFloat(area),
-          complexity,
-          bdi: parseFloat(bdi) || 20,
-          customPrices
-        },
+      input_data: {
+        material,
+        materialInputs,
+        complexity,
+        bdi: parseFloat(bdi) || 20,
+        customPrices
+      },
       result,
-      name: `${result.material} - ${area}m² (${complexity})`
+      name: `${result.material} - ${materialInputs.area}m² (${complexity})`
     });
   };
 
-  const isFormValid = material && area && complexity;
+  const isFormValid = material && complexity && Object.keys(materialInputs).length > 0;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -135,7 +222,7 @@ export const CostCalculator = () => {
             <div className="text-sm text-blue-900 dark:text-blue-100">
               <p className="font-medium mb-2">Como funciona o cálculo de custos:</p>
               <ul className="space-y-1 text-xs">
-                <li>• <strong>Materiais:</strong> Calculados com base na área e tipo escolhido</li>
+                <li>• <strong>Materiais:</strong> Calculados com base nos dados específicos do material</li>
                 <li>• <strong>Mão de obra:</strong> Estimada pela produtividade e complexidade</li>
                 <li>• <strong>BDI:</strong> Benefícios e Despesas Indiretas (impostos, lucro, administração)</li>
                 <li>• <strong>Complexidade:</strong> Afeta diretamente o tempo de execução</li>
@@ -145,182 +232,144 @@ export const CostCalculator = () => {
         </CardHeader>
         
         <CardContent className="space-y-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Material */}
-            <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-0 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm font-semibold text-foreground">
-                      Material da Obra
-                      <span className="text-red-500 ml-1 text-base">*</span>
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <p className="text-xs">Escolha o material principal que será utilizado na obra</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Calculator className="w-4 h-4 text-muted-foreground" />
+          {/* Material Selection */}
+          <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
+            <CardContent className="p-0 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Label className="text-sm font-semibold text-foreground">
+                    Material da Obra
+                    <span className="text-red-500 ml-1 text-base">*</span>
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <p className="text-xs">Escolha o material principal que será utilizado na obra</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-                <Select value={material} onValueChange={setMaterial}>
-                  <SelectTrigger className="h-11 bg-background border-input hover:border-primary/50 transition-colors">
-                    <SelectValue placeholder="Selecione o material principal..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border">
-                    {Object.entries(materialsDatabase).map(([key, data]) => (
-                      <SelectItem 
-                        key={key} 
-                        value={key}
-                        className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                      >
-                        {data.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground italic">
-                  Material principal determina custos base e produtividade
-                </p>
-              </CardContent>
-            </Card>
+                <Calculator className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <Select value={material} onValueChange={handleMaterialChange}>
+                <SelectTrigger className="h-11 bg-background border-input hover:border-primary/50 transition-colors">
+                  <SelectValue placeholder="Selecione o material principal..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border">
+                  {Object.entries(materialsDatabase).map(([key, data]) => (
+                    <SelectItem 
+                      key={key} 
+                      value={key}
+                      className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                    >
+                      {data.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground italic">
+                Cada material possui campos específicos de preenchimento
+              </p>
+            </CardContent>
+          </Card>
 
-            {/* Área */}
-            <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-0 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm font-semibold text-foreground">
-                      Área da Obra
-                      <span className="text-muted-foreground ml-1 font-normal">
-                        ({material && materialsDatabase[material]?.baseUnit === 'm³' ? 'da laje ' : ''}m²)
-                      </span>
-                      <span className="text-red-500 ml-1 text-base">*</span>
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <p className="text-xs">Área total a ser executada em metros quadrados</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Calculator className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <Input
-                  type="number"
-                  placeholder="Ex: 100.50"
-                  min="0"
-                  step="0.01"
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className={`h-11 bg-background border-input hover:border-primary/50 focus:border-primary transition-colors ${
-                    validationErrors.some(error => error.includes('Área')) ? 'border-red-500' : ''
-                  }`}
-                />
-                <p className="text-xs text-muted-foreground italic">
-                  Informe a área total em metros quadrados
-                </p>
-              </CardContent>
-            </Card>
+          {/* Dynamic Material Inputs */}
+          {renderMaterialInputs()}
 
-            {/* Complexidade */}
-            <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-0 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm font-semibold text-foreground">
-                      Complexidade
-                      <span className="text-red-500 ml-1 text-base">*</span>
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <p className="text-xs">Nível de dificuldade da execução da obra</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+          {/* Complexity and BDI */}
+          {material && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Complexidade */}
+              <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
+                <CardContent className="p-0 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-sm font-semibold text-foreground">
+                        Complexidade
+                        <span className="text-red-500 ml-1 text-base">*</span>
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-xs">Nível de dificuldade da execução da obra</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Calculator className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <Calculator className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <Select value={complexity} onValueChange={setComplexity}>
-                  <SelectTrigger className="h-11 bg-background border-input hover:border-primary/50 transition-colors">
-                    <SelectValue placeholder="Selecione o nível de complexidade..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border">
-                    {Object.entries(complexityFactors).map(([key, data]) => (
-                      <SelectItem 
-                        key={key} 
-                        value={key}
-                        className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span>{data.name}</span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            ({data.factor}x)
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground italic">
-                  Multiplica o tempo de execução da mão de obra
-                </p>
-              </CardContent>
-            </Card>
+                  <Select value={complexity} onValueChange={setComplexity}>
+                    <SelectTrigger className="h-11 bg-background border-input hover:border-primary/50 transition-colors">
+                      <SelectValue placeholder="Selecione o nível de complexidade..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border">
+                      {Object.entries(complexityFactors).map(([key, data]) => (
+                        <SelectItem 
+                          key={key} 
+                          value={key}
+                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>{data.name}</span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({data.factor}x)
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground italic">
+                    Multiplica o tempo de execução da mão de obra
+                  </p>
+                </CardContent>
+              </Card>
 
-            {/* BDI */}
-            <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
-              <CardContent className="p-0 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm font-semibold text-foreground">
-                      BDI (%)
-                      <span className="text-muted-foreground ml-1 font-normal text-xs">(opcional)</span>
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <p className="text-xs">Benefícios e Despesas Indiretas: impostos, lucro, administração</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+              {/* BDI */}
+              <Card className="p-4 bg-card border-border hover:shadow-md transition-shadow">
+                <CardContent className="p-0 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-sm font-semibold text-foreground">
+                        BDI (%)
+                        <span className="text-muted-foreground ml-1 font-normal text-xs">(opcional)</span>
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help transition-colors" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-xs">Benefícios e Despesas Indiretas: impostos, lucro, administração</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Calculator className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <Calculator className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <Input
-                  type="number"
-                  placeholder="Padrão: 20% (deixe vazio para usar)"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={bdi}
-                  onChange={(e) => setBdi(e.target.value)}
-                  className={`h-11 bg-background border-input hover:border-primary/50 focus:border-primary transition-colors ${
-                    validationErrors.some(error => error.includes('BDI')) ? 'border-red-500' : ''
-                  }`}
-                />
-                <p className="text-xs text-muted-foreground italic">
-                  Se não informado, será usado 20% (padrão SINAPI)
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                  <Input
+                    type="number"
+                    placeholder="Padrão: 20% (deixe vazio para usar)"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={bdi}
+                    onChange={(e) => setBdi(e.target.value)}
+                    className="h-11 bg-background border-input hover:border-primary/50 focus:border-primary transition-colors"
+                  />
+                  <p className="text-xs text-muted-foreground italic">
+                    Se não informado, será usado 20% (padrão SINAPI)
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Customização de Preços */}
           {material && (

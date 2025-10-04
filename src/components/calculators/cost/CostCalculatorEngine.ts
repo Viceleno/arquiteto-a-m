@@ -4,7 +4,7 @@ import { MaterialData, CostResult, complexityFactors, materialsDatabase } from '
 export class CostCalculatorEngine {
   static calculateCosts(
     materialKey: string,
-    area: number,
+    inputs: Record<string, number | string>,
     complexity: keyof typeof complexityFactors,
     bdiPercentage: number = 20,
     customPrices: Record<string, number> = {}
@@ -16,10 +16,16 @@ export class CostCalculatorEngine {
 
     const complexityFactor = complexityFactors[complexity].factor;
     
-    // Calcular volume se necessário (para concreto, por exemplo)
-    let quantity = area;
-    if (materialData.baseUnit === 'm³' && materialKey === 'concrete') {
-      quantity = area * 0.15; // 15cm de espessura padrão
+    // Calcular quantidade baseada nos campos específicos do material
+    let quantity: number;
+    const area = Number(inputs.area || 0);
+    
+    if (materialData.calculateQuantity) {
+      // Usa função customizada de cálculo
+      quantity = materialData.calculateQuantity(inputs);
+    } else {
+      // Usa área diretamente
+      quantity = area;
     }
 
     // Aplicar fator de perda
@@ -68,17 +74,52 @@ export class CostCalculatorEngine {
       bdi: bdiPercentage,
       bdiAmount: Number(bdiAmount.toFixed(2)),
       totalCost: Number(totalCost.toFixed(2)),
-      costPerM2: Number((totalCost / area).toFixed(2)),
+      costPerM2: area > 0 ? Number((totalCost / area).toFixed(2)) : 0,
     };
   }
 
-  static validateInputs(area: number, bdi: number): string[] {
+  static validateInputs(
+    materialKey: string,
+    inputs: Record<string, number | string>,
+    bdi: number
+  ): string[] {
     const errors: string[] = [];
+    const materialData = materialsDatabase[materialKey];
     
-    if (!area || area <= 0) {
-      errors.push('Área deve ser maior que zero');
+    if (!materialData) {
+      errors.push('Selecione um material');
+      return errors;
     }
     
+    // Validar campos específicos do material
+    materialData.inputFields.forEach(field => {
+      const value = inputs[field.key];
+      
+      if (field.required && (!value || value === '')) {
+        errors.push(`${field.label} é obrigatório`);
+        return;
+      }
+      
+      if (field.type === 'number' && value) {
+        const numValue = Number(value);
+        
+        if (isNaN(numValue)) {
+          errors.push(`${field.label} deve ser um número`);
+          return;
+        }
+        
+        if (field.min !== undefined && numValue < field.min) {
+          errors.push(`${field.label} deve ser no mínimo ${field.min}`);
+        }
+        
+        if (field.max !== undefined && numValue > field.max) {
+          errors.push(`${field.label} deve ser no máximo ${field.max}`);
+        }
+      }
+    });
+    
+    // Validar área
+    const area = Number(inputs.area || 0);
     if (area > 10000) {
       errors.push('Área muito grande (máximo 10.000 m²)');
     }

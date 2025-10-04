@@ -20,7 +20,7 @@ const calculators = [
   {
     id: 'materials',
     title: 'Estimativa de Materiais',
-    description: 'Concreto, tijolos, argamassa e mais materiais',
+    description: 'Concreto, tijolos, argamassa, iluminação, telhado e mais',
     icon: HardHat,
     color: 'bg-orange-500',
     category: 'Materiais'
@@ -28,7 +28,7 @@ const calculators = [
   {
     id: 'costs',
     title: 'Estimativa de Custos',
-    description: 'Orçamento completo com materiais, mão de obra e BDI',
+    description: 'Orçamento detalhado com campos específicos por material',
     icon: DollarSign,
     color: 'bg-emerald-500',
     category: 'Orçamento'
