@@ -67,6 +67,19 @@ export const materialsDatabase: Record<string, MaterialData> = {
     inputFields: [
       { key: 'area', label: 'Área da Laje', type: 'number', unit: 'm²', required: true, min: 0.1, step: 0.01, tooltip: 'Área total da laje em metros quadrados' },
       { key: 'thickness', label: 'Espessura', type: 'number', unit: 'cm', required: true, defaultValue: 15, min: 8, max: 30, step: 1, tooltip: 'Espessura da laje em centímetros' },
+      { 
+        key: 'concreteType', 
+        label: 'Resistência (FCK)', 
+        type: 'select', 
+        required: true, 
+        defaultValue: 'fck25',
+        options: [
+          { value: 'fck20', label: 'FCK 20 MPa - Traço 1:2,5:3,5' },
+          { value: 'fck25', label: 'FCK 25 MPa - Traço 1:2:3' },
+          { value: 'fck30', label: 'FCK 30 MPa - Traço 1:1,5:2,5' },
+        ],
+        tooltip: 'Resistência característica do concreto conforme NBR 6118'
+      },
     ],
     laborProductivity: 8,
     laborHourRate: 35,
@@ -78,12 +91,14 @@ export const materialsDatabase: Record<string, MaterialData> = {
       return area * (thickness / 100); // volume em m³
     },
     compositions: [
-      { name: 'Cimento CP-32', unit: 'saco 50kg', consumption: 7, unitPrice: 28, category: 'material' },
-      { name: 'Areia média', unit: 'm³', consumption: 0.64, unitPrice: 85, category: 'material' },
-      { name: 'Brita 1', unit: 'm³', consumption: 0.64, unitPrice: 95, category: 'material' },
-      { name: 'Aço CA-50', unit: 'kg', consumption: 120, unitPrice: 8.5, category: 'material' },
-      { name: 'Madeira para forma', unit: 'm²', consumption: 4, unitPrice: 25, category: 'auxiliary' },
-      { name: 'Arame recozido', unit: 'kg', consumption: 2, unitPrice: 12, category: 'auxiliary' },
+      { name: 'Cimento CP-II ou CP-III', unit: 'saco 50kg', consumption: 7, unitPrice: 28, category: 'material' },
+      { name: 'Areia média lavada', unit: 'm³', consumption: 0.64, unitPrice: 85, category: 'material' },
+      { name: 'Brita 1 (agregado graúdo)', unit: 'm³', consumption: 0.64, unitPrice: 95, category: 'material' },
+      { name: 'Água potável', unit: 'L', consumption: 170, unitPrice: 0.01, category: 'material' },
+      { name: 'Aço CA-50 Ø 8mm a 12mm', unit: 'kg', consumption: 120, unitPrice: 8.5, category: 'material' },
+      { name: 'Madeira compensada para forma', unit: 'm²', consumption: 4, unitPrice: 25, category: 'auxiliary' },
+      { name: 'Arame recozido #18', unit: 'kg', consumption: 2, unitPrice: 12, category: 'auxiliary' },
+      { name: 'Espaçadores plásticos', unit: 'unidade', consumption: 4, unitPrice: 0.35, category: 'auxiliary' },
     ]
   },
   brick: {

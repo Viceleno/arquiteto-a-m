@@ -135,33 +135,43 @@ const calculate = (inputs: Record<string, number | string>): MaterialResult => {
   waterL = Math.ceil(waterL * waterAdjustment);
 
   return {
-    // Informações básicas
+    // Informações básicas do projeto
     area: { value: area.toFixed(2), unit: 'm²', category: 'info' },
     thickness: { value: thickness, unit: 'cm', category: 'info' },
     volume: { value: volume.toFixed(2), unit: 'm³', category: 'info' },
+    
+    // Especificações técnicas NBR 6118
     concreteType: { value: concreteType.toUpperCase(), unit: '', category: 'info' },
     slumpType: { value: slumpType, unit: '', category: 'info' },
+    
+    // Traço de concreto (proporção em massa)
     ratio: { value: ratio, unit: '', category: 'info' },
+    concreteNeeded: { value: concreteNeeded.toFixed(2), unit: 'm³ concreto', highlight: true, category: 'primary' },
     
-    // Materiais principais - Concreto
-    concreteNeeded: { value: concreteNeeded.toFixed(2), unit: 'm³', highlight: true, category: 'primary' },
-    cementKg: { value: cementKg, unit: 'kg', highlight: true, category: 'primary' },
+    // Cimento Portland (NBR 12655)
+    cementKg: { value: cementKg, unit: 'kg cimento', highlight: true, category: 'primary' },
     cementBags: { value: cementBags, unit: 'sacos 50kg', highlight: true, category: 'primary' },
-    sandM3: { value: sandM3.toFixed(2), unit: 'm³', highlight: true, category: 'primary' },
-    sandTons: { value: sandTons, unit: 'toneladas', category: 'secondary' },
-    gravelM3: { value: gravelM3.toFixed(2), unit: 'm³', highlight: true, category: 'primary' },
-    gravelTons: { value: gravelTons, unit: 'toneladas', category: 'secondary' },
-    waterL: { value: waterL, unit: 'L', highlight: true, category: 'primary' },
     
-    // Armadura
+    // Agregado Miúdo - Areia
+    sandM3: { value: sandM3.toFixed(2), unit: 'm³ areia média', highlight: true, category: 'primary' },
+    sandTons: { value: sandTons, unit: 't areia', category: 'secondary' },
+    
+    // Agregado Graúdo - Brita
+    gravelM3: { value: gravelM3.toFixed(2), unit: 'm³ brita 1', highlight: true, category: 'primary' },
+    gravelTons: { value: gravelTons, unit: 't brita', category: 'secondary' },
+    
+    // Água de amassamento
+    waterL: { value: waterL, unit: 'L água', highlight: true, category: 'primary' },
+    
+    // Armadura CA-50 (NBR 6118)
     steelKg: { value: steelKg, unit: 'kg aço CA-50', highlight: true, category: 'primary' },
-    steelBars: { value: steelBars, unit: 'barras 12mm', category: 'secondary' },
+    steelBars: { value: steelBars, unit: 'barras Ø12mm', category: 'secondary' },
     
     // Materiais auxiliares
-    wireKg: { value: wireKg, unit: 'kg arame', category: 'secondary' },
-    spacersUn: { value: spacersUn, unit: 'espaçadores', category: 'secondary' },
-    plasticsM2: { value: plasticsM2, unit: 'm² lona', category: 'secondary' },
-    curingCompoundL: { value: curingCompoundL, unit: 'L cura química', category: 'secondary' }
+    wireKg: { value: wireKg, unit: 'kg arame recozido', category: 'secondary' },
+    spacersUn: { value: spacersUn, unit: 'espaçadores plásticos', category: 'secondary' },
+    plasticsM2: { value: plasticsM2, unit: 'm² lona para cura', category: 'secondary' },
+    curingCompoundL: { value: curingCompoundL, unit: 'L composto de cura', category: 'secondary' }
   };
 };
 
@@ -169,5 +179,5 @@ export const concreteCalculator: CalculationConfig = {
   inputs,
   calculate,
   name: 'Concreto',
-  description: 'Cálculo completo de concreto, armadura e materiais auxiliares conforme NBR 6118 e NBR 12655'
+  description: 'Cálculo de traço, agregados (areia e brita), cimento, água e armadura conforme NBR 6118 e NBR 12655'
 };
