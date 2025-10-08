@@ -248,10 +248,10 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
                         <h6 className="font-semibold text-gray-900">{item.name}</h6>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {item.category === 'material' ? '🧱 Material Principal' : 
-                           item.category === 'auxiliary' ? '🔧 Material Auxiliar' : '📋 Item'}
-                        </div>
+                           <div className="text-xs text-gray-500 mt-1">
+                            {item.category === 'material' ? '🧱 Material Principal' : 
+                             item.category === 'auxiliary' ? '🔧 Material Auxiliar' : '📋 Item'}
+                          </div>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-lg text-gray-900">
@@ -260,12 +260,12 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
                       </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                      <div>
+                       <div>
                         <span className="text-gray-600">Quantidade:</span>
                         <div className="font-semibold">{item.quantity.toLocaleString('pt-BR')} {item.unit}</div>
                       </div>
                       <div>
-                        <span className="text-gray-600">Preço Unit.:</span>
+                        <span className="text-gray-600">Preço Unitário:</span>
                         <div className="font-semibold">R$ {item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div className="md:col-span-2">
@@ -503,197 +503,450 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
   const exportToPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     
-    // Título
-    doc.setFontSize(18);
+    // Cores do tema
+    const primaryColor: [number, number, number] = [37, 99, 235]; // Blue-600
+    const secondaryColor: [number, number, number] = [107, 114, 128]; // Gray-500
+    const accentColor: [number, number, number] = [249, 115, 22]; // Orange-500
+    
+    // Cabeçalho com fundo colorido
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, pageWidth, 35, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('Relatório de Cálculo', pageWidth / 2, 20, { align: 'center' });
+    doc.text('RELATÓRIO DE CÁLCULO', pageWidth / 2, 15, { align: 'center' });
     
-    // Linha divisória
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 25, pageWidth - 20, 25);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(calculation.calculator_type, pageWidth / 2, 25, { align: 'center' });
     
-    let yPosition = 35;
+    // Reset cor do texto
+    doc.setTextColor(0, 0, 0);
     
-    // Informações Gerais
-    doc.setFontSize(14);
+    let yPosition = 45;
+    
+    // Box de Informações Gerais
+    doc.setFillColor(249, 250, 251);
+    doc.roundedRect(15, yPosition, pageWidth - 30, 28, 2, 2, 'F');
+    
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('Informações Gerais', 20, yPosition);
-    yPosition += 8;
+    doc.setTextColor(...primaryColor);
+    doc.text('📋 INFORMAÇÕES GERAIS', 20, yPosition + 7);
     
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Nome: ${calculation.name || 'Sem nome'}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Tipo: ${calculation.calculator_type}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Data: ${formatDate(calculation.created_at)}`, 20, yPosition);
-    yPosition += 12;
     
-    // Dados de Entrada
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dados de Entrada', 20, yPosition);
-    yPosition += 8;
+    const infoData = [
+      ['Nome:', calculation.name || 'Sem nome'],
+      ['Data:', formatDate(calculation.created_at)],
+      ['ID:', calculation.id.slice(0, 8).toUpperCase()]
+    ];
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    let infoY = yPosition + 14;
+    infoData.forEach(([label, value]) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, 20, infoY);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value, 50, infoY);
+      infoY += 5;
+    });
     
+    yPosition += 35;
+    
+    // Dados de Entrada com tabela
     if (calculation.input_data && typeof calculation.input_data === 'object') {
-      Object.entries(calculation.input_data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          const label = formatInputLabel(key);
-          const formattedValue = formatInputValue(key, value);
-          doc.text(`${label}: ${formattedValue}`, 20, yPosition);
-          yPosition += 6;
-          
-          if (yPosition > 270) {
-            doc.addPage();
-            yPosition = 20;
+      const inputEntries = Object.entries(calculation.input_data)
+        .filter(([_, value]) => value !== null && value !== undefined && value !== '');
+      
+      if (inputEntries.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...primaryColor);
+        doc.text('📝 DADOS DE ENTRADA', 20, yPosition);
+        yPosition += 2;
+        
+        const inputTableData = inputEntries.map(([key, value]) => [
+          formatInputLabel(key),
+          formatInputValue(key, value)
+        ]);
+        
+        (doc as any).autoTable({
+          startY: yPosition,
+          head: [['Parâmetro', 'Valor']],
+          body: inputTableData,
+          margin: { left: 15, right: 15 },
+          headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontSize: 10,
+            fontStyle: 'bold',
+            halign: 'left'
+          },
+          bodyStyles: {
+            fontSize: 9,
+            textColor: [31, 41, 55]
+          },
+          alternateRowStyles: {
+            fillColor: [249, 250, 251]
+          },
+          columnStyles: {
+            0: { cellWidth: 80, fontStyle: 'bold' },
+            1: { cellWidth: 'auto' }
           }
-        }
-      });
+        });
+        
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+      }
     }
     
-    yPosition += 6;
+    // Verificar se precisa de nova página
+    if (yPosition > pageHeight - 80) {
+      doc.addPage();
+      yPosition = 20;
+    }
     
     // Resultados
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('Resultados', 20, yPosition);
+    doc.setTextColor(...primaryColor);
+    doc.text('📊 RESULTADOS', 20, yPosition);
     yPosition += 8;
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
     
     if (calculation.result && typeof calculation.result === 'object') {
-      // Área Total
+      // Resultados principais em destaque
+      const mainResults = [];
+      
       if (calculation.result.area && !isNaN(parseFloat(calculation.result.area))) {
-        doc.text(`Área Total: ${parseFloat(calculation.result.area).toFixed(2)} m²`, 20, yPosition);
-        yPosition += 6;
-      }
-      
-      // Volume Total
-      if (calculation.result.volume && !isNaN(parseFloat(calculation.result.volume))) {
-        doc.text(`Volume Total: ${parseFloat(calculation.result.volume).toFixed(2)} m³`, 20, yPosition);
-        yPosition += 6;
-      }
-      
-      // Custos
-      if (calculation.result.totalCostWithBDI) {
-        doc.text(`Custo Total com BDI: R$ ${parseFloat(calculation.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 20, yPosition);
-        yPosition += 6;
-      }
-      
-      if (calculation.result.totalCost) {
-        doc.text(`Custo Total: R$ ${parseFloat(calculation.result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 20, yPosition);
-        yPosition += 6;
-      }
-      
-      // Materiais
-      if (calculation.result.materialDetails && Array.isArray(calculation.result.materialDetails)) {
-        yPosition += 4;
-        doc.setFont('helvetica', 'bold');
-        doc.text('Materiais:', 20, yPosition);
-        yPosition += 6;
-        doc.setFont('helvetica', 'normal');
-        
-        calculation.result.materialDetails.forEach((item: any) => {
-          if (yPosition > 270) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          
-          doc.text(`• ${item.name}`, 25, yPosition);
-          yPosition += 5;
-          doc.text(`  Quantidade: ${item.quantity.toLocaleString('pt-BR')} ${item.unit}`, 30, yPosition);
-          yPosition += 5;
-          doc.text(`  Preço Unitário: R$ ${item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 30, yPosition);
-          yPosition += 5;
-          doc.text(`  Total: R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 30, yPosition);
-          yPosition += 8;
+        mainResults.push({
+          label: 'Área Total',
+          value: `${parseFloat(calculation.result.area).toFixed(2)} m²`,
+          color: [59, 130, 246]
         });
       }
       
-      // MaterialResult format
+      if (calculation.result.volume && !isNaN(parseFloat(calculation.result.volume))) {
+        mainResults.push({
+          label: 'Volume Total',
+          value: `${parseFloat(calculation.result.volume).toFixed(2)} m³`,
+          color: [59, 130, 246]
+        });
+      }
+      
+      if (calculation.result.totalCostWithBDI) {
+        mainResults.push({
+          label: 'Custo Total com BDI',
+          value: `R$ ${parseFloat(calculation.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          color: [34, 197, 94]
+        });
+      }
+      
+      if (calculation.result.totalCost) {
+        mainResults.push({
+          label: 'Custo Total',
+          value: `R$ ${parseFloat(calculation.result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          color: [107, 114, 128]
+        });
+      }
+      
+      // Exibir resultados principais em boxes
+      mainResults.forEach((result) => {
+        if (yPosition > pageHeight - 30) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.setFillColor(result.color[0], result.color[1], result.color[2], 0.1);
+        doc.roundedRect(15, yPosition - 5, pageWidth - 30, 15, 2, 2, 'F');
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...secondaryColor);
+        doc.text(result.label, 20, yPosition);
+        
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(result.color[0], result.color[1], result.color[2]);
+        doc.text(result.value, pageWidth - 20, yPosition + 5, { align: 'right' });
+        
+        yPosition += 20;
+      });
+      
+      doc.setTextColor(0, 0, 0);
+      yPosition += 5;
+      
+      // Materiais com tabela detalhada
+      if (calculation.result.materialDetails && Array.isArray(calculation.result.materialDetails)) {
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...accentColor);
+        doc.text('🧱 MATERIAIS DETALHADOS', 20, yPosition);
+        yPosition += 2;
+        
+        const materialTableData = calculation.result.materialDetails.map((item: any) => [
+          item.name,
+          `${item.quantity.toLocaleString('pt-BR')} ${item.unit}`,
+          `R$ ${item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          `R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+        ]);
+        
+        (doc as any).autoTable({
+          startY: yPosition,
+          head: [['Material', 'Quantidade', 'Preço Unit.', 'Total']],
+          body: materialTableData,
+          margin: { left: 15, right: 15 },
+          headStyles: {
+            fillColor: accentColor,
+            textColor: [255, 255, 255],
+            fontSize: 10,
+            fontStyle: 'bold',
+            halign: 'center'
+          },
+          bodyStyles: {
+            fontSize: 9,
+            textColor: [31, 41, 55]
+          },
+          alternateRowStyles: {
+            fillColor: [255, 247, 237]
+          },
+          columnStyles: {
+            0: { cellWidth: 60, halign: 'left' },
+            1: { cellWidth: 40, halign: 'center' },
+            2: { cellWidth: 40, halign: 'right' },
+            3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+          }
+        });
+        
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+        
+        // Resumo de custos
+        if (calculation.result.materialTotal || calculation.result.laborTotal) {
+          const summaryData = [];
+          
+          if (calculation.result.materialTotal) {
+            summaryData.push([
+              'Total de Materiais',
+              `R$ ${calculation.result.materialTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            ]);
+          }
+          
+          if (calculation.result.laborTotal) {
+            summaryData.push([
+              'Total de Mão de Obra',
+              `R$ ${calculation.result.laborTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            ]);
+          }
+          
+          if (calculation.result.costPerM2) {
+            summaryData.push([
+              'Custo por m²',
+              `R$ ${calculation.result.costPerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            ]);
+          }
+          
+          (doc as any).autoTable({
+            startY: yPosition,
+            body: summaryData,
+            margin: { left: 15, right: 15 },
+            bodyStyles: {
+              fontSize: 10,
+              textColor: [31, 41, 55],
+              fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+              fillColor: [243, 244, 246]
+            },
+            columnStyles: {
+              0: { cellWidth: 120, halign: 'left' },
+              1: { cellWidth: 'auto', halign: 'right', textColor: [34, 197, 94] }
+            }
+          });
+          
+          yPosition = (doc as any).lastAutoTable.finalY + 10;
+        }
+      }
+      
+      // MaterialResult format (para calculadores de material)
       const materialResultEntries = Object.entries(calculation.result).filter(([key, value]) => {
         return value && typeof value === 'object' && 'value' in value && 'unit' in value && 'category' in value;
       });
       
       if (materialResultEntries.length > 0) {
-        yPosition += 4;
-        doc.setFont('helvetica', 'bold');
-        doc.text('Materiais e Quantitativos:', 20, yPosition);
-        yPosition += 6;
-        doc.setFont('helvetica', 'normal');
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 20;
+        }
         
         const primaryItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'primary');
         const secondaryItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'secondary');
         const infoItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'info');
         
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...accentColor);
+        doc.text('🧱 MATERIAIS E QUANTITATIVOS', 20, yPosition);
+        yPosition += 8;
+        
+        // Informações gerais
         if (infoItems.length > 0) {
-          infoItems.forEach(([key, data]: [string, any]) => {
-            if (yPosition > 270) {
-              doc.addPage();
-              yPosition = 20;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...secondaryColor);
+          doc.text('Informações Gerais', 20, yPosition);
+          yPosition += 6;
+          
+          const infoTableData = infoItems.map(([key, data]: [string, any]) => [
+            formatInputLabel(key),
+            `${data.value} ${data.unit}`
+          ]);
+          
+          (doc as any).autoTable({
+            startY: yPosition,
+            body: infoTableData,
+            margin: { left: 15, right: 15 },
+            bodyStyles: {
+              fontSize: 9,
+              textColor: [31, 41, 55]
+            },
+            alternateRowStyles: {
+              fillColor: [239, 246, 255]
+            },
+            columnStyles: {
+              0: { cellWidth: 100, fontStyle: 'bold' },
+              1: { cellWidth: 'auto', halign: 'right' }
             }
-            doc.text(`${formatInputLabel(key)}: ${data.value} ${data.unit}`, 25, yPosition);
-            yPosition += 6;
           });
-          yPosition += 2;
+          
+          yPosition = (doc as any).lastAutoTable.finalY + 8;
         }
         
+        // Materiais principais
         if (primaryItems.length > 0) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('Materiais Principais:', 25, yPosition);
-          yPosition += 6;
-          doc.setFont('helvetica', 'normal');
+          if (yPosition > pageHeight - 40) {
+            doc.addPage();
+            yPosition = 20;
+          }
           
-          primaryItems.forEach(([key, data]: [string, any]) => {
-            if (yPosition > 270) {
-              doc.addPage();
-              yPosition = 20;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...accentColor);
+          doc.text('Materiais Principais', 20, yPosition);
+          yPosition += 6;
+          
+          const primaryTableData = primaryItems.map(([key, data]: [string, any]) => [
+            formatInputLabel(key),
+            `${data.value} ${data.unit}`
+          ]);
+          
+          (doc as any).autoTable({
+            startY: yPosition,
+            body: primaryTableData,
+            margin: { left: 15, right: 15 },
+            bodyStyles: {
+              fontSize: 9,
+              textColor: [31, 41, 55],
+              fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+              fillColor: [255, 247, 237]
+            },
+            columnStyles: {
+              0: { cellWidth: 100 },
+              1: { cellWidth: 'auto', halign: 'right', textColor: accentColor }
             }
-            doc.text(`• ${formatInputLabel(key)}: ${data.value} ${data.unit}`, 30, yPosition);
-            yPosition += 6;
           });
-          yPosition += 2;
+          
+          yPosition = (doc as any).lastAutoTable.finalY + 8;
         }
         
+        // Materiais auxiliares
         if (secondaryItems.length > 0) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('Materiais Auxiliares:', 25, yPosition);
-          yPosition += 6;
-          doc.setFont('helvetica', 'normal');
+          if (yPosition > pageHeight - 40) {
+            doc.addPage();
+            yPosition = 20;
+          }
           
-          secondaryItems.forEach(([key, data]: [string, any]) => {
-            if (yPosition > 270) {
-              doc.addPage();
-              yPosition = 20;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...secondaryColor);
+          doc.text('Materiais Auxiliares', 20, yPosition);
+          yPosition += 6;
+          
+          const secondaryTableData = secondaryItems.map(([key, data]: [string, any]) => [
+            formatInputLabel(key),
+            `${data.value} ${data.unit}`
+          ]);
+          
+          (doc as any).autoTable({
+            startY: yPosition,
+            body: secondaryTableData,
+            margin: { left: 15, right: 15 },
+            bodyStyles: {
+              fontSize: 9,
+              textColor: [75, 85, 99]
+            },
+            alternateRowStyles: {
+              fillColor: [249, 250, 251]
+            },
+            columnStyles: {
+              0: { cellWidth: 100 },
+              1: { cellWidth: 'auto', halign: 'right' }
             }
-            doc.text(`• ${formatInputLabel(key)}: ${data.value} ${data.unit}`, 30, yPosition);
-            yPosition += 6;
           });
+          
+          yPosition = (doc as any).lastAutoTable.finalY + 8;
         }
       }
     }
     
-    // Rodapé
+    // Rodapé em todas as páginas
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
+      
+      // Linha superior do rodapé
+      doc.setDrawColor(229, 231, 235);
+      doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
+      
+      // Texto do rodapé
       doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...secondaryColor);
+      
       doc.text(
-        `Página ${i} de ${pageCount} - Gerado em ${new Date().toLocaleDateString('pt-BR')}`,
-        pageWidth / 2,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'center' }
+        `Relatório gerado em ${new Date().toLocaleDateString('pt-BR', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`,
+        15,
+        pageHeight - 8
+      );
+      
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        pageWidth - 15,
+        pageHeight - 8,
+        { align: 'right' }
       );
     }
     
-    // Salvar
-    doc.save(`relatorio_calculo_${calculation.id.slice(0, 8)}_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Salvar com nome descritivo
+    const fileName = `relatorio_${calculation.calculator_type.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${calculation.id.slice(0, 8)}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
   };
 
   return (
