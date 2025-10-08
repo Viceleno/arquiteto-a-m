@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, Calendar, User, FileText, Download, Share2 } from 'lucide-react';
+import { Calculator, Calendar, User, FileText, Download, Share2, FileDown } from 'lucide-react';
 import { ShareCalculationModal } from '@/components/ShareCalculationModal';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface Calculation {
   id: string;
@@ -60,33 +62,45 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
 
   const formatInputLabel = (key: string) => {
     const labelMap: { [key: string]: string } = {
-      length: 'Comprimento (m)',
-      width: 'Largura (m)',
-      height: 'Altura (m)',
-      diameter: 'Diâmetro (m)',
-      radius: 'Raio (m)',
-      thickness: 'Espessura (m)',
-      area: 'Área (m²)',
+      length: 'Comprimento',
+      width: 'Largura',
+      height: 'Altura',
+      diameter: 'Diâmetro',
+      radius: 'Raio',
+      thickness: 'Espessura',
+      area: 'Área',
       rooms: 'Número de Cômodos',
       windows: 'Número de Janelas',
       doors: 'Número de Portas',
-      wallHeight: 'Altura da Parede (m)',
-      wallLength: 'Comprimento da Parede (m)',
+      wallHeight: 'Altura da Parede',
+      wallLength: 'Comprimento da Parede',
       brickType: 'Tipo de Tijolo',
       mortarType: 'Tipo de Argamassa',
       cementType: 'Tipo de Cimento',
       flooringType: 'Tipo de Piso',
       paintType: 'Tipo de Tinta',
       roofType: 'Tipo de Telhado',
+      tileType: 'Tipo de Telha',
+      slope: 'Inclinação',
+      roofPlanes: 'Número de Águas',
+      fixtureType: 'Tipo de Luminária',
+      fixtureWattage: 'Potência',
+      ambientType: 'Tipo de Ambiente',
+      ceilingHeight: 'Altura do Teto',
       quantity: 'Quantidade',
-      unitCost: 'Custo Unitário (R$)',
-      laborCost: 'Custo de Mão de Obra (R$)',
-      bdi: 'BDI (%)',
-      margin: 'Margem (%)',
+      unitCost: 'Custo Unitário',
+      laborCost: 'Custo de Mão de Obra',
+      bdi: 'BDI',
+      margin: 'Margem',
       materialType: 'Tipo de Material',
       calculationType: 'Tipo de Cálculo',
       material: 'Material',
-      complexity: 'Complexidade'
+      complexity: 'Complexidade',
+      fck: 'FCK do Concreto',
+      coats: 'Demãos',
+      tileSize: 'Tamanho do Azulejo',
+      woodType: 'Tipo de Madeira',
+      brickSize: 'Tamanho do Tijolo'
     };
     
     return labelMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
@@ -161,7 +175,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
     return (
       <div className="space-y-4">
         {/* Área Calculada */}
-        {calculation.result.area && (
+        {calculation.result.area && !isNaN(parseFloat(calculation.result.area)) && (
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-900 mb-2">Área Total</h4>
             <p className="text-2xl font-bold text-blue-800">
@@ -171,7 +185,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
         )}
 
         {/* Volume Calculado */}
-        {calculation.result.volume && (
+        {calculation.result.volume && !isNaN(parseFloat(calculation.result.volume)) && (
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-900 mb-2">Volume Total</h4>
             <p className="text-2xl font-bold text-blue-800">
@@ -294,8 +308,8 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
                       {infoItems.map(([key, data]: [string, any]) => (
                         <div key={key} className="bg-blue-50 border border-blue-200 rounded p-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-blue-900 font-medium capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                           <span className="text-sm text-blue-900 font-medium capitalize">
+                              {formatInputLabel(key)}:
                             </span>
                             <span className={`font-bold text-lg ${data.highlight ? 'text-blue-700' : 'text-blue-600'}`}>
                               {data.value} {data.unit}
@@ -313,8 +327,8 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
                       {primaryItems.map(([key, data]: [string, any]) => (
                         <div key={key} className="bg-white border border-orange-300 rounded p-3 shadow-sm">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-700 font-medium capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                           <span className="text-sm text-gray-700 font-medium capitalize">
+                              {formatInputLabel(key)}:
                             </span>
                             <span className={`font-bold text-lg ${data.highlight ? 'text-orange-700' : 'text-orange-600'}`}>
                               {data.value} {data.unit}
@@ -333,8 +347,8 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
                         {secondaryItems.map(([key, data]: [string, any]) => (
                           <div key={key} className="bg-gray-50 border border-gray-300 rounded p-2">
                             <div className="flex flex-col">
-                              <span className="text-xs text-gray-600 capitalize">
-                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                             <span className="text-xs text-gray-600 capitalize">
+                                {formatInputLabel(key)}
                               </span>
                               <span className="font-semibold text-gray-800">
                                 {data.value} {data.unit}
@@ -486,6 +500,202 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Título
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Cálculo', pageWidth / 2, 20, { align: 'center' });
+    
+    // Linha divisória
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 25, pageWidth - 20, 25);
+    
+    let yPosition = 35;
+    
+    // Informações Gerais
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Informações Gerais', 20, yPosition);
+    yPosition += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nome: ${calculation.name || 'Sem nome'}`, 20, yPosition);
+    yPosition += 6;
+    doc.text(`Tipo: ${calculation.calculator_type}`, 20, yPosition);
+    yPosition += 6;
+    doc.text(`Data: ${formatDate(calculation.created_at)}`, 20, yPosition);
+    yPosition += 12;
+    
+    // Dados de Entrada
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Dados de Entrada', 20, yPosition);
+    yPosition += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    if (calculation.input_data && typeof calculation.input_data === 'object') {
+      Object.entries(calculation.input_data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          const label = formatInputLabel(key);
+          const formattedValue = formatInputValue(key, value);
+          doc.text(`${label}: ${formattedValue}`, 20, yPosition);
+          yPosition += 6;
+          
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        }
+      });
+    }
+    
+    yPosition += 6;
+    
+    // Resultados
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resultados', 20, yPosition);
+    yPosition += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    if (calculation.result && typeof calculation.result === 'object') {
+      // Área Total
+      if (calculation.result.area && !isNaN(parseFloat(calculation.result.area))) {
+        doc.text(`Área Total: ${parseFloat(calculation.result.area).toFixed(2)} m²`, 20, yPosition);
+        yPosition += 6;
+      }
+      
+      // Volume Total
+      if (calculation.result.volume && !isNaN(parseFloat(calculation.result.volume))) {
+        doc.text(`Volume Total: ${parseFloat(calculation.result.volume).toFixed(2)} m³`, 20, yPosition);
+        yPosition += 6;
+      }
+      
+      // Custos
+      if (calculation.result.totalCostWithBDI) {
+        doc.text(`Custo Total com BDI: R$ ${parseFloat(calculation.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 20, yPosition);
+        yPosition += 6;
+      }
+      
+      if (calculation.result.totalCost) {
+        doc.text(`Custo Total: R$ ${parseFloat(calculation.result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 20, yPosition);
+        yPosition += 6;
+      }
+      
+      // Materiais
+      if (calculation.result.materialDetails && Array.isArray(calculation.result.materialDetails)) {
+        yPosition += 4;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Materiais:', 20, yPosition);
+        yPosition += 6;
+        doc.setFont('helvetica', 'normal');
+        
+        calculation.result.materialDetails.forEach((item: any) => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          
+          doc.text(`• ${item.name}`, 25, yPosition);
+          yPosition += 5;
+          doc.text(`  Quantidade: ${item.quantity.toLocaleString('pt-BR')} ${item.unit}`, 30, yPosition);
+          yPosition += 5;
+          doc.text(`  Preço Unitário: R$ ${item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 30, yPosition);
+          yPosition += 5;
+          doc.text(`  Total: R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 30, yPosition);
+          yPosition += 8;
+        });
+      }
+      
+      // MaterialResult format
+      const materialResultEntries = Object.entries(calculation.result).filter(([key, value]) => {
+        return value && typeof value === 'object' && 'value' in value && 'unit' in value && 'category' in value;
+      });
+      
+      if (materialResultEntries.length > 0) {
+        yPosition += 4;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Materiais e Quantitativos:', 20, yPosition);
+        yPosition += 6;
+        doc.setFont('helvetica', 'normal');
+        
+        const primaryItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'primary');
+        const secondaryItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'secondary');
+        const infoItems = materialResultEntries.filter(([_, val]: [string, any]) => val.category === 'info');
+        
+        if (infoItems.length > 0) {
+          infoItems.forEach(([key, data]: [string, any]) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = 20;
+            }
+            doc.text(`${formatInputLabel(key)}: ${data.value} ${data.unit}`, 25, yPosition);
+            yPosition += 6;
+          });
+          yPosition += 2;
+        }
+        
+        if (primaryItems.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Materiais Principais:', 25, yPosition);
+          yPosition += 6;
+          doc.setFont('helvetica', 'normal');
+          
+          primaryItems.forEach(([key, data]: [string, any]) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = 20;
+            }
+            doc.text(`• ${formatInputLabel(key)}: ${data.value} ${data.unit}`, 30, yPosition);
+            yPosition += 6;
+          });
+          yPosition += 2;
+        }
+        
+        if (secondaryItems.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Materiais Auxiliares:', 25, yPosition);
+          yPosition += 6;
+          doc.setFont('helvetica', 'normal');
+          
+          secondaryItems.forEach(([key, data]: [string, any]) => {
+            if (yPosition > 270) {
+              doc.addPage();
+              yPosition = 20;
+            }
+            doc.text(`• ${formatInputLabel(key)}: ${data.value} ${data.unit}`, 30, yPosition);
+            yPosition += 6;
+          });
+        }
+      }
+    }
+    
+    // Rodapé
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text(
+        `Página ${i} de ${pageCount} - Gerado em ${new Date().toLocaleDateString('pt-BR')}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+    
+    // Salvar
+    doc.save(`relatorio_calculo_${calculation.id.slice(0, 8)}_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -495,6 +705,9 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             <span>Detalhes do Cálculo</span>
             {getCalculatorTypeBadge(calculation.calculator_type)}
           </DialogTitle>
+          <DialogDescription>
+            Visualize os detalhes completos do cálculo realizado
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -550,16 +763,20 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           </Card>
 
           {/* Ações */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-4 flex-wrap gap-2">
             {showShareButton && (
               <Button variant="outline" onClick={() => setShowShareModal(true)}>
                 <Share2 className="w-4 h-4 mr-2" />
                 Compartilhar
               </Button>
             )}
+            <Button variant="outline" onClick={exportToPDF}>
+              <FileDown className="w-4 h-4 mr-2" />
+              Baixar PDF
+            </Button>
             <Button variant="outline" onClick={exportCalculation}>
               <Download className="w-4 h-4 mr-2" />
-              Exportar Cálculo
+              Exportar JSON
             </Button>
             <Button onClick={onClose}>
               Fechar
