@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Calculator, Calendar, User, FileText, Download, Share2, FileDown } from 'lucide-react';
 import { ShareCalculationModal } from '@/components/ShareCalculationModal';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface Calculation {
   id: string;
@@ -575,7 +575,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           formatInputValue(key, value)
         ]);
         
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: yPosition,
           head: [['Parâmetro', 'Valor']],
           body: inputTableData,
@@ -701,7 +701,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           `R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         ]);
         
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: yPosition,
           head: [['Material', 'Quantidade', 'Preço Unit.', 'Total']],
           body: materialTableData,
@@ -711,20 +711,20 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             textColor: [255, 255, 255],
             fontSize: 10,
             fontStyle: 'bold',
-            halign: 'center'
+            halign: 'left'
           },
           bodyStyles: {
             fontSize: 9,
             textColor: [31, 41, 55]
           },
           alternateRowStyles: {
-            fillColor: [255, 247, 237]
+            fillColor: [254, 243, 199]
           },
           columnStyles: {
-            0: { cellWidth: 60, halign: 'left' },
-            1: { cellWidth: 40, halign: 'center' },
-            2: { cellWidth: 40, halign: 'right' },
-            3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+            0: { cellWidth: 60 },
+            1: { cellWidth: 40 },
+            2: { cellWidth: 40 },
+            3: { cellWidth: 40, fontStyle: 'bold' }
           }
         });
         
@@ -755,7 +755,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             ]);
           }
           
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: yPosition,
             body: summaryData,
             margin: { left: 15, right: 15 },
@@ -768,8 +768,8 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
               fillColor: [243, 244, 246]
             },
             columnStyles: {
-              0: { cellWidth: 120, halign: 'left' },
-              1: { cellWidth: 'auto', halign: 'right', textColor: [34, 197, 94] }
+              0: { cellWidth: 100, fontStyle: 'bold' },
+              1: { cellWidth: 'auto', halign: 'right' }
             }
           });
           
@@ -811,7 +811,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             `${data.value} ${data.unit}`
           ]);
           
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: yPosition,
             body: infoTableData,
             margin: { left: 15, right: 15 },
@@ -823,8 +823,8 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
               fillColor: [239, 246, 255]
             },
             columnStyles: {
-              0: { cellWidth: 100, fontStyle: 'bold' },
-              1: { cellWidth: 'auto', halign: 'right' }
+              0: { cellWidth: 80, fontStyle: 'bold' },
+              1: { cellWidth: 'auto' }
             }
           });
           
@@ -849,7 +849,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             `${data.value} ${data.unit}`
           ]);
           
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: yPosition,
             body: primaryTableData,
             margin: { left: 15, right: 15 },
@@ -859,11 +859,11 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
               fontStyle: 'bold'
             },
             alternateRowStyles: {
-              fillColor: [255, 247, 237]
+              fillColor: [254, 243, 199]
             },
             columnStyles: {
-              0: { cellWidth: 100 },
-              1: { cellWidth: 'auto', halign: 'right', textColor: accentColor }
+              0: { cellWidth: 80, fontStyle: 'bold' },
+              1: { cellWidth: 'auto' }
             }
           });
           
@@ -888,7 +888,7 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
             `${data.value} ${data.unit}`
           ]);
           
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: yPosition,
             body: secondaryTableData,
             margin: { left: 15, right: 15 },
@@ -900,8 +900,8 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
               fillColor: [249, 250, 251]
             },
             columnStyles: {
-              0: { cellWidth: 100 },
-              1: { cellWidth: 'auto', halign: 'right' }
+              0: { cellWidth: 80 },
+              1: { cellWidth: 'auto' }
             }
           });
           
