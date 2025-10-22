@@ -9,8 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Calculator, Save, Asterisk } from 'lucide-react';
+import { Calculator, Save, Asterisk, Lightbulb, BookOpen, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ContextualTips } from '@/components/ContextualTips';
+import { EnhancedResultDisplay } from '@/components/EnhancedResultDisplay';
 
 interface AreaResult {
   shape: string;
@@ -333,6 +335,11 @@ export const AreaCalculator = () => {
 
       {/* Seção explicativa */}
       <CardContent className="pb-4">
+        {/* Dicas Contextuais */}
+        <div className="mb-6">
+          <ContextualTips calculatorType="area" />
+        </div>
+        
         <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-100">
           <h4 className="font-semibold text-blue-900 mb-2">Como funciona?</h4>
           <ul className="list-disc text-gray-900 ml-5 space-y-1 text-sm">
@@ -396,37 +403,13 @@ export const AreaCalculator = () => {
         </form>
 
         {result && (
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
-            <h3 className="font-semibold text-blue-900 mb-2">Resultado:</h3>
-            <ul className="text-blue-900 space-y-1">
-              <li>
-                <b>Área:</b>{" "}
-                <span className="text-2xl font-bold text-blue-700">
-                  {result.area.toFixed(2)} m²
-                </span>
-              </li>
-              {calcVolume && typeof result.volume === "number" && (
-                <li>
-                  <b>Volume:</b>{" "}
-                  <span className="text-2xl font-bold text-emerald-700">
-                    {result.volume.toFixed(2)} m³
-                  </span>
-                </li>
-              )}
-            </ul>
-            <div className="text-xs text-muted-foreground mt-2">
-              As fórmulas utilizadas estão descritas acima. Para precisão, utilize todas as casas decimais necessárias.
-            </div>
-            <Button
-              onClick={handleSave}
-              variant="outline"
-              size="sm"
-              className="mt-3"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Salvar no Histórico
-            </Button>
-          </div>
+          <EnhancedResultDisplay
+            result={result}
+            shape={shape}
+            dimensions={dimensions}
+            calcVolume={calcVolume}
+            onSave={handleSave}
+          />
         )}
       </CardContent>
     </Card>

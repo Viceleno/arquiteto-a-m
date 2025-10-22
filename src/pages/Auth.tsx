@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, LogIn, UserPlus, Calculator, Ruler, Building, TrendingUp, CheckCircle, Users, Shield, Zap, BookOpen } from 'lucide-react';
+import { AlertCircle, LogIn, UserPlus, Calculator, ArrowRight, Sparkles, Clock, Shield, Zap, CheckCircle, Play } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DemoCalculator } from '@/components/DemoCalculator';
+import { SocialProof } from '@/components/SocialProof';
 
 // Login Form Schema
 const loginSchema = z.object({
@@ -101,45 +103,21 @@ const Auth = () => {
     return <Navigate to="/" replace />;
   }
 
-  const features = [
-    {
-      icon: Calculator,
-      title: "Cálculos Precisos",
-      description: "Ferramentas profissionais para cálculos arquitetônicos baseados em normas técnicas brasileiras (ABNT)"
-    },
-    {
-      icon: Building,
-      title: "Múltiplas Categorias",
-      description: "Calculadoras para áreas, materiais, custos, estruturas e muito mais"
-    },
-    {
-      icon: TrendingUp,
-      title: "Histórico Completo",
-      description: "Salve e organize todos os seus cálculos com exportação em diferentes formatos"
-    },
-    {
-      icon: Users,
-      title: "Feito para Profissionais",
-      description: "Desenvolvido por e para arquitetos, engenheiros e profissionais da construção"
-    }
-  ];
-
   const benefits = [
-    "✓ Cálculos instantâneos com precisão profissional",
-    "✓ Interface intuitiva e responsiva",
-    "✓ Histórico de cálculos salvo automaticamente",
-    "✓ Exportação em múltiplos formatos",
-    "✓ Baseado em normas técnicas brasileiras",
-    "✓ Sempre atualizado com as últimas práticas"
+    { icon: Clock, text: "Economize 2-3 horas por projeto" },
+    { icon: Shield, text: "Baseado em normas técnicas ABNT" },
+    { icon: Zap, text: "Cálculos instantâneos e precisos" },
+    { icon: CheckCircle, text: "Histórico automático de todos os cálculos" }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 items-start max-w-7xl mx-auto">
           
-          {/* Seção Informativa */}
+          {/* Seção Principal - Hero + Demo */}
           <div className="space-y-8">
+            {/* Hero Section */}
             <div className="text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start mb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
@@ -151,12 +129,13 @@ const Auth = () => {
                 </div>
               </div>
               
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
-                Transforme seus cálculos arquitetônicos
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                Calcule projetos arquitetônicos
+                <span className="text-blue-600 block">10x mais rápido</span>
               </h2>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-gray-600 mb-6 max-w-xl">
                 A plataforma mais completa para cálculos precisos em arquitetura e construção. 
-                Desenvolvida com base nas normas técnicas brasileiras para garantir resultados confiáveis.
+                <strong> Usado por 500+ profissionais</strong> que economizam horas todos os dias.
               </p>
               
               <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-8">
@@ -169,218 +148,227 @@ const Auth = () => {
                   Resultados Instantâneos
                 </Badge>
                 <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                  <BookOpen className="w-3 h-3 mr-1" />
+                  <Sparkles className="w-3 h-3 mr-1" />
                   Interface Profissional
                 </Badge>
               </div>
             </div>
 
-            {/* Features Grid */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {features.map((feature, index) => (
-                <div key={index} className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3>
-                      <p className="text-sm text-gray-600">{feature.description}</p>
-                    </div>
+            {/* Benefits */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center space-x-3 bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <benefit.icon className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{benefit.text}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Benefits List */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                Por que escolher o ArqCalc?
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {benefits.map((benefit, index) => (
-                  <p key={index} className="text-sm text-gray-700">{benefit}</p>
-                ))}
-              </div>
+            {/* Demo Calculator */}
+            <div className="lg:hidden">
+              <DemoCalculator />
+            </div>
+
+            {/* Social Proof */}
+            <div className="hidden lg:block">
+              <SocialProof />
             </div>
           </div>
 
           {/* Seção de Login/Cadastro */}
-          <div className="flex justify-center">
-            <Card className="w-full max-w-md shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-              <CardHeader className="text-center space-y-2">
-                <CardTitle className="text-2xl font-bold">Acesse sua conta</CardTitle>
-                <CardDescription>
-                  Entre ou crie sua conta para começar a usar as calculadoras profissionais
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue={tab} value={tab} onValueChange={(v) => setTab(v as "login" | "register")}>
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login" className="flex items-center">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Entrar
-                    </TabsTrigger>
-                    <TabsTrigger value="register" className="flex items-center">
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Cadastrar
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="login">
-                    {loginError && (
-                      <Alert variant="destructive" className="mb-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{loginError}</AlertDescription>
-                      </Alert>
-                    )}
-                    {registerSuccess && (
-                      <Alert className="mb-4 bg-green-50 border-green-200">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                          Cadastro realizado com sucesso! Se a confirmação de email estiver habilitada, verifique sua caixa de entrada antes de fazer login.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 pt-4">
-                        <FormField
-                          control={loginForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" placeholder="seu@email.com" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={loginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Senha</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="********" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
-                          {isSubmitting ? "Entrando..." : (
-                            <>
-                              <LogIn className="mr-2 h-4 w-4" />
-                              Entrar
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </Form>
-                  </TabsContent>
-                  <TabsContent value="register">
-                    {registerError && (
-                      <Alert variant="destructive" className="mb-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{registerError}</AlertDescription>
-                      </Alert>
-                    )}
-                    <Form {...registerForm}>
-                      <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 pt-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome de usuário</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="seunome" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="full_name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome completo</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Seu Nome Completo" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" placeholder="seu@email.com" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Senha</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="********" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Confirmar senha</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="********" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
-                          {isSubmitting ? "Cadastrando..." : (
-                            <>
-                              <UserPlus className="mr-2 h-4 w-4" />
-                              Cadastrar
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </Form>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-              <CardFooter className="flex flex-col items-center space-y-4 text-center">
-                <p className="text-sm text-gray-500">
-                  Plataforma segura e profissional para arquitetos
-                </p>
-                <Alert className="bg-blue-50 border-blue-200">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-blue-800 text-xs">
-                    <strong>Primeira vez aqui?</strong> Crie uma conta gratuita para acessar todas as calculadoras e salvar seu histórico de cálculos.
-                  </AlertDescription>
-                </Alert>
-              </CardFooter>
-            </Card>
+          <div className="flex justify-center lg:justify-end">
+            <div className="w-full max-w-md space-y-6">
+              {/* Demo Calculator para Desktop */}
+              <div className="hidden lg:block">
+                <DemoCalculator />
+              </div>
+
+              {/* Formulário de Login/Cadastro */}
+              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+                <CardHeader className="text-center space-y-2">
+                  <CardTitle className="text-2xl font-bold">Acesse sua conta</CardTitle>
+                  <CardDescription>
+                    Entre ou crie sua conta para começar a usar todas as calculadoras profissionais
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue={tab} value={tab} onValueChange={(v) => setTab(v as "login" | "register")}>
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                      <TabsTrigger value="login" className="flex items-center">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Entrar
+                      </TabsTrigger>
+                      <TabsTrigger value="register" className="flex items-center">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Cadastrar
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="login">
+                      {loginError && (
+                        <Alert variant="destructive" className="mb-4">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{loginError}</AlertDescription>
+                        </Alert>
+                      )}
+                      {registerSuccess && (
+                        <Alert className="mb-4 bg-green-50 border-green-200">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-green-800">
+                            Cadastro realizado com sucesso! Faça login para acessar sua conta.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 pt-4">
+                          <FormField
+                            control={loginForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input {...field} type="email" placeholder="seu@email.com" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={loginForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Senha</FormLabel>
+                                <FormControl>
+                                  <Input {...field} type="password" placeholder="********" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold" disabled={isSubmitting}>
+                            {isSubmitting ? "Entrando..." : (
+                              <>
+                                <LogIn className="mr-2 h-4 w-4" />
+                                Entrar
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </Form>
+                    </TabsContent>
+                    <TabsContent value="register">
+                      {registerError && (
+                        <Alert variant="destructive" className="mb-4">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{registerError}</AlertDescription>
+                        </Alert>
+                      )}
+                      <Form {...registerForm}>
+                        <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 pt-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={registerForm.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Usuário</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="seunome" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={registerForm.control}
+                              name="full_name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nome</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="Nome Completo" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={registerForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input {...field} type="email" placeholder="seu@email.com" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={registerForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Senha</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="password" placeholder="********" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={registerForm.control}
+                              name="confirmPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Confirmar</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="password" placeholder="********" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold" disabled={isSubmitting}>
+                            {isSubmitting ? "Cadastrando..." : (
+                              <>
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Criar Conta Gratuita
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </Form>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+                <CardFooter className="flex flex-col items-center space-y-4 text-center">
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <Shield className="w-4 h-4 text-green-500" />
+                    <span>Plataforma segura e profissional</span>
+                  </div>
+                  <Alert className="bg-blue-50 border-blue-200">
+                    <Play className="h-4 w-4" />
+                    <AlertDescription className="text-blue-800 text-xs">
+                      <strong>Teste grátis!</strong> Experimente a calculadora acima e veja a diferença.
+                    </AlertDescription>
+                  </Alert>
+                </CardFooter>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
