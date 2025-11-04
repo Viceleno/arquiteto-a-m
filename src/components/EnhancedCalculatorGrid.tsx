@@ -218,12 +218,19 @@ export const EnhancedCalculatorGrid = () => {
               Escolha uma calculadora acima e experimente a precisão profissional do ArqCalc.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold">
+              <Button 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
+                onClick={() => window.location.href = '/calculators'}
+              >
                 <Calculator className="w-4 h-4 mr-2" />
                 Ver Todas as Calculadoras
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-              <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Button 
+                variant="outline" 
+                className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={() => window.location.href = '/tips'}
+              >
                 <Lightbulb className="w-4 h-4 mr-2" />
                 Dicas de Uso
               </Button>

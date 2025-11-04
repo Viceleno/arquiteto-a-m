@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Calculators from "./pages/Calculators";
+import Tips from "./pages/Tips";
 import { SharedCalculation } from "./pages/SharedCalculation";
 import NotFound from "./pages/NotFound";
 
@@ -68,6 +69,7 @@ const AppRoutes = () => (
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="/calculators" element={<ProtectedRoute><Calculators /></ProtectedRoute>} />
     <Route path="/calculators/:type" element={<ProtectedRoute><Calculators /></ProtectedRoute>} />
+    <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
     <Route path="/shared/:token" element={<SharedCalculation />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
