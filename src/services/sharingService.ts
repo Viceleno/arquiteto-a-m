@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackEvent } from './analyticsService';
 
 export interface ShareCalculationData {
   calculation_id: string;
@@ -22,6 +23,11 @@ export const createShareLink = async (data: ShareCalculationData) => {
       .single();
 
     if (error) throw error;
+
+    // Track analytics event
+    trackEvent('calculation_shared', {
+      calculation_id: data.calculation_id,
+    });
 
     const shareUrl = `${window.location.origin}/shared/${shareData.share_token}`;
     return { success: true, shareUrl, token: shareData.share_token };

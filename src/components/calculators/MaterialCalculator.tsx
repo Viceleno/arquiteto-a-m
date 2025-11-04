@@ -9,6 +9,7 @@ import { HardHat, Save, Calculator, AlertCircle, BookOpen, Lightbulb } from 'luc
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { trackEvent } from '@/services/analyticsService';
 
 // Importar os módulos
 import { materialCalculators, MaterialCalculatorType } from './material/calculators';
@@ -60,6 +61,12 @@ export const MaterialCalculator = () => {
       }
       
       setResult(calculation);
+      
+      // Track analytics event
+      trackEvent('calculation_completed', {
+        calculator_type: 'material',
+        category,
+      });
       
       toast({
         title: "Cálculo Concluído",

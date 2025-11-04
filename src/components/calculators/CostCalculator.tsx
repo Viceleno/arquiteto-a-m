@@ -14,6 +14,7 @@ import { CostResultChart } from './cost/CostResultChart';
 import { CostResultDetails } from './cost/CostResultDetails';
 import { complexityFactors, materialsDatabase } from './cost/CostCalculatorTypes';
 import type { CostResult, MaterialInputField } from './cost/CostCalculatorTypes';
+import { trackEvent } from '@/services/analyticsService';
 
 export const CostCalculator = () => {
   const { user } = useAuth();
@@ -164,6 +165,13 @@ export const CostCalculator = () => {
       
       setResult(calculationResult);
       setValidationErrors([]);
+      
+      // Track analytics event
+      trackEvent('calculation_completed', {
+        calculator_type: 'cost',
+        material,
+        complexity,
+      });
     } catch (error) {
       toast({
         title: "Erro no cálculo",

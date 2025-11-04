@@ -13,6 +13,7 @@ import { Calculator, Save, Asterisk, Lightbulb, BookOpen, Zap } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import { ContextualTips } from '@/components/ContextualTips';
 import { EnhancedResultDisplay } from '@/components/EnhancedResultDisplay';
+import { trackEvent } from '@/services/analyticsService';
 
 interface AreaResult {
   shape: string;
@@ -91,6 +92,13 @@ export const AreaCalculator = () => {
     }
 
     setResult({ area, volume });
+    
+    // Track analytics event
+    trackEvent('calculation_completed', {
+      calculator_type: 'area',
+      shape,
+      includesVolume: calcVolume,
+    });
   };
 
   // Salvar
