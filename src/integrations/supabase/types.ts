@@ -219,15 +219,7 @@ export type Database = {
       }
     }
     Views: {
-      analytics_summary: {
-        Row: {
-          event_count: number | null
-          event_date: string | null
-          event_name: string | null
-          unique_users: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_current_profile: {
