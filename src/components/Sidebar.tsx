@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, History, Settings, Home, Ruler, HardHat, DollarSign } from 'lucide-react';
+import { Calculator, History, Settings, Home, Ruler, HardHat, DollarSign, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/' },
@@ -21,6 +23,28 @@ export const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      setIsAdmin(!!data);
+    };
+
+    checkAdmin();
+  }, [user]);
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0 overflow-y-auto">
@@ -49,7 +73,7 @@ export const Sidebar = () => {
           </ul>
         </div>
 
-        <div>
+        <div className="mb-6">
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
             Calculadoras
           </h2>
@@ -72,6 +96,30 @@ export const Sidebar = () => {
             ))}
           </ul>
         </div>
+
+        {isAdmin && (
+          <div>
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
+              Administração
+            </h2>
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => navigate('/admin/analytics')}
+                  className={cn(
+                    "w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors",
+                    currentPath === '/admin/analytics'
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                >
+                  <BarChart3 className="w-5 h-5" />
+                  <span className="font-medium">Analytics</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
       </nav>
     </aside>
   );

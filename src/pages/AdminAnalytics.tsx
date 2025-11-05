@@ -4,13 +4,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart3, Users, Activity, TrendingUp } from 'lucide-react';
+import { BarChart3, Users, Activity, TrendingUp, Calculator, Share2, Save } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
-type AnalyticsData = {
+type AnalyticsEvent = {
+  id: string;
   event_name: string;
-  event_count: number;
-  unique_users: number;
-  event_date: string;
+  user_id: string | null;
+  created_at: string;
+  event_data: any;
 };
 
 type EventSummary = {
@@ -19,8 +21,15 @@ type EventSummary = {
   uniqueUsers: number;
 };
 
+type DailyData = {
+  date: string;
+  calculation_completed: number;
+  calculation_saved: number;
+  calculation_shared: number;
+};
+
 export default function AdminAnalytics() {
-  const [data, setData] = useState<AnalyticsData[]>([]);
+  const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,33 +37,16 @@ export default function AdminAnalytics() {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const { data: summaryData, error: summaryError } = await supabase
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        
+        const { data: eventsData, error: eventsError } = await supabase
           .from('analytics_events')
-          .select('event_name, user_id, created_at')
-          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+          .select('*')
+          .gte('created_at', thirtyDaysAgo)
           .order('created_at', { ascending: false });
 
-        if (summaryError) throw summaryError;
-
-        // Agrupar dados manualmente
-        const grouped = (summaryData || []).reduce((acc: Record<string, AnalyticsData>, row) => {
-          const date = new Date(row.created_at).toISOString().split('T')[0];
-          const key = `${row.event_name}-${date}`;
-          
-          if (!acc[key]) {
-            acc[key] = {
-              event_name: row.event_name,
-              event_count: 0,
-              unique_users: 0,
-              event_date: date,
-            };
-          }
-          
-          acc[key].event_count++;
-          return acc;
-        }, {});
-
-        setData(Object.values(grouped));
+        if (eventsError) throw eventsError;
+        setEvents(eventsData || []);
       } catch (err: any) {
         setError('Erro ao buscar dados: ' + err.message);
       } finally {
@@ -64,21 +56,50 @@ export default function AdminAnalytics() {
     fetchAnalytics();
   }, []);
 
-  const eventSummaries = data.reduce((acc: Record<string, EventSummary>, row) => {
-    if (!acc[row.event_name]) {
-      acc[row.event_name] = {
-        name: row.event_name,
+  // Calcular métricas
+  const eventSummaries = events.reduce((acc: Record<string, EventSummary>, event) => {
+    if (!acc[event.event_name]) {
+      acc[event.event_name] = {
+        name: event.event_name,
         total: 0,
         uniqueUsers: 0,
       };
     }
-    acc[row.event_name].total += row.event_count;
-    acc[row.event_name].uniqueUsers += row.unique_users;
+    acc[event.event_name].total++;
     return acc;
   }, {});
 
-  const totalEvents = data.reduce((sum, row) => sum + row.event_count, 0);
-  const totalUsers = new Set(data.map(row => row.unique_users)).size;
+  // Calcular usuários únicos por evento
+  Object.keys(eventSummaries).forEach(eventName => {
+    const uniqueUserIds = new Set(
+      events
+        .filter(e => e.event_name === eventName && e.user_id)
+        .map(e => e.user_id)
+    );
+    eventSummaries[eventName].uniqueUsers = uniqueUserIds.size;
+  });
+
+  const totalEvents = events.length;
+  const uniqueUsers = new Set(events.filter(e => e.user_id).map(e => e.user_id)).size;
+
+  // Preparar dados para o gráfico diário
+  const dailyData: Record<string, DailyData> = {};
+  events.forEach(event => {
+    const date = new Date(event.created_at).toLocaleDateString('pt-BR');
+    if (!dailyData[date]) {
+      dailyData[date] = {
+        date,
+        calculation_completed: 0,
+        calculation_saved: 0,
+        calculation_shared: 0,
+      };
+    }
+    if (event.event_name === 'calculation_completed') dailyData[date].calculation_completed++;
+    if (event.event_name === 'calculation_saved') dailyData[date].calculation_saved++;
+    if (event.event_name === 'calculation_shared') dailyData[date].calculation_shared++;
+  });
+
+  const chartData = Object.values(dailyData).reverse().slice(-14); // Últimos 14 dias
 
   if (loading) {
     return (
@@ -93,6 +114,12 @@ export default function AdminAnalytics() {
       </div>
     );
   }
+
+  const eventLabels: Record<string, { label: string; icon: any }> = {
+    calculation_completed: { label: 'Cálculos Concluídos', icon: Calculator },
+    calculation_saved: { label: 'Cálculos Salvos', icon: Save },
+    calculation_shared: { label: 'Cálculos Compartilhados', icon: Share2 },
+  };
 
   return (
     <div className="p-4 md:p-8 space-y-6">
@@ -136,55 +163,92 @@ export default function AdminAnalytics() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
+            <div className="text-2xl font-bold">{uniqueUsers}</div>
             <p className="text-xs text-muted-foreground">Com atividade recente</p>
           </CardContent>
         </Card>
       </div>
+
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Atividade Diária (Últimos 14 dias)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="calculation_completed" name="Concluídos" fill="hsl(var(--primary))" />
+                <Bar dataKey="calculation_saved" name="Salvos" fill="hsl(var(--chart-2))" />
+                <Bar dataKey="calculation_shared" name="Compartilhados" fill="hsl(var(--chart-3))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle>Resumo de Eventos por Tipo</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Evento</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Object.values(eventSummaries).map((summary, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{summary.name}</TableCell>
-                  <TableCell className="text-right">{summary.total}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-4">
+            {Object.values(eventSummaries).map((summary, index) => {
+              const eventInfo = eventLabels[summary.name] || { label: summary.name, icon: Activity };
+              const Icon = eventInfo.icon;
+              return (
+                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{eventInfo.label}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {summary.uniqueUsers} usuário{summary.uniqueUsers !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">{summary.total}</p>
+                    <p className="text-xs text-muted-foreground">eventos</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Eventos Detalhados (Últimos 30 dias)</CardTitle>
+          <CardTitle>Eventos Recentes</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data</TableHead>
+                <TableHead>Data/Hora</TableHead>
                 <TableHead>Evento</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Usuário</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{new Date(row.event_date).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell className="font-medium">{row.event_name}</TableCell>
-                  <TableCell className="text-right">{row.event_count}</TableCell>
+              {events.slice(0, 50).map((event) => (
+                <TableRow key={event.id}>
+                  <TableCell className="text-sm">
+                    {new Date(event.created_at).toLocaleString('pt-BR')}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {eventLabels[event.event_name]?.label || event.event_name}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {event.user_id ? event.user_id.substring(0, 8) + '...' : 'Anônimo'}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
