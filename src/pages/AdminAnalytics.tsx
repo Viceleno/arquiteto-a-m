@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart3, Users, Activity, TrendingUp, Calculator, Share2, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BarChart3, Users, Activity, TrendingUp, Calculator, Share2, Save, ArrowLeft } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 type AnalyticsEvent = {
@@ -29,6 +31,7 @@ type DailyData = {
 };
 
 export default function AdminAnalytics() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,9 +126,19 @@ export default function AdminAnalytics() {
 
   return (
     <div className="p-4 md:p-8 space-y-6">
-      <div className="flex items-center gap-3">
-        <BarChart3 className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold">Dashboard de Analytics</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <BarChart3 className="w-8 h-8 text-primary" />
+          <h1 className="text-3xl font-bold">Dashboard de Analytics</h1>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </Button>
       </div>
 
       {error && (
