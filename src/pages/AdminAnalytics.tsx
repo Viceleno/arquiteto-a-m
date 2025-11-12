@@ -147,7 +147,28 @@ export default function AdminAnalytics() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {!loading && events.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+            <div className="p-6 bg-muted rounded-full">
+              <BarChart3 className="w-16 h-16 text-muted-foreground" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-semibold">Nenhum dado disponível ainda</h3>
+              <p className="text-muted-foreground max-w-md">
+                Os dados de analytics serão exibidos aqui assim que os usuários começarem a usar as calculadoras.
+                Experimente fazer alguns cálculos para ver os dados aparecerem!
+              </p>
+            </div>
+            <Button onClick={() => navigate('/')} variant="outline" className="gap-2">
+              <Calculator className="w-4 h-4" />
+              Ir para Calculadoras
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
@@ -204,70 +225,76 @@ export default function AdminAnalytics() {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumo de Eventos por Tipo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Object.values(eventSummaries).map((summary, index) => {
-              const eventInfo = eventLabels[summary.name] || { label: summary.name, icon: Activity };
-              const Icon = eventInfo.icon;
-              return (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{eventInfo.label}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {summary.uniqueUsers} usuário{summary.uniqueUsers !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">{summary.total}</p>
-                    <p className="text-xs text-muted-foreground">eventos</p>
-                  </div>
+          {Object.values(eventSummaries).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumo de Eventos por Tipo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.values(eventSummaries).map((summary, index) => {
+                    const eventInfo = eventLabels[summary.name] || { label: summary.name, icon: Activity };
+                    const Icon = eventInfo.icon;
+                    return (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <Icon className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{eventInfo.label}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {summary.uniqueUsers} usuário{summary.uniqueUsers !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">{summary.total}</p>
+                          <p className="text-xs text-muted-foreground">eventos</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Eventos Recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Evento</TableHead>
-                <TableHead>Usuário</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.slice(0, 50).map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="text-sm">
-                    {new Date(event.created_at).toLocaleString('pt-BR')}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {eventLabels[event.event_name]?.label || event.event_name}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {event.user_id ? event.user_id.substring(0, 8) + '...' : 'Anônimo'}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          {events.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Eventos Recentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data/Hora</TableHead>
+                      <TableHead>Evento</TableHead>
+                      <TableHead>Usuário</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.slice(0, 50).map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="text-sm">
+                          {new Date(event.created_at).toLocaleString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {eventLabels[event.event_name]?.label || event.event_name}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {event.user_id ? event.user_id.substring(0, 8) + '...' : 'Anônimo'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calculator, History, User, TrendingUp, Clock, BookOpen, Zap } from 'lucide-react';
 import { EnhancedCalculatorGrid } from '@/components/EnhancedCalculatorGrid';
@@ -9,10 +9,15 @@ import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
+import { trackEvent } from '@/services/analyticsService';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackEvent('page_view', { page: 'dashboard' });
+  }, []);
 
   // Show skeleton while auth is loading
   if (loading) {

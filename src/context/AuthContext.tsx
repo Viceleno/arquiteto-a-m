@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackEvent } from '@/services/analyticsService';
 
 type AuthContextType = {
   user: User | null;
@@ -59,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
       
+      trackEvent('user_login', { email });
       console.log('Login realizado com sucesso');
     } catch (error: any) {
       console.error('Erro no processo de login:', error);
@@ -89,6 +91,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           throw new Error(`Erro ao cadastrar: ${error.message}`);
         }
       }
+      
+      trackEvent('user_signup', { email });
       
       if (data.user && !data.session) {
         toast({
