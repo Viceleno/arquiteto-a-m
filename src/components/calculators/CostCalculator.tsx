@@ -17,6 +17,7 @@ import { complexityFactors, materialsDatabase } from './cost/CostCalculatorTypes
 import type { CostResult, MaterialInputField } from './cost/CostCalculatorTypes';
 import { trackEvent } from '@/services/analyticsService';
 import { Link } from 'react-router-dom';
+import { SaveCalculationModal } from '@/components/SaveCalculationModal';
 
 export const CostCalculator = () => {
   const { user } = useAuth();
@@ -190,7 +191,9 @@ export const CostCalculator = () => {
     }
   };
 
-  const handleSaveCalculation = async () => {
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
+  const handleSaveCalculation = () => {
     if (!user) {
       toast({
         title: "Login necessário",
@@ -202,18 +205,7 @@ export const CostCalculator = () => {
     
     if (!result) return;
     
-    await saveCalculation({
-      calculator_type: 'Estimativa de Custos Detalhada',
-      input_data: {
-        material,
-        materialInputs,
-        complexity,
-        bdi: parseFloat(bdi) || 20,
-        customPrices: { ...contextPrices, ...localCustomPrices }
-      },
-      result,
-      name: `${result.material} - ${materialInputs.area}m² (${complexity})`
-    });
+    setIsSaveModalOpen(true);
   };
 
   const isFormValid = material && complexity && Object.keys(materialInputs).length > 0;
@@ -702,6 +694,29 @@ export const CostCalculator = () => {
           </Card>
         </div>
       )}
+
+      <SaveCalculationModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        calculationData={{
+          calculator_type: 'Estimativa de Custos Detalhada',
+          input_data: {
+            material,
+            materialInputs,
+            complexity,
+            bdi: parseFloat(bdi) || 20,
+            customPrices: { ...contextPrices, ...localCustomPrices }
+          },
+          result: result || {},
+          name: result ? `${result.material} - ${materialInputs.area}m² (${complexity})` : undefined,
+        }}
+        onSaveSuccess={() => {
+          toast({
+            title: "Cálculo salvo",
+            description: "Seu cálculo foi salvo com sucesso no banco de dados.",
+          });
+        }}
+      />
     </div>
   );
 };

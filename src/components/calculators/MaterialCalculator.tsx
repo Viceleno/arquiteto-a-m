@@ -16,6 +16,7 @@ import { materialCalculators, MaterialCalculatorType } from './material/calculat
 import { MaterialInputRenderer } from './material/components/MaterialInputRenderer';
 import { MaterialResultDisplay } from './material/components/MaterialResultDisplay';
 import { MaterialResult } from './material/MaterialCalculatorTypes';
+import { SaveCalculationModal } from '@/components/SaveCalculationModal';
 
 export const MaterialCalculator = () => {
   const { user } = useAuth();
@@ -84,7 +85,9 @@ export const MaterialCalculator = () => {
     }
   };
 
-  const saveMaterialCalculation = async () => {
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
+  const saveMaterialCalculation = () => {
     if (!user) {
       toast({
         title: "Login Necessário",
@@ -103,26 +106,7 @@ export const MaterialCalculator = () => {
       return;
     }
     
-    try {
-      await saveCalculation({
-        calculator_type: 'Cálculo de Materiais',
-        input_data: { category, inputs },
-        result,
-        name: `${materialCalculators[category].name} - ${new Date().toLocaleDateString('pt-BR')}`
-      });
-      
-      toast({
-        title: "Sucesso",
-        description: "Cálculo salvo no seu histórico!",
-      });
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
-      toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível salvar o cálculo. Tente novamente.",
-        variant: "destructive",
-      });
-    }
+    setIsSaveModalOpen(true);
   };
 
   const currentCalculator = materialCalculators[category];
@@ -253,6 +237,23 @@ export const MaterialCalculator = () => {
           )}
         </CardContent>
       </Card>
+
+      <SaveCalculationModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        calculationData={{
+          calculator_type: 'Cálculo de Materiais',
+          input_data: { category, inputs },
+          result: result || {},
+          name: result ? `${materialCalculators[category].name} - ${new Date().toLocaleDateString('pt-BR')}` : undefined,
+        }}
+        onSaveSuccess={() => {
+          toast({
+            title: "Sucesso",
+            description: "Cálculo salvo no seu histórico!",
+          });
+        }}
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@ export interface CalculationData {
   input_data: Record<string, any>;
   result: Record<string, any>;
   name?: string;
+  project_id?: string | null;
 }
 
 export const saveCalculation = async (data: CalculationData) => {
@@ -23,6 +24,7 @@ export const saveCalculation = async (data: CalculationData) => {
         input_data: data.input_data,
         result: data.result,
         name: data.name,
+        project_id: data.project_id || null,
       });
 
     if (error) throw error;

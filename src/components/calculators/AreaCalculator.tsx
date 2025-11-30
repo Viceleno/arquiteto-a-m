@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { ContextualTips } from '@/components/ContextualTips';
 import { EnhancedResultDisplay } from '@/components/EnhancedResultDisplay';
 import { trackEvent } from '@/services/analyticsService';
+import { SaveCalculationModal } from '@/components/SaveCalculationModal';
 
 interface AreaResult {
   shape: string;
@@ -101,8 +102,10 @@ export const AreaCalculator = () => {
     });
   };
 
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
   // Salvar
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!user) {
       toast({
         title: "Login necessário",
@@ -112,13 +115,7 @@ export const AreaCalculator = () => {
       return;
     }
     if (!result) return;
-    await saveCalculation({
-      calculator_type: 'Cálculo de Área e Volume',
-      input_data: { shape, dimensions, calcVolume },
-      result: { area: result.area, volume: result.volume, unit: calcVolume ? 'm³' : 'm²' },
-      name: `Área/Volume ${shape} - ${calcVolume && result.volume ? result.volume.toFixed(2)+'m³' : result.area.toFixed(2)+'m²'}`
-    });
-    toast({ title: "Salvo!", description: "Cálculo salvo no histórico." });
+    setIsSaveModalOpen(true);
   };
 
   // Renderização dos inputs
@@ -420,6 +417,20 @@ export const AreaCalculator = () => {
           />
         )}
       </CardContent>
+
+      <SaveCalculationModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        calculationData={{
+          calculator_type: 'Cálculo de Área e Volume',
+          input_data: { shape, dimensions, calcVolume },
+          result: { area: result?.area, volume: result?.volume, unit: calcVolume ? 'm³' : 'm²' },
+          name: result ? `Área/Volume ${shape} - ${calcVolume && result.volume ? result.volume.toFixed(2)+'m³' : result.area.toFixed(2)+'m²'}` : undefined,
+        }}
+        onSaveSuccess={() => {
+          toast({ title: "Salvo!", description: "Cálculo salvo no histórico." });
+        }}
+      />
     </Card>
   );
 };

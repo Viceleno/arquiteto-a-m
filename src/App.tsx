@@ -17,6 +17,8 @@ import { SharedCalculation } from "./pages/SharedCalculation";
 import NotFound from "./pages/NotFound";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import { AdminRoute } from "./components/AdminRoute";
+import ProjectsList from "./pages/ProjectsList";
+import ProjectDetails from "./pages/ProjectDetails";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +76,8 @@ const AppRoutes = () => (
     <Route path="/calculators/:type" element={<ProtectedRoute><Calculators /></ProtectedRoute>} />
     <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
     <Route path="/prices" element={<ProtectedRoute><Prices /></ProtectedRoute>} />
+    <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
+    <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
     <Route path="/shared/:token" element={<SharedCalculation />} />
     <Route element={<AdminRoute />}>
       <Route path="/admin/analytics" element={<AdminAnalytics />} />
