@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp, Zap, Clock, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
+import { DollarSign, Save, AlertCircle, Info, Calculator, BookOpen, TrendingUp, Zap, Clock, Edit3, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCalculationService } from '@/services/calculationService';
 import { useAuth } from '@/context/AuthContext';
+import { usePrices } from '@/context/PriceContext';
 import { useToast } from '@/hooks/use-toast';
 import { CostCalculatorEngine } from './cost/CostCalculatorEngine';
 import { CostResultChart } from './cost/CostResultChart';
@@ -15,11 +16,13 @@ import { CostResultDetails } from './cost/CostResultDetails';
 import { complexityFactors, materialsDatabase } from './cost/CostCalculatorTypes';
 import type { CostResult, MaterialInputField } from './cost/CostCalculatorTypes';
 import { trackEvent } from '@/services/analyticsService';
+import { Link } from 'react-router-dom';
 
 export const CostCalculator = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { saveCalculation } = useCalculationService();
+  const { prices: contextPrices, loading: pricesLoading } = usePrices();
   
   const [material, setMaterial] = useState('');
   const [materialInputs, setMaterialInputs] = useState<Record<string, number | string>>({});
@@ -28,7 +31,7 @@ export const CostCalculator = () => {
   const [result, setResult] = useState<CostResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [customPrices, setCustomPrices] = useState<Record<string, number>>({});
+  const [localCustomPrices, setLocalCustomPrices] = useState<Record<string, number>>({});
   const [showCustomPrices, setShowCustomPrices] = useState(false);
 
   const handleMaterialChange = (newMaterial: string) => {
@@ -155,12 +158,15 @@ export const CostCalculator = () => {
     setIsCalculating(true);
     
     try {
+      // Combinar preços do contexto com sobrescritas locais
+      const mergedPrices = { ...contextPrices, ...localCustomPrices };
+      
       const calculationResult = CostCalculatorEngine.calculateCosts(
         material,
         materialInputs,
         complexity as keyof typeof complexityFactors,
         bdiNumber,
-        customPrices
+        mergedPrices
       );
       
       setResult(calculationResult);
@@ -203,7 +209,7 @@ export const CostCalculator = () => {
         materialInputs,
         complexity,
         bdi: parseFloat(bdi) || 20,
-        customPrices
+        customPrices: { ...contextPrices, ...localCustomPrices }
       },
       result,
       name: `${result.material} - ${materialInputs.area}m² (${complexity})`
@@ -393,7 +399,10 @@ export const CostCalculator = () => {
                         Valores Regionais
                       </CardTitle>
                       <CardDescription className="text-orange-700 dark:text-orange-300">
-                        Personalize os preços dos materiais conforme sua região
+                        Ajuste pontual para este cálculo ou{' '}
+                        <Link to="/prices" className="underline hover:text-orange-500 inline-flex items-center gap-1">
+                          gerencie preços globais <ExternalLink className="w-3 h-3" />
+                        </Link>
                       </CardDescription>
                     </div>
                   </div>
@@ -433,10 +442,10 @@ export const CostCalculator = () => {
                               step="0.01"
                               min="0"
                               placeholder={item.unitPrice.toFixed(2)}
-                              value={customPrices[`${material}_${index}`] || ''}
+                              value={localCustomPrices[`${material}_${index}`] || contextPrices[`${material}_${index}`] || ''}
                               onChange={(e) => {
                                 const value = parseFloat(e.target.value) || 0;
-                                setCustomPrices(prev => ({
+                                setLocalCustomPrices(prev => ({
                                   ...prev,
                                   [`${material}_${index}`]: value
                                 }));
