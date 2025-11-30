@@ -3,17 +3,14 @@ import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { AlertCircle, LogIn, UserPlus, Calculator, ArrowRight, Sparkles, Clock, Shield, Zap, CheckCircle, Play } from 'lucide-react';
+import { AlertCircle, LogIn, UserPlus, Calculator, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DemoCalculator } from '@/components/DemoCalculator';
-import { SocialProof } from '@/components/SocialProof';
 
 // Login Form Schema
 const loginSchema = z.object({
@@ -103,96 +100,39 @@ const Auth = () => {
     return <Navigate to="/" replace />;
   }
 
-  const benefits = [
-    { icon: Clock, text: "Economize 2-3 horas por projeto" },
-    { icon: Shield, text: "Baseado em normas técnicas ABNT" },
-    { icon: Zap, text: "Cálculos instantâneos e precisos" },
-    { icon: CheckCircle, text: "Histórico automático de todos os cálculos" }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-blue-50/50">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-start max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto min-h-[calc(100vh-4rem)]">
           
-          {/* Seção Principal - Hero + Demo */}
-          <div className="space-y-8">
-            {/* Hero Section */}
-            <div className="text-center lg:text-left">
-              <div className="flex items-center justify-center lg:justify-start mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
-                  <Calculator className="w-8 h-8 text-white" />
-                </div>
-                <div className="ml-4">
-                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">ArqCalc</h1>
-                  <p className="text-gray-600">Calculadora Profissional de Arquitetura</p>
-                </div>
+          {/* Seção Principal - Hero */}
+          <div className="flex flex-col justify-center text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start mb-8">
+              <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                <Calculator className="w-7 h-7 text-white" />
               </div>
-              
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-                Calcule projetos arquitetônicos
-                <span className="text-blue-600 block">10x mais rápido</span>
-              </h2>
-              <p className="text-lg text-gray-600 mb-6 max-w-xl">
-                A plataforma mais completa para cálculos precisos em arquitetura e construção. 
-                <strong> Usado por 500+ profissionais</strong> que economizam horas todos os dias.
-              </p>
-              
-              <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-8">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Normas ABNT
-                </Badge>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <Zap className="w-3 h-3 mr-1" />
-                  Resultados Instantâneos
-                </Badge>
-                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Interface Profissional
-                </Badge>
+              <div className="ml-4">
+                <h1 className="text-3xl font-bold text-gray-900">ArqCalc</h1>
               </div>
             </div>
-
-            {/* Benefits */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center space-x-3 bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-sm">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <benefit.icon className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{benefit.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Demo Calculator */}
-            <div className="lg:hidden">
-              <DemoCalculator />
-            </div>
-
-            {/* Social Proof */}
-            <div className="hidden lg:block">
-              <SocialProof />
-            </div>
+            
+            <h2 className="text-2xl lg:text-3xl font-semibold text-gray-900 mb-4 leading-tight">
+              Suíte de Cálculos para Arquitetura
+            </h2>
+            <p className="text-base text-gray-600 max-w-lg">
+              Acesse suas ferramentas de cálculo de área, materiais e custos em um único lugar.
+            </p>
           </div>
 
           {/* Seção de Login/Cadastro */}
           <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-md space-y-6">
-              {/* Demo Calculator para Desktop */}
-              <div className="hidden lg:block">
-                <DemoCalculator />
-              </div>
-
+            <div className="w-full max-w-md">
               {/* Formulário de Login/Cadastro */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+              <Card className="shadow-lg border border-gray-200 bg-white">
                 <CardHeader className="text-center space-y-2">
                   <CardTitle className="text-2xl font-bold">Acesse sua conta</CardTitle>
                   <CardDescription>
-                    Entre ou crie sua conta para começar a usar todas as calculadoras profissionais
+                    Entre ou crie sua conta para começar
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -251,7 +191,7 @@ const Auth = () => {
                               </FormItem>
                             )}
                           />
-                          <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold" disabled={isSubmitting}>
+                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium" disabled={isSubmitting}>
                             {isSubmitting ? "Entrando..." : (
                               <>
                                 <LogIn className="mr-2 h-4 w-4" />
@@ -341,11 +281,11 @@ const Auth = () => {
                               )}
                             />
                           </div>
-                          <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold" disabled={isSubmitting}>
+                          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium" disabled={isSubmitting}>
                             {isSubmitting ? "Cadastrando..." : (
                               <>
                                 <UserPlus className="mr-2 h-4 w-4" />
-                                Criar Conta Gratuita
+                                Criar Conta
                                 <ArrowRight className="ml-2 h-4 w-4" />
                               </>
                             )}
@@ -355,18 +295,6 @@ const Auth = () => {
                     </TabsContent>
                   </Tabs>
                 </CardContent>
-                <CardFooter className="flex flex-col items-center space-y-4 text-center">
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Shield className="w-4 h-4 text-green-500" />
-                    <span>Plataforma segura e profissional</span>
-                  </div>
-                  <Alert className="bg-blue-50 border-blue-200">
-                    <Play className="h-4 w-4" />
-                    <AlertDescription className="text-blue-800 text-xs">
-                      <strong>Teste grátis!</strong> Experimente a calculadora acima e veja a diferença.
-                    </AlertDescription>
-                  </Alert>
-                </CardFooter>
               </Card>
             </div>
           </div>
