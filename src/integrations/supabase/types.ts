@@ -74,6 +74,45 @@ export type Database = {
         }
         Relationships: []
       }
+      material_prices: {
+        Row: {
+          composition_index: number
+          composition_name: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          material_key: string
+          unit: string
+          unit_price: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          composition_index: number
+          composition_name: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          material_key: string
+          unit: string
+          unit_price: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          composition_index?: number
+          composition_name?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          material_key?: string
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,12 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SettingsProvider } from "@/hooks/useSettings";
+import { PriceProvider } from "@/context/PriceContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Calculators from "./pages/Calculators";
 import Tips from "./pages/Tips";
+import Prices from "./pages/Prices";
 import { SharedCalculation } from "./pages/SharedCalculation";
 import NotFound from "./pages/NotFound";
 import AdminAnalytics from "./pages/AdminAnalytics";
@@ -72,6 +73,7 @@ const AppRoutes = () => (
     <Route path="/calculators" element={<ProtectedRoute><Calculators /></ProtectedRoute>} />
     <Route path="/calculators/:type" element={<ProtectedRoute><Calculators /></ProtectedRoute>} />
     <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
+    <Route path="/prices" element={<ProtectedRoute><Prices /></ProtectedRoute>} />
     <Route path="/shared/:token" element={<SharedCalculation />} />
     <Route element={<AdminRoute />}>
       <Route path="/admin/analytics" element={<AdminAnalytics />} />
@@ -84,13 +86,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SettingsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
+        <PriceProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </PriceProvider>
       </SettingsProvider>
     </AuthProvider>
   </QueryClientProvider>

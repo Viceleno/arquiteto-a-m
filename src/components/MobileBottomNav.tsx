@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calculator, History, User } from 'lucide-react';
+import { Home, Calculator, History, User, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { icon: Home, label: 'Início', path: '/' },
   { icon: Calculator, label: 'Calculadoras', path: '/calculators' },
+  { icon: Tag, label: 'Preços', path: '/prices' },
   { icon: History, label: 'Histórico', path: '/history' },
   { icon: User, label: 'Perfil', path: '/settings' },
 ];

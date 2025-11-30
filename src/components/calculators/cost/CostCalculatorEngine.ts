@@ -2,16 +2,30 @@
 import { MaterialData, CostResult, complexityFactors, materialsDatabase } from './CostCalculatorTypes';
 
 export class CostCalculatorEngine {
+  /**
+   * Calcula custos detalhados de uma obra.
+   * 
+   * @param materialKey - Chave do material (ex: 'concrete', 'brick')
+   * @param inputs - Valores de entrada do formulário
+   * @param complexity - Nível de complexidade da obra
+   * @param bdiPercentage - Percentual de BDI (default: 20%)
+   * @param customPrices - Objeto OBRIGATÓRIO com preços customizados no formato { "materialKey_index": price }
+   * @returns Resultado detalhado do cálculo de custos
+   */
   static calculateCosts(
     materialKey: string,
     inputs: Record<string, number | string>,
     complexity: keyof typeof complexityFactors,
-    bdiPercentage: number = 20,
-    customPrices: Record<string, number> = {}
+    bdiPercentage: number,
+    customPrices: Record<string, number>
   ): CostResult {
     const materialData = materialsDatabase[materialKey];
     if (!materialData) {
       throw new Error('Material não encontrado');
+    }
+
+    if (!customPrices || typeof customPrices !== 'object') {
+      throw new Error('Objeto de preços customizados é obrigatório');
     }
 
     const complexityFactor = complexityFactors[complexity].factor;
@@ -31,11 +45,12 @@ export class CostCalculatorEngine {
     // Aplicar fator de perda
     const quantityWithWaste = quantity * (1 + materialData.wastePercentage / 100);
 
-    // Calcular materiais e insumos
+    // Calcular materiais e insumos usando preços do contexto
     const materialDetails = materialData.compositions.map((item, index) => {
       const itemQuantity = quantityWithWaste * item.consumption;
       const customPriceKey = `${materialKey}_${index}`;
-      const unitPrice = customPrices[customPriceKey] || item.unitPrice;
+      // Usar preço do contexto, fallback para preço default do item
+      const unitPrice = customPrices[customPriceKey] ?? item.unitPrice;
       const total = itemQuantity * unitPrice;
       
       return {
@@ -47,7 +62,6 @@ export class CostCalculatorEngine {
         category: item.category,
       };
     });
-
     // Calcular custo total de materiais
     const materialTotal = materialDetails
       .filter(item => item.category === 'material' || item.category === 'auxiliary')
