@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, Info, AlertTriangle, TrendingUp, BookOpen, Lightbulb } from 'lucide-react';
 import { MaterialResult } from '../MaterialCalculatorTypes';
 
@@ -15,10 +16,21 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
   result,
   categoryName
 }) => {
+  // Extrai alertas do resultado (se houver)
+  const alertsData = result.alerts;
+  const alerts = alertsData ? String(alertsData.value).split('|||') : [];
+  
+  // Filtra o campo alerts e sandSwellingNote das exibições normais
+  const filteredResult = Object.fromEntries(
+    Object.entries(result).filter(([key]) => key !== 'alerts' && key !== 'sandSwellingNote')
+  );
+  
+  const sandSwellingNote = result.sandSwellingNote;
+  
   const groupedResults = {
-    primary: Object.entries(result).filter(([_, data]) => data.category === 'primary'),
-    secondary: Object.entries(result).filter(([_, data]) => data.category === 'secondary'),
-    info: Object.entries(result).filter(([_, data]) => data.category === 'info' || !data.category)
+    primary: Object.entries(filteredResult).filter(([_, data]) => data.category === 'primary'),
+    secondary: Object.entries(filteredResult).filter(([_, data]) => data.category === 'secondary'),
+    info: Object.entries(filteredResult).filter(([_, data]) => data.category === 'info' || !data.category)
   };
 
   const formatLabel = (key: string) => {
@@ -124,6 +136,10 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
       wireKg: 'Arame Recozido',
       spacersUn: 'Espaçadores de Concreto',
       curingCompoundL: 'Composto de Cura',
+      sandHumidityInfo: 'Umidade da Areia',
+      sandSwellingNote: 'Ajuste de Inchamento',
+      steelLoss: 'Perda de Aço',
+      alerts: 'Alertas',
       // Labels para cobertura
       tileType: 'Tipo de Telha',
       ridgeLength: 'Comprimento Cumeeira',
@@ -410,6 +426,42 @@ export const MaterialResultDisplay: React.FC<MaterialResultDisplayProps> = ({
           </CardTitle>
         </CardHeader>
       </Card>
+
+      {/* Alertas de Compatibilidade */}
+      {alerts.length > 0 && (
+        <div className="space-y-3">
+          {alerts.map((alert, index) => {
+            const isWarning = alert.startsWith('⚠️');
+            const isTip = alert.startsWith('💡');
+            return (
+              <Alert 
+                key={index} 
+                variant={isWarning ? 'destructive' : 'default'}
+                className={isTip ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30' : ''}
+              >
+                <AlertTriangle className={`h-4 w-4 ${isTip ? 'text-blue-600' : ''}`} />
+                <AlertTitle className={isTip ? 'text-blue-900 dark:text-blue-100' : ''}>
+                  {isWarning ? 'Alerta de Compatibilidade' : isTip ? 'Dica de Otimização' : 'Atenção'}
+                </AlertTitle>
+                <AlertDescription className={isTip ? 'text-blue-800 dark:text-blue-200' : ''}>
+                  {alert.replace(/^[⚠️💡]\s*/, '')}
+                </AlertDescription>
+              </Alert>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Nota de ajuste de inchamento da areia */}
+      {sandSwellingNote && (
+        <Alert className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30">
+          <Info className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-900 dark:text-amber-100">Ajuste por Umidade da Areia (NBR 9775)</AlertTitle>
+          <AlertDescription className="text-amber-800 dark:text-amber-200">
+            {String(sandSwellingNote.value)}
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="space-y-4">
         {renderResultGroup(getCategoryTitle('primary'), groupedResults.primary, 'primary')}
