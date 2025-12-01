@@ -22,7 +22,8 @@ import {
   History,
   Ruler,
   HardHat,
-  DollarSign
+  DollarSign,
+  FolderOpen
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from 'react-router-dom';
@@ -32,6 +33,7 @@ const menuItems = [
   { icon: Home, label: 'Dashboard', path: '/' },
   { icon: Calculator, label: 'Calculadoras', path: '/calculators' },
   { icon: History, label: 'Histórico', path: '/history' },
+  { icon: FolderOpen, label: 'Projetos', path: '/projects' },
   { icon: Settings, label: 'Configurações', path: '/settings' },
 ];
 
