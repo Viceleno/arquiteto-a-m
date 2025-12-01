@@ -31,7 +31,8 @@ import {
   Percent,
   DollarSign,
   Package,
-  Clock
+  Clock,
+  RotateCcw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -67,11 +68,12 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
-  const { settings, loading: settingsLoading, updateSettings } = useSettings();
+  const { settings, loading: settingsLoading, updateSettings, resetToMarketDefaults } = useSettings();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -254,6 +256,44 @@ const Settings = () => {
         variant: 'destructive',
         duration: 5000,
       });
+    }
+  };
+
+  const handleResetMarketDefaults = async () => {
+    if (!window.confirm('🔄 Restaurar todos os parâmetros para os padrões de mercado?\n\n' +
+      '• BDI: 20%\n' +
+      '• Encargos Sociais: 88%\n' +
+      '• Hora Técnica: R$ 150,00\n' +
+      '• Perda Materiais: 5%')) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      await resetToMarketDefaults();
+      
+      // Recarregar o formulário com os novos valores
+      if (settings) {
+        form.setValue('bdi_padrao', 20);
+        form.setValue('encargos_sociais', 88);
+        form.setValue('valor_hora_tecnica', 150);
+        form.setValue('perda_padrao_materiais', 5);
+      }
+
+      toast({
+        title: '✅ Parâmetros Restaurados',
+        description: 'Seus parâmetros foram resetados para os padrões de mercado com sucesso!',
+        duration: 3000,
+      });
+    } catch (error: any) {
+      toast({
+        title: '❌ Erro ao restaurar padrões',
+        description: error?.message || 'Não foi possível restaurar os parâmetros padrão.',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -688,7 +728,7 @@ const Settings = () => {
                         </div>
 
                         {/* Informação sobre uso */}
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
                             <div className="flex items-start gap-3">
                               <Info className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
@@ -701,6 +741,29 @@ const Settings = () => {
                                 </p>
                               </div>
                             </div>
+                          </div>
+
+                          {/* Botão Restaurar Padrões */}
+                          <div className="flex gap-3">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleResetMarketDefaults}
+                              disabled={isResetting}
+                              className="flex-1 h-11 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
+                            >
+                              {isResetting ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                                  <span>Restaurando...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <RotateCcw className="w-4 h-4" />
+                                  <span>Restaurar Padrões de Mercado</span>
+                                </>
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
