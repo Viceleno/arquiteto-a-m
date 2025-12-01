@@ -15,15 +15,25 @@ import {
   Target,
   Zap,
   BookOpen,
-  Lightbulb
+  Lightbulb,
+  History
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { getCalculatorByDbKey } from '@/config/calculatorRegistry';
 
 interface UserStats {
   totalCalculations: number;
   lastCalculationDate: string | null;
   favoriteCalculator: string | null;
-  timeSaved: number; // em horas
+}
+
+interface RecentCalculation {
+  id: string;
+  name: string | null;
+  calculator_type: string;
+  created_at: string;
+  result: any;
 }
 
 export const SmartWelcomeCard = () => {
@@ -32,26 +42,96 @@ export const SmartWelcomeCard = () => {
   const [userStats, setUserStats] = useState<UserStats>({
     totalCalculations: 0,
     lastCalculationDate: null,
-    favoriteCalculator: null,
-    timeSaved: 0
+    favoriteCalculator: null
   });
+  const [recentCalculations, setRecentCalculations] = useState<RecentCalculation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Simular carregamento de estatísticas do usuário
+  // Carregar dados reais do usuário
   useEffect(() => {
-    // Em uma implementação real, isso viria de uma API
-    const mockStats: UserStats = {
-      totalCalculations: 12,
-      lastCalculationDate: '2024-01-15',
-      favoriteCalculator: 'Cálculo de Área',
-      timeSaved: 24
-    };
-    setUserStats(mockStats);
-    
-    // Verificar se é primeira visita
-    const isFirstVisit = !localStorage.getItem('arqcalc_onboarding_completed');
-    setShowOnboarding(isFirstVisit);
-  }, []);
+    if (user) {
+      loadUserStats();
+      loadRecentCalculations();
+    }
+  }, [user]);
+
+  const loadUserStats = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+
+      // Buscar total de cálculos
+      const { count, error: countError } = await supabase
+        .from('calculations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (countError) throw countError;
+
+      // Buscar calculadora mais usada
+      const { data: calcTypes, error: typesError } = await supabase
+        .from('calculations')
+        .select('calculator_type')
+        .eq('user_id', user.id);
+
+      if (typesError) throw typesError;
+
+      // Contar tipos de calculadora
+      const typeCounts = calcTypes?.reduce((acc: Record<string, number>, calc) => {
+        acc[calc.calculator_type] = (acc[calc.calculator_type] || 0) + 1;
+        return acc;
+      }, {});
+
+      const favoriteType = typeCounts && Object.keys(typeCounts).length > 0
+        ? Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0][0]
+        : null;
+
+      // Buscar última data de cálculo
+      const { data: lastCalc, error: lastError } = await supabase
+        .from('calculations')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastError) throw lastError;
+
+      setUserStats({
+        totalCalculations: count || 0,
+        lastCalculationDate: lastCalc?.created_at || null,
+        favoriteCalculator: favoriteType
+      });
+
+      // Verificar se é primeira visita
+      const isFirstVisit = !localStorage.getItem('arqcalc_onboarding_completed');
+      setShowOnboarding(isFirstVisit && (count === 0 || count === null));
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadRecentCalculations = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('calculations')
+        .select('id, name, calculator_type, created_at, result')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      setRecentCalculations(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar cálculos recentes:', error);
+    }
+  };
 
   const getUserGreeting = () => {
     const hour = new Date().getHours();
@@ -72,10 +152,37 @@ export const SmartWelcomeCard = () => {
     }
   };
 
-  const getTimeSavedMessage = () => {
-    if (userStats.timeSaved === 0) return "Comece a economizar tempo hoje!";
-    if (userStats.timeSaved < 10) return `Você já economizou ${userStats.timeSaved}h!`;
-    return `Incrível! ${userStats.timeSaved}h economizadas!`;
+  const getFavoriteCalculatorName = () => {
+    if (!userStats.favoriteCalculator) return 'Nenhuma ainda';
+    const calculator = getCalculatorByDbKey(userStats.favoriteCalculator);
+    return calculator?.title || userStats.favoriteCalculator;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getResultPreview = (calc: RecentCalculation): string => {
+    const result = calc.result || {};
+    if (result.totalCostWithBDI) {
+      return `R$ ${parseFloat(result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+    if (result.totalCost) {
+      return `R$ ${parseFloat(result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+    if (result.area) {
+      return `${parseFloat(result.area).toFixed(2)} m²`;
+    }
+    if (result.volume) {
+      return `${parseFloat(result.volume).toFixed(2)} m³`;
+    }
+    return 'Ver detalhes';
   };
 
   const onboardingSteps = [
@@ -149,40 +256,75 @@ export const SmartWelcomeCard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white/60 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-600 mb-1">
-                {userStats.totalCalculations}
+                {isLoading ? '...' : userStats.totalCalculations}
               </div>
               <div className="text-sm text-blue-700">Cálculos Realizados</div>
             </div>
             <div className="bg-white/60 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600 mb-1">
-                {userStats.timeSaved}h
+                {isLoading ? '...' : (userStats.lastCalculationDate ? formatDate(userStats.lastCalculationDate).split(',')[0] : 'Nenhum')}
               </div>
-              <div className="text-sm text-green-700">Tempo Economizado</div>
+              <div className="text-sm text-green-700">Último Cálculo</div>
             </div>
             <div className="bg-white/60 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 mb-1">
-                {userStats.favoriteCalculator ? 'Área' : 'N/A'}
+              <div className="text-2xl font-bold text-purple-600 mb-1 truncate">
+                {isLoading ? '...' : getFavoriteCalculatorName()}
               </div>
-              <div className="text-sm text-purple-700">Calculadora Favorita</div>
+              <div className="text-sm text-purple-700">Mais Usada</div>
             </div>
           </div>
 
-          {/* Motivational Message */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-green-600" />
+          {/* Recent Calculations */}
+          {recentCalculations.length > 0 && (
+            <div className="bg-white/60 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <History className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-semibold text-blue-900">Recentes</h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/history')}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  Ver todos
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
               </div>
-              <div>
-                <p className="font-semibold text-green-900">
-                  {getTimeSavedMessage()}
-                </p>
-                <p className="text-sm text-green-700">
-                  Continue usando o ArqCalc para economizar ainda mais tempo em seus projetos.
-                </p>
+              <div className="space-y-2">
+                {recentCalculations.map((calc) => {
+                  const calculator = getCalculatorByDbKey(calc.calculator_type);
+                  return (
+                    <div
+                      key={calc.id}
+                      onClick={() => navigate(`/history`)}
+                      className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        {calculator?.icon && (
+                          <div className={`w-8 h-8 ${calculator.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                            <calculator.icon className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">
+                            {calc.name || calculator?.title || 'Sem nome'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDate(calc.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-700 ml-2 flex-shrink-0">
+                        {getResultPreview(calc)}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
