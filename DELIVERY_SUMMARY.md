@@ -3,6 +3,7 @@
 ## ✅ O QUE FOI ENTREGUE
 
 ### 1. 📊 **Migration SQL** - Banco de Dados Robusto
+
 **Arquivo**: `supabase/migrations/20251201000002_add_business_settings.sql`
 
 ```
@@ -14,6 +15,7 @@
 ```
 
 **Colunas**:
+
 - `cau_crea`: Registro profissional (CAU/CREA)
 - `professional_phone`: Telefone profissional
 - `business_address`: Endereço comercial
@@ -22,6 +24,7 @@
 ---
 
 ### 2. 🔧 **Hook useSettings.tsx** - Lógica Inteligente
+
 **Arquivo**: `src/hooks/useSettings.tsx`
 
 ```
@@ -34,6 +37,7 @@
 ```
 
 **Recursos**:
+
 - Se campo vem `null` do banco → usa valor padrão
 - Atualização otimista (instant feedback)
 - Reverter automático se salvar falhar
@@ -42,6 +46,7 @@
 ---
 
 ### 3. 🎨 **UI - Settings.tsx** - Botão "Restaurar Padrões"
+
 **Arquivo**: `src/pages/Settings.tsx`
 
 ```
@@ -54,6 +59,7 @@
 ```
 
 **Fluxo Visual**:
+
 ```
 1. User clica botão "Restaurar"
    ↓
@@ -77,29 +83,34 @@
 ## 🎯 OBJETIVOS ATINGIDOS
 
 ✅ **Segurança dos Dados**
+
 - Constraints de banco impedem valores inválidos
 - Merge inteligente de defaults
 - Rollback automático em caso de erro
 
 ✅ **Confiança do Usuário**
+
 - Confirmação antes de restaurar
 - Feedback visual claro (toasts, spinners)
 - Dados visíveis e persistentes
 - Recuperação fácil dos padrões
 
 ✅ **Robustez**
+
 - Tratamento de erro em toda cadeia
 - Tipagem TypeScript forte
 - Validação em múltiplas camadas (UI, App, DB)
 - Fallback automático para padrões
 
 ✅ **Usabilidade**
+
 - Botão intuitivo com ícone
 - Confirmação clara
 - Operação instantânea (< 1s)
 - Funciona em mobile e desktop
 
 ✅ **Manutenibilidade**
+
 - Código bem documentado
 - Estrutura clara e lógica
 - Fácil adicionar mais campos
@@ -109,26 +120,28 @@
 
 ## 📦 ARQUIVOS MODIFICADOS
 
-| Arquivo | Tipo | Mudança |
-|---------|------|---------|
-| `supabase/migrations/20251201000002_add_business_settings.sql` | SQL | 🆕 Criado |
-| `src/hooks/useSettings.tsx` | TypeScript | ✏️ Atualizado |
-| `src/pages/Settings.tsx` | TypeScript | ✏️ Atualizado |
-| `IMPLEMENTATION_SUMMARY.md` | Docs | 📝 Atualizado |
-| `ARCHITECTURE.md` | Docs | 🆕 Criado |
-| `TESTING_GUIDE.md` | Docs | 🆕 Criado |
+| Arquivo                                                        | Tipo       | Mudança       |
+| -------------------------------------------------------------- | ---------- | ------------- |
+| `supabase/migrations/20251201000002_add_business_settings.sql` | SQL        | 🆕 Criado     |
+| `src/hooks/useSettings.tsx`                                    | TypeScript | ✏️ Atualizado |
+| `src/pages/Settings.tsx`                                       | TypeScript | ✏️ Atualizado |
+| `IMPLEMENTATION_SUMMARY.md`                                    | Docs       | 📝 Atualizado |
+| `ARCHITECTURE.md`                                              | Docs       | 🆕 Criado     |
+| `TESTING_GUIDE.md`                                             | Docs       | 🆕 Criado     |
 
 ---
 
 ## 🚀 PRÓXIMOS PASSOS
 
 ### 1. **Executar a Migration** (5 min)
+
 ```sql
 -- No Supabase SQL Editor, execute:
 -- Copy & paste do arquivo 20251201000002_add_business_settings.sql
 ```
 
 ### 2. **Testar na Aplicação** (10 min)
+
 ```
 1. Abra Settings → Aba "Cálculos"
 2. Veja o novo botão "🔄 Restaurar Padrões de Mercado"
@@ -138,12 +151,14 @@
 ```
 
 ### 3. **Validar no Banco** (3 min)
+
 ```sql
 -- Consulte os dados salvos:
 SELECT * FROM user_settings WHERE user_id = 'SEU_USER_ID';
 ```
 
 ### 4. **Deploy** (quando pronto)
+
 ```bash
 git add .
 git commit -m "feat: adicionar configurações empresariais e botão restaurar padrões"
@@ -155,12 +170,14 @@ git push origin main
 ## 💡 DESTAQUES TÉCNICOS
 
 ### Merge Inteligente
+
 ```typescript
 // Se campo vem null do banco, usa default
 const value = data.bdi_padrao ?? defaultSettings.bdi_padrao;
 ```
 
 ### Rollback Automático
+
 ```typescript
 // Guarda estado anterior
 const previousSettings = settings;
@@ -169,17 +186,19 @@ setSettings(previousSettings);
 ```
 
 ### Confirmação Contextualizada
+
 ```tsx
 window.confirm(
-  '🔄 Restaurar padrões?\n' +
-  '• BDI: 20%\n' +
-  '• Encargos: 88%\n' +
-  '• Hora: R$ 150,00\n' +
-  '• Perda: 5%'
-)
+  "🔄 Restaurar padrões?\n" +
+    "• BDI: 20%\n" +
+    "• Encargos: 88%\n" +
+    "• Hora: R$ 150,00\n" +
+    "• Perda: 5%"
+);
 ```
 
 ### Constraints SQL
+
 ```sql
 CHECK (default_bdi >= 0 AND default_bdi <= 100)
 CHECK (social_charges >= 0 AND social_charges <= 200)
@@ -190,23 +209,25 @@ CHECK (tech_hour_rate >= 0)
 
 ## 📊 VALORES PADRÃO DE MERCADO
 
-| Parâmetro | Valor | Justificativa |
-|-----------|-------|---------------|
-| BDI | 20% | SINAPI padrão para obras públicas |
-| Encargos Sociais | 88% | Mercado brasileiro (FGTS, INSS, 13º, férias) |
-| Hora Técnica | R$ 150,00 | Profissional experiente em região metropolitana |
-| Perda Materiais | 5% | Perda padrão para materiais sem grandes cortes |
+| Parâmetro        | Valor     | Justificativa                                   |
+| ---------------- | --------- | ----------------------------------------------- |
+| BDI              | 20%       | SINAPI padrão para obras públicas               |
+| Encargos Sociais | 88%       | Mercado brasileiro (FGTS, INSS, 13º, férias)    |
+| Hora Técnica     | R$ 150,00 | Profissional experiente em região metropolitana |
+| Perda Materiais  | 5%        | Perda padrão para materiais sem grandes cortes  |
 
 ---
 
 ## 🔒 SEGURANÇA
 
 ✅ **Validação em 3 Camadas**:
+
 1. **UI**: React Form com Zod schema
 2. **App**: TypeScript interfaces com tipos fortes
 3. **DB**: PostgreSQL constraints
 
 ✅ **Proteção Contra**:
+
 - Valores inválidos (constraints)
 - Valores null (merge de defaults)
 - Erros de rede (rollback automático)
@@ -217,12 +238,14 @@ CHECK (tech_hour_rate >= 0)
 ## 📈 PERFORMANCE
 
 ⚡ **Otimizações Implementadas**:
+
 - **Otimistic Update**: UI atualiza antes do banco
 - **Upsert**: Uma única operação em vez de INSERT ou UPDATE separado
 - **Índice**: `idx_user_settings_user_id` para queries rápidas
 - **Sem N+1**: Query única para carregar settings
 
 **Tempos Esperados**:
+
 - Salvar: < 1000ms
 - Restaurar: < 1500ms
 - Carregar: < 500ms
@@ -232,6 +255,7 @@ CHECK (tech_hour_rate >= 0)
 ## ✨ EXPERIÊNCIA DO USUÁRIO
 
 ### Antes
+
 ```
 ❌ Usuário muda parametros
 ❌ Clica salvar
@@ -241,6 +265,7 @@ CHECK (tech_hour_rate >= 0)
 ```
 
 ### Depois
+
 ```
 ✅ Usuário muda parametros
 ✅ Clica salvar
@@ -273,15 +298,15 @@ CHECK (tech_hour_rate >= 0)
 
 ## 🏆 QUALIDADE
 
-| Métrica | Status |
-|---------|--------|
-| TypeScript Errors | ✅ 0 |
-| ESLint Warnings | ✅ 0 |
-| Database Constraints | ✅ 3 |
-| Error Handling | ✅ Robusto |
-| User Feedback | ✅ Claro |
-| Performance | ✅ Otimizado |
-| Documentation | ✅ Completo |
+| Métrica              | Status       |
+| -------------------- | ------------ |
+| TypeScript Errors    | ✅ 0         |
+| ESLint Warnings      | ✅ 0         |
+| Database Constraints | ✅ 3         |
+| Error Handling       | ✅ Robusto   |
+| User Feedback        | ✅ Claro     |
+| Performance          | ✅ Otimizado |
+| Documentation        | ✅ Completo  |
 
 ---
 
@@ -304,6 +329,7 @@ CHECK (tech_hour_rate >= 0)
 **Status**: 🚀 **PRONTO PARA PRODUÇÃO**
 
 **Checklist de Go-Live**:
+
 - ✅ Código implementado
 - ✅ Sem erros de compilação
 - ✅ Documentação completa

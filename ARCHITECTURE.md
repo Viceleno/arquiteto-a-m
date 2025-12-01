@@ -25,6 +25,7 @@
 ```
 
 **Constraints de Integridade**:
+
 ```sql
 CHECK (default_bdi >= 0 AND default_bdi <= 100)
 CHECK (social_charges >= 0 AND social_charges <= 200)
@@ -50,6 +51,7 @@ SettingsContext → Providers to Components
 ```
 
 #### **loadSettings()** - Inteligência de Merge
+
 ```
 1. Query user_settings by user_id
 2. For each field:
@@ -60,6 +62,7 @@ SettingsContext → Providers to Components
 ```
 
 #### **updateSettings(newSettings)** - Segurança
+
 ```
 1. Store previousSettings (for rollback)
 2. Optimistic update: setSettings(newSettings)
@@ -70,6 +73,7 @@ SettingsContext → Providers to Components
 ```
 
 #### **resetToMarketDefaults()** - Padrões
+
 ```
 Executa updateSettings com:
 {
@@ -112,6 +116,7 @@ Executa updateSettings com:
 ```
 
 #### **handleResetMarketDefaults()**
+
 ```
 1. Show confirmation dialog with values
 2. User confirms → setIsResetting(true)
@@ -219,6 +224,7 @@ Executa updateSettings com:
 ## 🛡️ Tratamento de Erros
 
 ### Cenário 1: Falha ao Salvar
+
 ```
 ✗ Erro de rede ou banco de dados
 
@@ -232,6 +238,7 @@ Executa updateSettings com:
 ```
 
 ### Cenário 2: Usuário Não Autenticado
+
 ```
 ✗ Tentativa de atualizar sem user
 
@@ -241,6 +248,7 @@ Executa updateSettings com:
 ```
 
 ### Cenário 3: Dados Inválidos do Banco
+
 ```
 ✗ Campo vem null do banco
 
@@ -253,18 +261,18 @@ Executa updateSettings com:
 
 ## 📊 Tipo de Dados por Campo
 
-| Campo | Tipo | Min | Max | Padrão | Descrição |
-|-------|------|-----|-----|--------|-----------|
-| `bdi_padrao` | numeric(5,2) | 0 | 100 | 20.00 | BDI em % |
-| `encargos_sociais` | numeric(5,2) | 0 | 200 | 88.00 | Encargos em % |
-| `valor_hora_tecnica` | numeric(10,2) | 0 | ∞ | 150.00 | Valor em R$ |
-| `perda_padrao_materiais` | numeric(5,2) | 0 | 50 | 5.00 | Perda em % |
-| `cau_crea` | varchar(50) | - | - | null | Texto livre |
-| `professional_phone` | varchar(20) | - | - | null | Texto livre |
-| `business_address` | text | - | - | null | Texto livre |
-| `default_bdi` | numeric(5,2) | 0 | 100 | 20.00 | BDI duplicado |
-| `social_charges` | numeric(5,2) | 0 | 200 | 88.00 | Encargos duplicado |
-| `tech_hour_rate` | numeric(10,2) | 0 | ∞ | 150.00 | Hora técnica duplicado |
+| Campo                    | Tipo          | Min | Max | Padrão | Descrição              |
+| ------------------------ | ------------- | --- | --- | ------ | ---------------------- |
+| `bdi_padrao`             | numeric(5,2)  | 0   | 100 | 20.00  | BDI em %               |
+| `encargos_sociais`       | numeric(5,2)  | 0   | 200 | 88.00  | Encargos em %          |
+| `valor_hora_tecnica`     | numeric(10,2) | 0   | ∞   | 150.00 | Valor em R$            |
+| `perda_padrao_materiais` | numeric(5,2)  | 0   | 50  | 5.00   | Perda em %             |
+| `cau_crea`               | varchar(50)   | -   | -   | null   | Texto livre            |
+| `professional_phone`     | varchar(20)   | -   | -   | null   | Texto livre            |
+| `business_address`       | text          | -   | -   | null   | Texto livre            |
+| `default_bdi`            | numeric(5,2)  | 0   | 100 | 20.00  | BDI duplicado          |
+| `social_charges`         | numeric(5,2)  | 0   | 200 | 88.00  | Encargos duplicado     |
+| `tech_hour_rate`         | numeric(10,2) | 0   | ∞   | 150.00 | Hora técnica duplicado |
 
 ---
 

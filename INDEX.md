@@ -5,12 +5,14 @@
 Se você está começando, leia nesta ordem:
 
 1. **DELIVERY_SUMMARY.md** ← 👈 COMECE AQUI (5 min)
+
    - Resumo executivo
    - O que foi entregue
    - Objetivos atingidos
    - Valores padrão de mercado
 
 2. **IMPLEMENTATION_SUMMARY.md** (5 min)
+
    - Instruções passo a passo
    - Como usar
    - Como aplicar migration
@@ -29,6 +31,7 @@ Se você está começando, leia nesta ordem:
 ### Para Desenvolvedores
 
 - **ARCHITECTURE.md** (15 min)
+
   - Arquitetura do sistema
   - Fluxos de dados
   - Tratamento de erros
@@ -36,6 +39,7 @@ Se você está começando, leia nesta ordem:
   - Checklist de implementação
 
 - **TESTING_GUIDE.md** (20 min)
+
   - 19 testes manuais
   - Testes de UI
   - Testes de banco
@@ -112,21 +116,27 @@ supabase/
 ### ❓ "Como..."
 
 #### Como aplicar a migration?
+
 → IMPLEMENTATION_SUMMARY.md ou DEPLOYMENT.md (Passo 1)
 
 #### Como testar?
+
 → TESTING_GUIDE.md (19 testes)
 
 #### Como fazer deploy?
+
 → DEPLOYMENT.md (passos 1-9)
 
 #### Como os dados são salvos?
+
 → ARCHITECTURE.md (fluxo de dados) ou IMPLEMENTATION_SUMMARY.md
 
 #### Como o usuário usa?
+
 → UI_MOCKUP.md ou DELIVERY_SUMMARY.md (UX antes/depois)
 
 #### Como funciona o rollback?
+
 → ARCHITECTURE.md (tratamento de erros) ou useSettings.tsx (código)
 
 ---
@@ -134,18 +144,23 @@ supabase/
 ### 🏗️ "Arquitetura..."
 
 #### Fluxo de dados completo?
+
 → ARCHITECTURE.md (seção "Fluxo Completo")
 
 #### Estrutura do banco?
+
 → ARCHITECTURE.md (Database Layer) ou migration SQL
 
 #### Fluxo de restauração?
+
 → ARCHITECTURE.md (seção "Fluxo: Restaurar Padrões de Mercado")
 
 #### Como merge de defaults funciona?
+
 → ARCHITECTURE.md (loadSettings) ou useSettings.tsx
 
 #### Tratamento de erros?
+
 → ARCHITECTURE.md (Tratamento de Erros) ou DEPLOYMENT.md
 
 ---
@@ -153,18 +168,23 @@ supabase/
 ### 🧪 "Testes..."
 
 #### Quais testes fazer?
+
 → TESTING_GUIDE.md (Testes 1-19)
 
 #### Como testar restaurar padrões?
+
 → TESTING_GUIDE.md (Teste 2)
 
 #### Como testar erro de rede?
+
 → TESTING_GUIDE.md (Testes 12-13)
 
 #### Como validar banco?
+
 → TESTING_GUIDE.md (Testes 6-11)
 
 #### Checklist de testes?
+
 → TESTING_GUIDE.md (Checklist Final)
 
 ---
@@ -172,18 +192,23 @@ supabase/
 ### 🚀 "Deployment..."
 
 #### Passo a passo?
+
 → DEPLOYMENT.md (Passos 1-9)
 
 #### Como executar migration?
+
 → DEPLOYMENT.md (Passo 1)
 
 #### Como testar na aplicação?
+
 → DEPLOYMENT.md (Passo 2)
 
 #### Troubleshooting?
+
 → DEPLOYMENT.md (seção "Troubleshooting")
 
 #### Rollback?
+
 → DEPLOYMENT.md (seção "Rollback")
 
 ---
@@ -191,15 +216,19 @@ supabase/
 ### 📊 "Dados..."
 
 #### Valores padrão de mercado?
+
 → DELIVERY_SUMMARY.md ou IMPLEMENTATION_SUMMARY.md
 
 #### Tipos de dados no banco?
+
 → ARCHITECTURE.md (Tipo de Dados por Campo)
 
 #### Como os dados persistem?
+
 → ARCHITECTURE.md (Fluxo Completo) ou IMPLEMENTATION_SUMMARY.md
 
 #### Qual table armazena?
+
 → IMPLEMENTATION_SUMMARY.md ou migration SQL
 
 ---
@@ -207,18 +236,23 @@ supabase/
 ### 🎨 "Interface..."
 
 #### Como funciona a UI?
+
 → UI_MOCKUP.md (Visualização completa)
 
 #### Dialog de confirmação?
+
 → UI_MOCKUP.md (seção "Dialog de Confirmação")
 
 #### Como funciona em mobile?
+
 → UI_MOCKUP.md (seção "Mobile - Responsive")
 
 #### Dark mode?
+
 → UI_MOCKUP.md (seção "Dark Mode")
 
 #### Toast de sucesso/erro?
+
 → UI_MOCKUP.md (seções "Toast")
 
 ---
@@ -333,23 +367,23 @@ supabase/
 
 **P: Onde aplico a migration?**
 A: Supabase Dashboard → SQL Editor ou Supabase CLI
-   Ver: DEPLOYMENT.md (Passo 1)
+Ver: DEPLOYMENT.md (Passo 1)
 
 **P: O que o usuário vê?**
 A: Novo botão "Restaurar Padrões" na Settings → Aba Cálculos
-   Ver: UI_MOCKUP.md
+Ver: UI_MOCKUP.md
 
 **P: Quais campos foram adicionados?**
 A: 6 colunas: cau_crea, professional_phone, business_address, default_bdi, social_charges, tech_hour_rate
-   Ver: IMPLEMENTATION_SUMMARY.md
+Ver: IMPLEMENTATION_SUMMARY.md
 
 **P: Como testei?**
 A: 19 testes manuais planejados
-   Ver: TESTING_GUIDE.md
+Ver: TESTING_GUIDE.md
 
 **P: Preciso fazer backup?**
 A: Sim, antes de aplicar migration em produção
-   Ver: DEPLOYMENT.md (Antes de fazer deploy)
+Ver: DEPLOYMENT.md (Antes de fazer deploy)
 
 **P: E se der erro?**
 A: Ler DEPLOYMENT.md (Troubleshooting) ou ARCHITECTURE.md (Tratamento de Erros)
@@ -384,18 +418,18 @@ arquiteto-a-m/
 
 ## 📊 ESTATÍSTICAS
 
-| Métrica | Valor |
-|---------|-------|
-| Arquivos modificados | 2 (TypeScript) |
-| Arquivos criados | 1 (SQL) + 6 (Docs) |
-| Linhas de código adicionadas | ~150 |
-| Novos campos no banco | 6 |
-| Constraints adicionados | 3 |
-| Funções no hook | +1 (resetToMarketDefaults) |
-| Testes manuais planejados | 19 |
-| Documentação criada | ~3000 linhas |
-| Tempo de implementação | ~2 horas |
-| Tempo para fazer deploy | ~30 min |
+| Métrica                      | Valor                      |
+| ---------------------------- | -------------------------- |
+| Arquivos modificados         | 2 (TypeScript)             |
+| Arquivos criados             | 1 (SQL) + 6 (Docs)         |
+| Linhas de código adicionadas | ~150                       |
+| Novos campos no banco        | 6                          |
+| Constraints adicionados      | 3                          |
+| Funções no hook              | +1 (resetToMarketDefaults) |
+| Testes manuais planejados    | 19                         |
+| Documentação criada          | ~3000 linhas               |
+| Tempo de implementação       | ~2 horas                   |
+| Tempo para fazer deploy      | ~30 min                    |
 
 ---
 

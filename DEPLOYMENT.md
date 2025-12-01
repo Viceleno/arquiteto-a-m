@@ -3,18 +3,21 @@
 ## 📋 Antes de Fazer Deploy
 
 ### ✅ Código
+
 - [x] TypeScript sem erros (`npm run build` funciona)
 - [x] ESLint sem warnings
 - [x] Arquivos commitados
 - [x] Nenhuma quebra de compatibilidade
 
 ### ✅ Banco de Dados
+
 - [ ] Migration SQL revisada
 - [ ] Constraints validadas
 - [ ] Índices criados
 - [ ] Comentários SQL adicionados
 
 ### ✅ Testes
+
 - [ ] Teste manual: Salvar parâmetro
 - [ ] Teste manual: Restaurar padrões
 - [ ] Teste manual: Dialog cancelar
@@ -24,6 +27,7 @@
 - [ ] Verificar dados no banco SQL
 
 ### ✅ Documentação
+
 - [x] IMPLEMENTATION_SUMMARY.md
 - [x] ARCHITECTURE.md
 - [x] TESTING_GUIDE.md
@@ -62,8 +66,8 @@ supabase migration up
 
 SELECT column_name, data_type, column_default
 FROM information_schema.columns
-WHERE table_name = 'user_settings' 
-AND column_name IN ('cau_crea', 'professional_phone', 'business_address', 
+WHERE table_name = 'user_settings'
+AND column_name IN ('cau_crea', 'professional_phone', 'business_address',
                     'default_bdi', 'social_charges', 'tech_hour_rate');
 
 -- Esperado: 6 linhas
@@ -74,6 +78,7 @@ AND column_name IN ('cau_crea', 'professional_phone', 'business_address',
 ## 🎮 Passo 2: Testar na Aplicação (10 min)
 
 ### Teste 1: Carregar Settings
+
 ```
 1. Abra a aplicação
 2. Navegue para Settings
@@ -86,6 +91,7 @@ ESPERADO:
 ```
 
 ### Teste 2: Salvar Parâmetro
+
 ```
 1. Mude "BDI Padrão" de 20 para 25
 2. Clique "Salvar configurações"
@@ -98,6 +104,7 @@ ESPERADO:
 ```
 
 ### Teste 3: Restaurar Padrões
+
 ```
 1. Mude BDI para 30, Encargos para 90
 2. Clique em "🔄 Restaurar Padrões de Mercado"
@@ -113,6 +120,7 @@ ESPERADO:
 ```
 
 ### Teste 4: Dark Mode
+
 ```
 1. Mude tema para "🌙 Escuro"
 2. Volte para Settings → Cálculos
@@ -126,6 +134,7 @@ ESPERADO:
 ```
 
 ### Teste 5: Mobile
+
 ```
 1. Abra em celular ou DevTools mobile (F12 → toggle device toolbar)
 2. Vá para Settings → Cálculos
@@ -184,7 +193,7 @@ SELECT * FROM user_settings WHERE user_id = '[seu_user_id]';
 
 ```javascript
 // Abra Console (F12) e execute:
-console.time('loadSettings');
+console.time("loadSettings");
 // Abra Settings
 // Quando terminar, o console mostrará tempo
 
@@ -195,7 +204,7 @@ console.time('loadSettings');
 
 ```javascript
 // No Console:
-console.time('saveSettings');
+console.time("saveSettings");
 // Mude um valor e clique "Salvar"
 // Espere o toast aparecer
 
@@ -353,12 +362,14 @@ git push origin main -f  # ⚠️ Cuidado com -f
 ## 📞 Troubleshooting
 
 ### Problema: "Column não existe"
+
 ```
 Solução: Verificar se migration foi executada no Supabase
 Execute novamente o SQL de migration
 ```
 
 ### Problema: "TypeError: resetToMarketDefaults is not a function"
+
 ```
 Solução: Verificar se useSettings.tsx foi atualizado
 Limpar cache: npm cache clean --force
@@ -366,6 +377,7 @@ Reinstalar: npm install
 ```
 
 ### Problema: "Valores não persistem após reload"
+
 ```
 Solução: Verificar se Supabase upsert funcionou
 Abrir DevTools → Network → ver requisição POST
@@ -373,6 +385,7 @@ Verificar se houve erro 4xx ou 5xx
 ```
 
 ### Problema: "Dialog não aparece"
+
 ```
 Solução: Verificar se window.confirm() está funcionando
 Verificar console por erros JavaScript

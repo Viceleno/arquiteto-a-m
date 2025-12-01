@@ -3,6 +3,7 @@
 ## 1️⃣ Testes Manuais da UI
 
 ### Teste 1: Salvar Parâmetro Individual
+
 ```
 PASSOS:
 1. Abrir Settings → Aba "Cálculos"
@@ -17,6 +18,7 @@ ESPERADO:
 ```
 
 ### Teste 2: Restaurar Padrões
+
 ```
 PASSOS:
 1. Abrir Settings → Aba "Cálculos"
@@ -35,6 +37,7 @@ ESPERADO:
 ```
 
 ### Teste 3: Cancelar Restauração
+
 ```
 PASSOS:
 1. Abrir Settings → Aba "Cálculos"
@@ -49,6 +52,7 @@ ESPERADO:
 ```
 
 ### Teste 4: Múltiplos Campos
+
 ```
 PASSOS:
 1. Abrir Settings → Aba "Cálculos"
@@ -65,6 +69,7 @@ ESPERADO:
 ```
 
 ### Teste 5: Dark Mode
+
 ```
 PASSOS:
 1. Settings → Aba "Geral"
@@ -84,15 +89,16 @@ ESPERADO:
 ## 2️⃣ Testes de Banco de Dados
 
 ### Teste 6: Verificar Columns Criadas
+
 ```sql
 -- Execute no Supabase SQL Editor
 
 SELECT column_name, data_type, column_default
 FROM information_schema.columns
-WHERE table_name = 'user_settings' 
+WHERE table_name = 'user_settings'
 AND column_name IN (
-  'cau_crea', 
-  'professional_phone', 
+  'cau_crea',
+  'professional_phone',
   'business_address',
   'default_bdi',
   'social_charges',
@@ -103,22 +109,24 @@ AND column_name IN (
 ```
 
 ### Teste 7: Verificar Constraints
+
 ```sql
 SELECT constraint_name, constraint_type
 FROM information_schema.table_constraints
-WHERE table_name = 'user_settings' 
+WHERE table_name = 'user_settings'
 AND constraint_type = 'CHECK';
 
 -- ESPERADO: 3 constraints CHECK
 -- - check_default_bdi
--- - check_social_charges  
+-- - check_social_charges
 -- - check_tech_hour_rate
 ```
 
 ### Teste 8: Verificar Dados Salvos
+
 ```sql
 -- Substitua USER_ID pelo ID real do usuário logado
-SELECT 
+SELECT
   user_id,
   bdi_padrao,
   encargos_sociais,
@@ -140,12 +148,13 @@ WHERE user_id = 'USER_ID';
 ## 3️⃣ Testes de Validação
 
 ### Teste 9: Constraint - BDI > 100%
+
 ```sql
 -- Execute no Supabase SQL Editor
 -- Substitua USER_ID
 
-UPDATE user_settings 
-SET default_bdi = 150 
+UPDATE user_settings
+SET default_bdi = 150
 WHERE user_id = 'USER_ID';
 
 -- ESPERADO: Erro - "new row for relation violates check constraint"
@@ -153,11 +162,12 @@ WHERE user_id = 'USER_ID';
 ```
 
 ### Teste 10: Constraint - Social Charges Negativo
+
 ```sql
 -- Substitua USER_ID
 
-UPDATE user_settings 
-SET social_charges = -5 
+UPDATE user_settings
+SET social_charges = -5
 WHERE user_id = 'USER_ID';
 
 -- ESPERADO: Erro - "violates check constraint"
@@ -165,19 +175,20 @@ WHERE user_id = 'USER_ID';
 ```
 
 ### Teste 11: Constraint - Tech Hour Rate Válido
+
 ```sql
 -- Substitua USER_ID
 
-UPDATE user_settings 
-SET tech_hour_rate = 0 
+UPDATE user_settings
+SET tech_hour_rate = 0
 WHERE user_id = 'USER_ID';
 
 -- ESPERADO: Sucesso ✅
 -- Tech hour rate pode ser 0 (trabalho pro bono)
 
 -- Depois restaure:
-UPDATE user_settings 
-SET tech_hour_rate = 150 
+UPDATE user_settings
+SET tech_hour_rate = 150
 WHERE user_id = 'USER_ID';
 ```
 
@@ -186,6 +197,7 @@ WHERE user_id = 'USER_ID';
 ## 4️⃣ Testes de Erro
 
 ### Teste 12: Falha de Rede - Salvar
+
 ```
 SETUP:
 1. Abrir DevTools (F12) → Network
@@ -203,6 +215,7 @@ ESPERADO:
 ```
 
 ### Teste 13: Falha de Rede - Restaurar
+
 ```
 SETUP:
 1. DevTools → Offline
@@ -224,6 +237,7 @@ ESPERADO:
 ## 5️⃣ Testes de Performance
 
 ### Teste 14: Tempo de Salvar
+
 ```
 MEDIÇÃO:
 1. Abrir Console (F12 → Console)
@@ -239,6 +253,7 @@ ESPERADO:
 ```
 
 ### Teste 15: Tempo de Carregar
+
 ```
 MEDIÇÃO:
 1. DevTools → Performance
@@ -255,6 +270,7 @@ ESPERADO:
 ## 6️⃣ Testes de Integração
 
 ### Teste 16: Dados Propagam para Calculadora
+
 ```
 PASSOS:
 1. Settings → Cálculos
@@ -270,6 +286,7 @@ ESPERADO:
 ```
 
 ### Teste 17: Multi-usuário
+
 ```
 SETUP:
 - Browser 1: Usuário A logado
@@ -291,6 +308,7 @@ ESPERADO:
 ## 7️⃣ Testes de Acessibilidade
 
 ### Teste 18: Keyboard Navigation
+
 ```
 PASSOS:
 1. Settings → Cálculos
@@ -304,6 +322,7 @@ ESPERADO:
 ```
 
 ### Teste 19: Leitura de Tela
+
 ```
 PASSOS:
 1. Ativar leitor de tela (NVDA, JAWS, VoiceOver)
@@ -322,6 +341,7 @@ ESPERADO:
 ## 📋 Checklist Final de Testes
 
 ### UI Tests
+
 - [ ] Teste 1: Salvar Parâmetro Individual
 - [ ] Teste 2: Restaurar Padrões
 - [ ] Teste 3: Cancelar Restauração
@@ -329,28 +349,34 @@ ESPERADO:
 - [ ] Teste 5: Dark Mode
 
 ### Database Tests
+
 - [ ] Teste 6: Columns Criadas
 - [ ] Teste 7: Constraints Existem
 - [ ] Teste 8: Dados Salvos
 
 ### Validation Tests
+
 - [ ] Teste 9: BDI Validation
 - [ ] Teste 10: Social Charges Validation
 - [ ] Teste 11: Tech Hour Rate Validation
 
 ### Error Tests
+
 - [ ] Teste 12: Falha de Rede - Salvar
 - [ ] Teste 13: Falha de Rede - Restaurar
 
 ### Performance Tests
+
 - [ ] Teste 14: Tempo de Salvar
 - [ ] Teste 15: Tempo de Carregar
 
 ### Integration Tests
+
 - [ ] Teste 16: Dados Propagam
 - [ ] Teste 17: Multi-usuário
 
 ### Accessibility Tests
+
 - [ ] Teste 18: Keyboard Navigation
 - [ ] Teste 19: Leitura de Tela
 
