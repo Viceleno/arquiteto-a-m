@@ -5,16 +5,14 @@ import { useAuth } from '@/context/AuthContext';
 
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
-  language: 'pt-BR' | 'en-US' | 'es';
-  unit_preference: 'metric' | 'imperial';
+  email_notifications: boolean;
   default_margin: number;
   auto_save_calculations: boolean;
   decimal_places: number;
-  email_notifications: boolean;
-  push_notifications: boolean;
-  calculation_reminders: boolean;
-  share_calculations: boolean;
-  data_analytics: boolean;
+  bdi_padrao: number;
+  encargos_sociais: number;
+  valor_hora_tecnica: number;
+  perda_padrao_materiais: number;
 }
 
 interface SettingsContextType {
@@ -26,16 +24,14 @@ interface SettingsContextType {
 
 const defaultSettings: UserSettings = {
   theme: 'light',
-  language: 'pt-BR',
-  unit_preference: 'metric',
+  email_notifications: true,
   default_margin: 10,
   auto_save_calculations: true,
   decimal_places: 2,
-  email_notifications: true,
-  push_notifications: false,
-  calculation_reminders: true,
-  share_calculations: false,
-  data_analytics: true,
+  bdi_padrao: 20,
+  encargos_sociais: 88,
+  valor_hora_tecnica: 150,
+  perda_padrao_materiais: 5,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -66,21 +62,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (data) {
         // Safe type casting with validation
         const theme = ['light', 'dark', 'system'].includes(data.theme) ? data.theme as 'light' | 'dark' | 'system' : defaultSettings.theme;
-        const language = ['pt-BR', 'en-US', 'es'].includes(data.language) ? data.language as 'pt-BR' | 'en-US' | 'es' : defaultSettings.language;
-        const unit_preference = ['metric', 'imperial'].includes(data.unit_preference) ? data.unit_preference as 'metric' | 'imperial' : defaultSettings.unit_preference;
         
         setSettings({
           theme,
-          language,
-          unit_preference,
+          email_notifications: data.email_notifications ?? defaultSettings.email_notifications,
           default_margin: data.default_margin ?? defaultSettings.default_margin,
           auto_save_calculations: data.auto_save_calculations ?? defaultSettings.auto_save_calculations,
           decimal_places: data.decimal_places ?? defaultSettings.decimal_places,
-          email_notifications: data.email_notifications ?? defaultSettings.email_notifications,
-          push_notifications: data.push_notifications ?? defaultSettings.push_notifications,
-          calculation_reminders: data.calculation_reminders ?? defaultSettings.calculation_reminders,
-          share_calculations: data.share_calculations ?? defaultSettings.share_calculations,
-          data_analytics: data.data_analytics ?? defaultSettings.data_analytics,
+          bdi_padrao: data.bdi_padrao ?? defaultSettings.bdi_padrao,
+          encargos_sociais: data.encargos_sociais ?? defaultSettings.encargos_sociais,
+          valor_hora_tecnica: data.valor_hora_tecnica ?? defaultSettings.valor_hora_tecnica,
+          perda_padrao_materiais: data.perda_padrao_materiais ?? defaultSettings.perda_padrao_materiais,
         });
       } else {
         setSettings(defaultSettings);

@@ -10,24 +10,28 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Settings as SettingsIcon, 
   User, 
-  Bell, 
-  Shield, 
-  Database, 
   Palette,
-  Globe,
-  Ruler,
   Calculator,
   Save,
-  Trash2,
   Check,
-  AlertCircle,
-  Info
+  Info,
+  Building2,
+  MapPin,
+  Phone,
+  Globe,
+  Image as ImageIcon,
+  Upload,
+  Percent,
+  DollarSign,
+  Package,
+  Clock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -37,27 +41,26 @@ import { useSettings } from '@/hooks/useSettings';
 const settingsSchema = z.object({
   // Preferências gerais
   theme: z.enum(['light', 'dark', 'system']),
-  language: z.enum(['pt-BR', 'en-US', 'es']),
-  unit_preference: z.enum(['metric', 'imperial']),
+  email_notifications: z.boolean(),
   
   // Configurações de cálculo
   default_margin: z.number().min(0).max(100),
   auto_save_calculations: z.boolean(),
   decimal_places: z.number().min(0).max(6),
   
-  // Notificações
-  email_notifications: z.boolean(),
-  push_notifications: z.boolean(),
-  calculation_reminders: z.boolean(),
+  // Parâmetros de Engenharia
+  bdi_padrao: z.number().min(0).max(100),
+  encargos_sociais: z.number().min(0).max(200),
+  valor_hora_tecnica: z.number().min(0),
+  perda_padrao_materiais: z.number().min(0).max(50),
   
-  // Privacidade
-  share_calculations: z.boolean(),
-  data_analytics: z.boolean(),
-  
-  // Perfil
-  display_name: z.string().max(100),
-  bio: z.string().max(500),
-  company: z.string().max(100),
+  // Dados da Empresa
+  registro_profissional: z.string().max(50).optional(),
+  razao_social: z.string().max(200).optional(),
+  endereco_comercial: z.string().max(500).optional(),
+  telefone_comercial: z.string().max(20).optional(),
+  site_portfolio: z.union([z.string().url(), z.literal('')]).optional(),
+  logo_url: z.union([z.string().url(), z.literal('')]).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -74,19 +77,20 @@ const Settings = () => {
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       theme: 'light',
-      language: 'pt-BR',
-      unit_preference: 'metric',
+      email_notifications: true,
       default_margin: 10,
       auto_save_calculations: true,
       decimal_places: 2,
-      email_notifications: true,
-      push_notifications: false,
-      calculation_reminders: true,
-      share_calculations: false,
-      data_analytics: true,
-      display_name: '',
-      bio: '',
-      company: '',
+      bdi_padrao: 20,
+      encargos_sociais: 88,
+      valor_hora_tecnica: 150,
+      perda_padrao_materiais: 5,
+      registro_profissional: '',
+      razao_social: '',
+      endereco_comercial: '',
+      telefone_comercial: '',
+      site_portfolio: '',
+      logo_url: '',
     },
   });
 
@@ -114,9 +118,12 @@ const Settings = () => {
         }
 
         if (profileData) {
-          form.setValue('display_name', profileData.full_name || '');
-          form.setValue('bio', profileData.bio || '');
-          form.setValue('company', profileData.company || '');
+          form.setValue('registro_profissional', profileData.registro_profissional || '');
+          form.setValue('razao_social', profileData.razao_social || '');
+          form.setValue('endereco_comercial', profileData.endereco_comercial || '');
+          form.setValue('telefone_comercial', profileData.telefone_comercial || '');
+          form.setValue('site_portfolio', profileData.site_portfolio || '');
+          form.setValue('logo_url', profileData.logo_url || '');
         }
       } catch (error: any) {
         console.error('Error loading profile:', error);
@@ -134,23 +141,21 @@ const Settings = () => {
   useEffect(() => {
     if (settings) {
       form.setValue('theme', settings.theme);
-      form.setValue('language', settings.language);
-      form.setValue('unit_preference', settings.unit_preference);
+      form.setValue('email_notifications', settings.email_notifications);
       form.setValue('default_margin', settings.default_margin);
       form.setValue('auto_save_calculations', settings.auto_save_calculations);
       form.setValue('decimal_places', settings.decimal_places);
-      form.setValue('email_notifications', settings.email_notifications);
-      form.setValue('push_notifications', settings.push_notifications);
-      form.setValue('calculation_reminders', settings.calculation_reminders);
-      form.setValue('share_calculations', settings.share_calculations);
-      form.setValue('data_analytics', settings.data_analytics);
+      form.setValue('bdi_padrao', settings.bdi_padrao);
+      form.setValue('encargos_sociais', settings.encargos_sociais);
+      form.setValue('valor_hora_tecnica', settings.valor_hora_tecnica);
+      form.setValue('perda_padrao_materiais', settings.perda_padrao_materiais);
     }
   }, [settings, form]);
 
   // Handle individual setting changes for instant feedback
   const handleSettingChange = async (field: keyof SettingsFormValues, value: any) => {
     try {
-      if (['theme', 'language', 'unit_preference', 'default_margin', 'auto_save_calculations', 'decimal_places', 'email_notifications', 'push_notifications', 'calculation_reminders', 'share_calculations', 'data_analytics'].includes(field)) {
+      if (['theme', 'email_notifications', 'default_margin', 'auto_save_calculations', 'decimal_places', 'bdi_padrao', 'encargos_sociais', 'valor_hora_tecnica', 'perda_padrao_materiais'].includes(field)) {
         await updateSettings({ [field]: value });
         
         // Show success feedback for important changes
@@ -158,18 +163,6 @@ const Settings = () => {
           toast({
             title: '🎨 Tema alterado',
             description: `Tema alterado para ${value === 'light' ? 'claro' : value === 'dark' ? 'escuro' : 'sistema'}`,
-            duration: 2000,
-          });
-        } else if (field === 'language') {
-          toast({
-            title: '🌍 Idioma alterado',
-            description: `Idioma alterado para ${value === 'pt-BR' ? 'Português' : value === 'en-US' ? 'English' : 'Español'}`,
-            duration: 2000,
-          });
-        } else if (field === 'unit_preference') {
-          toast({
-            title: '📏 Sistema de unidades alterado',
-            description: `Sistema alterado para ${value === 'metric' ? 'métrico' : 'imperial'}`,
             duration: 2000,
           });
         }
@@ -193,25 +186,26 @@ const Settings = () => {
       // Atualizar configurações usando o hook
       await updateSettings({
         theme: values.theme,
-        language: values.language,
-        unit_preference: values.unit_preference,
+        email_notifications: values.email_notifications,
         default_margin: values.default_margin,
         auto_save_calculations: values.auto_save_calculations,
         decimal_places: values.decimal_places,
-        email_notifications: values.email_notifications,
-        push_notifications: values.push_notifications,
-        calculation_reminders: values.calculation_reminders,
-        share_calculations: values.share_calculations,
-        data_analytics: values.data_analytics,
+        bdi_padrao: values.bdi_padrao,
+        encargos_sociais: values.encargos_sociais,
+        valor_hora_tecnica: values.valor_hora_tecnica,
+        perda_padrao_materiais: values.perda_padrao_materiais,
       });
 
-      // Atualizar perfil
+      // Atualizar perfil corporativo
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: values.display_name,
-          bio: values.bio,
-          company: values.company,
+          registro_profissional: values.registro_profissional || null,
+          razao_social: values.razao_social || null,
+          endereco_comercial: values.endereco_comercial || null,
+          telefone_comercial: values.telefone_comercial || null,
+          site_portfolio: values.site_portfolio || null,
+          logo_url: values.logo_url || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -297,7 +291,7 @@ const Settings = () => {
             </div>
             
             <Tabs defaultValue="general" className="space-y-8">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1 bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-700">
+              <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-700">
                 <TabsTrigger value="general" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <Palette className="w-4 h-4" />
                   <span className="hidden sm:inline">Geral</span>
@@ -305,14 +299,6 @@ const Settings = () => {
                 <TabsTrigger value="calculations" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <Calculator className="w-4 h-4" />
                   <span className="hidden sm:inline">Cálculos</span>
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
-                  <Bell className="w-4 h-4" />
-                  <span className="hidden sm:inline">Notificações</span>
-                </TabsTrigger>
-                <TabsTrigger value="privacy" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
-                  <Shield className="w-4 h-4" />
-                  <span className="hidden sm:inline">Privacidade</span>
                 </TabsTrigger>
                 <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-3 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-900/30 dark:data-[state=active]:text-blue-400">
                   <User className="w-4 h-4" />
@@ -333,114 +319,67 @@ const Settings = () => {
                           <div>
                             <CardTitle className="text-xl dark:text-white">Preferências Gerais</CardTitle>
                             <CardDescription className="text-gray-600 dark:text-gray-400">
-                              Configure a aparência e idioma da aplicação
+                              Configure a aparência e notificações da aplicação
                             </CardDescription>
                           </div>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <FormField
-                            control={form.control}
-                            name="theme"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
-                                  <Palette className="w-4 h-4" />
-                                  Tema
-                                </FormLabel>
-                                <Select 
-                                  onValueChange={(value) => {
-                                    field.onChange(value);
-                                    handleSettingChange('theme', value);
-                                  }} 
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="h-11 dark:bg-gray-700 dark:border-gray-600">
-                                      <SelectValue placeholder="Selecione um tema" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="light">🌞 Claro</SelectItem>
-                                    <SelectItem value="dark">🌙 Escuro</SelectItem>
-                                    <SelectItem value="system">💻 Sistema</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
-                                  Escolha entre tema claro, escuro ou automático
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="language"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
-                                  <Globe className="w-4 h-4" />
-                                  Idioma
-                                </FormLabel>
-                                <Select 
-                                  onValueChange={(value) => {
-                                    field.onChange(value);
-                                    handleSettingChange('language', value);
-                                  }} 
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="h-11 dark:bg-gray-700 dark:border-gray-600">
-                                      <SelectValue placeholder="Selecione um idioma" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="pt-BR">🇧🇷 Português (Brasil)</SelectItem>
-                                    <SelectItem value="en-US">🇺🇸 English (US)</SelectItem>
-                                    <SelectItem value="es">🇪🇸 Español</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
-                                  Idioma da interface da aplicação
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
                         <FormField
                           control={form.control}
-                          name="unit_preference"
+                          name="theme"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
-                                <Ruler className="w-4 h-4" />
-                                Sistema de unidades
+                                <Palette className="w-4 h-4" />
+                                Tema
                               </FormLabel>
                               <Select 
                                 onValueChange={(value) => {
                                   field.onChange(value);
-                                  handleSettingChange('unit_preference', value);
+                                  handleSettingChange('theme', value);
                                 }} 
                                 value={field.value}
                               >
                                 <FormControl>
                                   <SelectTrigger className="h-11 dark:bg-gray-700 dark:border-gray-600">
-                                    <SelectValue placeholder="Selecione um sistema" />
+                                    <SelectValue placeholder="Selecione um tema" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="metric">📏 Métrico (m, m², m³)</SelectItem>
-                                  <SelectItem value="imperial">📐 Imperial (ft, ft², ft³)</SelectItem>
+                                  <SelectItem value="light">🌞 Claro</SelectItem>
+                                  <SelectItem value="dark">🌙 Escuro</SelectItem>
+                                  <SelectItem value="system">💻 Sistema</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
-                                Sistema de medidas usado nos cálculos
+                                Escolha entre tema claro, escuro ou automático
                               </FormDescription>
                               <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email_notifications"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">Receber novidades por email</FormLabel>
+                                <FormDescription className="text-sm text-muted-foreground">
+                                  Receba atualizações e novidades sobre o aplicativo
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={(checked) => {
+                                    field.onChange(checked);
+                                    handleSettingChange('email_notifications', checked);
+                                  }}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
@@ -450,7 +389,7 @@ const Settings = () => {
                             <Info className="w-4 h-4 text-blue-500" />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status das configurações</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
                               <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                               <span className="text-green-700 dark:text-green-300">
@@ -460,13 +399,7 @@ const Settings = () => {
                             <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                               <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               <span className="text-blue-700 dark:text-blue-300">
-                                Idioma: {settings?.language === 'pt-BR' ? '🇧🇷 PT' : settings?.language === 'en-US' ? '🇺🇸 EN' : '🇪🇸 ES'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
-                              <Check className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                              <span className="text-purple-700 dark:text-purple-300">
-                                Unidades: {settings?.unit_preference === 'metric' ? '📏 Métrico' : '📐 Imperial'}
+                                Sistema: 📏 Métrico (m, m², m³)
                               </span>
                             </div>
                           </div>
@@ -476,210 +409,510 @@ const Settings = () => {
                   </TabsContent>
 
                   <TabsContent value="calculations">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Configurações de Cálculo</CardTitle>
-                        <CardDescription>
-                          Defina preferências para os cálculos e resultados
-                        </CardDescription>
+                    <Card className="shadow-sm border-0 bg-white dark:bg-gray-800 dark:border-gray-700">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                            <Calculator className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl dark:text-white">Parâmetros de Engenharia</CardTitle>
+                            <CardDescription className="text-gray-600 dark:text-gray-400">
+                              Configurações técnicas padrão para cálculos e orçamentos
+                            </CardDescription>
+                          </div>
+                        </div>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="default_margin"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Margem padrão (%)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="decimal_places"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Casas decimais</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value)}>
+                      <CardContent className="space-y-6">
+                        {/* Grid de Parâmetros Principais */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* BDI Padrão */}
+                          <FormField
+                            control={form.control}
+                            name="bdi_padrao"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Percent className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                  <FormLabel className="text-sm font-medium dark:text-white">
+                                    BDI Padrão (%)
+                                  </FormLabel>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs">
+                                        <div className="space-y-2">
+                                          <p className="font-semibold">BDI - Benefícios e Despesas Indiretas</p>
+                                          <p className="text-xs">Inclui: impostos (ISS, PIS, COFINS), lucro, administração, riscos e despesas gerais.</p>
+                                          <p className="text-xs font-medium">Recomendação SINAPI: 20% para obras públicas. Obras privadas: 15-30%.</p>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.1"
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                    className="h-11"
+                                  />
                                 </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="0">0</SelectItem>
-                                  <SelectItem value="1">1</SelectItem>
-                                  <SelectItem value="2">2</SelectItem>
-                                  <SelectItem value="3">3</SelectItem>
-                                  <SelectItem value="4">4</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Valor padrão: 20% (SINAPI)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Encargos Sociais */}
+                          <FormField
+                            control={form.control}
+                            name="encargos_sociais"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Percent className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                  <FormLabel className="text-sm font-medium dark:text-white">
+                                    Encargos Sociais (%)
+                                  </FormLabel>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs">
+                                        <div className="space-y-2">
+                                          <p className="font-semibold">Encargos Sociais sobre Mão de Obra</p>
+                                          <p className="text-xs">Inclui: FGTS, INSS, 13º salário, férias, horas extras, adicional noturno, etc.</p>
+                                          <p className="text-xs font-medium">Padrão mercado: 88% sobre o salário base. Pode variar conforme região e categoria profissional.</p>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="200"
+                                    step="0.1"
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                    className="h-11"
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Valor padrão: 88% (mercado)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Valor Hora Técnica */}
+                          <FormField
+                            control={form.control}
+                            name="valor_hora_tecnica"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <DollarSign className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                  <FormLabel className="text-sm font-medium dark:text-white">
+                                    Valor Hora Técnica (R$)
+                                  </FormLabel>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs">
+                                        <div className="space-y-2">
+                                          <p className="font-semibold">Custo da Hora Técnica</p>
+                                          <p className="text-xs">Valor cobrado por hora de trabalho técnico do responsável (arquiteto/engenheiro).</p>
+                                          <p className="text-xs font-medium">Usado em orçamentos de consultoria, projetos e laudos técnicos.</p>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                    className="h-11"
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Valor padrão: R$ 150,00/hora
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Perda Padrão Materiais */}
+                          <FormField
+                            control={form.control}
+                            name="perda_padrao_materiais"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Package className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                  <FormLabel className="text-sm font-medium dark:text-white">
+                                    Perda Padrão Materiais (%)
+                                  </FormLabel>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs">
+                                        <div className="space-y-2">
+                                          <p className="font-semibold">Margem de Segurança para Materiais</p>
+                                          <p className="text-xs">Percentual adicional para cobrir perdas, desperdícios, cortes e ajustes durante a execução.</p>
+                                          <p className="text-xs font-medium">Recomendação: 5% para materiais padronizados, 10% para materiais com muitos cortes.</p>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="50"
+                                    step="0.1"
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                    className="h-11"
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Valor padrão: 5% (materiais padrão)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Configurações Auxiliares */}
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Configurações Auxiliares</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                              control={form.control}
+                              name="default_margin"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium dark:text-white">Margem Padrão (%)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      {...field}
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      className="h-11"
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                    Margem de segurança geral para cálculos
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="decimal_places"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium dark:text-white">Casas Decimais</FormLabel>
+                                  <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
+                                    <FormControl>
+                                      <SelectTrigger className="h-11">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="0">0</SelectItem>
+                                      <SelectItem value="1">1</SelectItem>
+                                      <SelectItem value="2">2</SelectItem>
+                                      <SelectItem value="3">3</SelectItem>
+                                      <SelectItem value="4">4</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                    Precisão numérica dos resultados
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="mt-4">
+                            <FormField
+                              control={form.control}
+                              name="auto_save_calculations"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                  <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Salvar automaticamente</FormLabel>
+                                    <FormDescription className="text-sm text-muted-foreground">
+                                      Salva os cálculos automaticamente no histórico
+                                    </FormDescription>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Informação sobre uso */}
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <Info className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-orange-900 dark:text-orange-200">
+                                  Uso dos Parâmetros
+                                </p>
+                                <p className="text-xs text-orange-700 dark:text-orange-300">
+                                  Estes valores serão usados como padrão pelo CostCalculatorEngine ao criar novos orçamentos. Você pode alterá-los individualmente em cada cálculo quando necessário.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="profile">
+                    <Card className="shadow-sm border-0 bg-white dark:bg-gray-800 dark:border-gray-700">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl dark:text-white">Dados da Empresa</CardTitle>
+                            <CardDescription className="text-gray-600 dark:text-gray-400">
+                              Informações corporativas para relatórios e orçamentos
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Logo da Empresa */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <ImageIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                            <FormLabel className="text-sm font-medium dark:text-white">Logo da Empresa</FormLabel>
+                          </div>
+                          
+                          <FormField
+                            control={form.control}
+                            name="logo_url"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="space-y-4">
+                                  {field.value && (
+                                    <div className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                                      <img 
+                                        src={field.value} 
+                                        alt="Logo da empresa" 
+                                        className="max-h-32 max-w-full object-contain"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                  <FormControl>
+                                    <div className="flex gap-2">
+                                      <Input
+                                        type="url"
+                                        placeholder="https://exemplo.com/logo.png"
+                                        {...field}
+                                        className="flex-1"
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                    Cole a URL de uma imagem pública do logo da sua empresa
+                                  </FormDescription>
+                                  <FormMessage />
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Registro Profissional */}
+                          <FormField
+                            control={form.control}
+                            name="registro_profissional"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
+                                  <User className="w-4 h-4" />
+                                  Registro Profissional
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Ex: CAU A12345-6 ou CREA 12345-D"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  CAU, CREA ou outro registro profissional
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Razão Social */}
+                          <FormField
+                            control={form.control}
+                            name="razao_social"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
+                                  <Building2 className="w-4 h-4" />
+                                  Razão Social
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Nome completo da empresa"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Nome oficial para contratos e documentos
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Endereço Comercial */}
+                        <FormField
+                          control={form.control}
+                          name="endereco_comercial"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
+                                <MapPin className="w-4 h-4" />
+                                Endereço Comercial
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Rua, número, bairro, cidade - UF, CEP"
+                                  rows={3}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                Endereço completo para rodapé de orçamentos
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="auto_save_calculations"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Salvar automaticamente</FormLabel>
-                                <FormLabel className="text-sm text-muted-foreground font-normal">
-                                  Salva os cálculos automaticamente no histórico
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Telefone Comercial */}
+                          <FormField
+                            control={form.control}
+                            name="telefone_comercial"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
+                                  <Phone className="w-4 h-4" />
+                                  Telefone Comercial
                                 </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="tel"
+                                    placeholder="(00) 00000-0000"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Contato público para orçamentos
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Site/Portfolio */}
+                          <FormField
+                            control={form.control}
+                            name="site_portfolio"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-2 text-sm font-medium dark:text-white">
+                                  <Globe className="w-4 h-4" />
+                                  Site/Portfolio
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="url"
+                                    placeholder="https://seusite.com.br"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+                                  Link profissional ou portfólio
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                                  Uso dos dados
+                                </p>
+                                <p className="text-xs text-blue-700 dark:text-blue-300">
+                                  Estas informações serão usadas para preencher automaticamente o cabeçalho das calculadoras e orçamentos exportados.
+                                </p>
                               </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                            </div>
+                          </div>
+                        </div>
                       </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="notifications">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Notificações</CardTitle>
-                        <CardDescription>
-                          Configure como deseja receber notificações
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="email_notifications"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Notificações por email</FormLabel>
-                                <FormLabel className="text-sm text-muted-foreground font-normal">
-                                  Receba atualizações importantes por email
-                                </FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="push_notifications"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Notificações push</FormLabel>
-                                <FormLabel className="text-sm text-muted-foreground font-normal">
-                                  Receba notificações no navegador
-                                </FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="calculation_reminders"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Lembrete de cálculos</FormLabel>
-                                <FormLabel className="text-sm text-muted-foreground font-normal">
-                                  Receba lembretes sobre cálculos pendentes
-                                </FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="privacy">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Privacidade e Dados</CardTitle>
-                        <CardDescription>
-                          Controle como seus dados são utilizados
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="share_calculations"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Compartilhar cálculos</FormLabel>
-                                <FormLabel className="text-sm text-muted-foreground font-normal">
-                                  Permite compartilhar cálculos com outros usuários
-                                </FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="data_analytics"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel className="text-base">Análise de dados</FormLabel>
-                                <FormLabel className="text-sm text-muted-foreground font-normal">
-                                  Permite análise anônima para melhorar o serviço
-                                </FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="pt-4 border-t">
+                      <CardFooter className="flex flex-col space-y-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="w-full pt-4">
                           <Button 
                             type="button" 
                             variant="destructive" 
@@ -692,65 +925,7 @@ const Settings = () => {
                             Esta ação remove todos os seus cálculos salvos
                           </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="profile">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Informações do Perfil</CardTitle>
-                        <CardDescription>
-                          Gerencie suas informações pessoais
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="display_name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome de exibição</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="company"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Empresa</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="bio"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Biografia</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  rows={4}
-                                  placeholder="Conte um pouco sobre você..."
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
+                      </CardFooter>
                     </Card>
                   </TabsContent>
 
