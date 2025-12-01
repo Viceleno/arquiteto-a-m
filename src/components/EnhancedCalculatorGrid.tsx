@@ -1,14 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalculatorCard } from '@/components/CalculatorCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Calculator, 
-  HardHat,
-  Ruler,
-  DollarSign,
   Clock,
   Users,
   Star,
@@ -17,71 +13,16 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-
-const calculators = [
-  {
-    id: 'area',
-    title: 'Cálculo de Área e Volume',
-    description: 'Calcule áreas e volumes de diferentes formas geométricas',
-    icon: Ruler,
-    color: 'bg-blue-500',
-    category: 'Medidas e Cálculos',
-    difficulty: 'Fácil',
-    timeEstimate: '2-5 min',
-    example: 'Quarto 4x3m = 12m²',
-    popularity: 95,
-    features: ['Retângulo', 'Círculo', 'Triângulo', 'Volume 3D'],
-    useCase: 'Ideal para dimensionamento de ambientes e cálculo de materiais'
-  },
-  {
-    id: 'materials',
-    title: 'Estimativa de Materiais',
-    description: 'Concreto, tijolos, argamassa, iluminação, telhado e mais',
-    icon: HardHat,
-    color: 'bg-orange-500',
-    category: 'Materiais',
-    difficulty: 'Médio',
-    timeEstimate: '5-10 min',
-    example: 'Casa 100m² = 15m³ concreto',
-    popularity: 88,
-    features: ['Concreto', 'Tijolos', 'Argamassa', 'Iluminação'],
-    useCase: 'Perfeito para orçamentos e compras de materiais'
-  },
-  {
-    id: 'costs',
-    title: 'Estimativa de Custos',
-    description: 'Orçamento detalhado com campos específicos por material',
-    icon: DollarSign,
-    color: 'bg-emerald-500',
-    category: 'Orçamento',
-    difficulty: 'Avançado',
-    timeEstimate: '10-15 min',
-    example: 'Projeto completo = R$ 50.000',
-    popularity: 92,
-    features: ['BDI', 'Mão de Obra', 'Materiais', 'Complexidade'],
-    useCase: 'Essencial para propostas comerciais e controle de custos'
-  }
-];
-
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty) {
-    case 'Fácil': return 'bg-green-100 text-green-700 border-green-200';
-    case 'Médio': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-    case 'Avançado': return 'bg-red-100 text-red-700 border-red-200';
-    default: return 'bg-gray-100 text-gray-700 border-gray-200';
-  }
-};
-
-const getTimeColor = (time: string) => {
-  if (time.includes('2-5')) return 'text-green-600';
-  if (time.includes('5-10')) return 'text-yellow-600';
-  if (time.includes('10-15')) return 'text-red-600';
-  return 'text-gray-600';
-};
+import { 
+  calculatorRegistry, 
+  getAllCategories, 
+  getDifficultyColor, 
+  getTimeColor 
+} from '@/config/calculatorRegistry';
 
 export const EnhancedCalculatorGrid = () => {
   const navigate = useNavigate();
-  const categories = [...new Set(calculators.map(calc => calc.category))];
+  const categories = getAllCategories();
 
   return (
     <div className="space-y-8">
@@ -120,18 +61,18 @@ export const EnhancedCalculatorGrid = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-gray-900">{category}</h3>
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              {calculators.filter(calc => calc.category === category).length} calculadoras
+              {calculatorRegistry.filter(calc => calc.category === category).length} calculadoras
             </Badge>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {calculators
+            {calculatorRegistry
               .filter(calc => calc.category === category)
               .map(calculator => (
                 <Card 
                   key={calculator.id}
                   className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer border-0 shadow-lg bg-white/90 backdrop-blur-sm"
-                  onClick={() => navigate(`/calculators/${calculator.id}`)}
+                  onClick={() => navigate(calculator.route)}
                 >
                   <CardHeader className="pb-4">
                     {/* Header com ícone e badges */}
