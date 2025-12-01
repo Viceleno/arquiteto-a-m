@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CalculatorCard } from '@/components/CalculatorCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -79,6 +80,7 @@ const getTimeColor = (time: string) => {
 };
 
 export const EnhancedCalculatorGrid = () => {
+  const navigate = useNavigate();
   const categories = [...new Set(calculators.map(calc => calc.category))];
 
   return (
@@ -129,7 +131,7 @@ export const EnhancedCalculatorGrid = () => {
                 <Card 
                   key={calculator.id}
                   className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer border-0 shadow-lg bg-white/90 backdrop-blur-sm"
-                  onClick={() => window.location.href = `/calculators/${calculator.id}`}
+                  onClick={() => navigate(`/calculators/${calculator.id}`)}
                 >
                   <CardHeader className="pb-4">
                     {/* Header com ícone e badges */}
@@ -220,7 +222,7 @@ export const EnhancedCalculatorGrid = () => {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button 
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
-                onClick={() => window.location.href = '/calculators'}
+                onClick={() => navigate('/calculators')}
               >
                 <Calculator className="w-4 h-4 mr-2" />
                 Ver Todas as Calculadoras
@@ -229,7 +231,7 @@ export const EnhancedCalculatorGrid = () => {
               <Button 
                 variant="outline" 
                 className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                onClick={() => window.location.href = '/tips'}
+                onClick={() => navigate('/tips')}
               >
                 <Lightbulb className="w-4 h-4 mr-2" />
                 Dicas de Uso

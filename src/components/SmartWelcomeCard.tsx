@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ interface UserStats {
 
 export const SmartWelcomeCard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [userStats, setUserStats] = useState<UserStats>({
     totalCalculations: 0,
     lastCalculationDate: null,
@@ -81,25 +83,29 @@ export const SmartWelcomeCard = () => {
       title: "Bem-vindo ao ArqCalc!",
       description: "Sua plataforma profissional para cálculos arquitetônicos",
       icon: Sparkles,
-      completed: true
+      completed: true,
+      action: () => {}
     },
     {
       title: "Explore as Calculadoras",
       description: "Descubra todas as ferramentas disponíveis",
       icon: Calculator,
-      completed: false
+      completed: false,
+      action: () => navigate('/calculators')
     },
     {
       title: "Faça seu Primeiro Cálculo",
       description: "Experimente uma das calculadoras",
       icon: Target,
-      completed: false
+      completed: false,
+      action: () => navigate('/calculators/area')
     },
     {
       title: "Salve no Histórico",
       description: "Todos os cálculos são salvos automaticamente",
       icon: CheckCircle,
-      completed: false
+      completed: false,
+      action: () => navigate('/history')
     }
   ];
 
@@ -180,12 +186,19 @@ export const SmartWelcomeCard = () => {
 
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold">
+            <Button 
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
+              onClick={() => navigate('/calculators')}
+            >
               <Calculator className="w-4 h-4 mr-2" />
               Nova Calculadora
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-            <Button variant="outline" className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Button 
+              variant="outline" 
+              className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+              onClick={() => navigate('/history')}
+            >
               <BookOpen className="w-4 h-4 mr-2" />
               Ver Histórico
             </Button>
@@ -236,11 +249,15 @@ export const SmartWelcomeCard = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {onboardingSteps.map((step, index) => (
-                <div key={index} className={`flex items-center space-x-3 p-3 rounded-lg ${
-                  step.completed 
-                    ? 'bg-green-100 border border-green-200' 
-                    : 'bg-white/60 border border-orange-200'
-                }`}>
+                <div 
+                  key={index} 
+                  className={`flex items-center space-x-3 p-3 rounded-lg transition-all ${
+                    step.completed 
+                      ? 'bg-green-100 border border-green-200' 
+                      : 'bg-white/60 border border-orange-200 cursor-pointer hover:bg-orange-50'
+                  }`}
+                  onClick={!step.completed ? step.action : undefined}
+                >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                     step.completed ? 'bg-green-500' : 'bg-orange-100'
                   }`}>
@@ -250,7 +267,7 @@ export const SmartWelcomeCard = () => {
                       <step.icon className="w-4 h-4 text-orange-600" />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className={`font-medium text-sm ${
                       step.completed ? 'text-green-900' : 'text-orange-900'
                     }`}>
@@ -262,12 +279,18 @@ export const SmartWelcomeCard = () => {
                       {step.description}
                     </div>
                   </div>
+                  {!step.completed && (
+                    <ArrowRight className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                  )}
                 </div>
               ))}
             </div>
 
             <div className="flex gap-3">
-              <Button className="flex-1 bg-gradient-to-r from-orange-500 to-yellow-600 hover:from-orange-600 hover:to-yellow-700 text-white">
+              <Button 
+                className="flex-1 bg-gradient-to-r from-orange-500 to-yellow-600 hover:from-orange-600 hover:to-yellow-700 text-white"
+                onClick={() => navigate('/calculators')}
+              >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 Continuar Tour
               </Button>

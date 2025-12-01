@@ -113,7 +113,7 @@ const ProjectsList = () => {
       const projectsWithCount = (projectsData || []).map((project) => ({
         ...project,
         calculations_count: calculationsCount[project.id] || 0,
-      }));
+      })) as Project[];
 
       setProjects(projectsWithCount);
     } catch (error: any) {

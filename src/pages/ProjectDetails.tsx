@@ -85,7 +85,7 @@ const ProjectDetails = () => {
         .single();
 
       if (error) throw error;
-      setProject(data);
+      setProject(data as Project);
     } catch (error: any) {
       console.error('Erro ao carregar projeto:', error);
       toast({

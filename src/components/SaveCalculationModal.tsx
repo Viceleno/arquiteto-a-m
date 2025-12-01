@@ -87,7 +87,7 @@ export const SaveCalculationModal: React.FC<SaveCalculationModalProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProjects(data || []);
+      setProjects((data || []) as Project[]);
     } catch (error: any) {
       console.error('Erro ao carregar projetos:', error);
       toast({
