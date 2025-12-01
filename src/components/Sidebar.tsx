@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, History, Settings, Home, Ruler, HardHat, DollarSign, BarChart3, Tag } from 'lucide-react';
+import { Calculator, History, Settings, Home, Ruler, HardHat, DollarSign, BarChart3, Tag, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,7 @@ const menuItems = [
   { icon: Calculator, label: 'Calculadoras', path: '/calculators' },
   { icon: Tag, label: 'Preços', path: '/prices' },
   { icon: History, label: 'Histórico', path: '/history' },
+  { icon: FolderOpen, label: 'Projetos', path: '/projects' },
   { icon: Settings, label: 'Configurações', path: '/settings' },
 ];
 

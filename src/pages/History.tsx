@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, ArrowUpDown, Eye, Share2 } from 'lucide-react';
+import { History as HistoryIcon, Search, Trash2, FileDown, FileText, Calendar, Calculator, ArrowUpDown, Eye, Share2, FolderOpen } from 'lucide-react';
 
 interface Calculation {
   id: string;
@@ -372,18 +372,28 @@ const History = () => {
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
-            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
-              <HistoryIcon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                <HistoryIcon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                  Histórico de Cálculos
+                </h1>
+                <p className="text-gray-600 text-base lg:text-lg">
+                  Acesse e gerencie todos os seus cálculos anteriores
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
-                Histórico de Cálculos
-              </h1>
-              <p className="text-gray-600 text-base lg:text-lg">
-                Acesse e gerencie todos os seus cálculos anteriores
-              </p>
-            </div>
+            <Button
+              onClick={() => navigate('/projects')}
+              variant="outline"
+              className="bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800"
+            >
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Meus Projetos
+            </Button>
           </div>
           
           {calculations.length > 0 && (
