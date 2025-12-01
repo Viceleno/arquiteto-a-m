@@ -51,6 +51,7 @@ export type Database = {
           id: string
           input_data: Json
           name: string | null
+          project_id: string | null
           result: Json
           user_id: string
         }
@@ -60,6 +61,7 @@ export type Database = {
           id?: string
           input_data: Json
           name?: string | null
+          project_id?: string | null
           result: Json
           user_id: string
         }
@@ -69,10 +71,19 @@ export type Database = {
           id?: string
           input_data?: Json
           name?: string | null
+          project_id?: string | null
           result?: Json
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calculations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       material_prices: {
         Row: {
@@ -143,6 +154,39 @@ export type Database = {
           id?: string
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          address: string | null
+          client_name: string | null
+          created_at: string | null
+          id: string
+          name: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
