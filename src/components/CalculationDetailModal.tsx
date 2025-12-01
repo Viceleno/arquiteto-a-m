@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Calculator, Calendar, User, FileText, Download, Share2, FileDown } from 'lucide-react';
 import { ShareCalculationModal } from '@/components/ShareCalculationModal';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -33,6 +35,32 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
   showShareButton = true,
 }) => {
   const [showShareModal, setShowShareModal] = React.useState(false);
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<{ company?: string; full_name?: string } | null>(null);
+  
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('company, full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+      }
+    };
+    
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user]);
   
   if (!calculation) return null;
 
@@ -500,75 +528,216 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
+  // Função para calcular Curva ABC dos materiais
+  const calculateABCCurve = (materialDetails: any[]) => {
+    if (!materialDetails || materialDetails.length === 0) return [];
+    
+    // Ordenar materiais do mais caro para o mais barato
+    const sorted = [...materialDetails].sort((a, b) => b.total - a.total);
+    
+    // Calcular total
+    const totalCost = sorted.reduce((sum, item) => sum + item.total, 0);
+    
+    // Calcular percentual acumulado
+    let cumulative = 0;
+    return sorted.map((item, index) => {
+      const percentage = (item.total / totalCost) * 100;
+      cumulative += percentage;
+      
+      return {
+        ...item,
+        percentage,
+        cumulativePercentage: cumulative,
+        classification: cumulative <= 80 ? 'A' : cumulative <= 95 ? 'B' : 'C',
+        rank: index + 1
+      };
+    });
+  };
+
+  // Função para obter notas técnicas baseadas no tipo de cálculo
+  const getTechnicalNotes = (calculatorType: string, inputData: any, result: any): string[] => {
+    const notes: string[] = [];
+    
+    if (calculatorType.includes('Custo') || calculatorType.includes('Estimativa')) {
+      notes.push('• Os preços utilizados são referências de mercado e podem variar conforme região e fornecedor.');
+      notes.push('• O BDI (Benefícios e Despesas Indiretas) de 20% segue recomendações do SINAPI para obras públicas.');
+      notes.push('• Para obras privadas, o BDI pode variar entre 15% e 30% conforme complexidade e margem desejada.');
+      
+      if (inputData?.complexity) {
+        const complexity = inputData.complexity;
+        if (complexity === 'complex') {
+          notes.push('• Obra classificada como COMPLEXA: tempo de execução pode ser 80% superior ao padrão.');
+        } else if (complexity === 'simple') {
+          notes.push('• Obra classificada como SIMPLES: execução mais rápida e menor necessidade de mão de obra especializada.');
+        }
+      }
+    }
+    
+    if (calculatorType.includes('Material') || calculatorType.includes('Concreto')) {
+      notes.push('• As quantidades calculadas já incluem margem de segurança para perdas e desperdícios (5-10%).');
+      notes.push('• Recomenda-se adicionar 10% extra para materiais críticos ou obras com maior complexidade.');
+      
+      if (inputData?.concreteType || result?.concreteType) {
+        const concreteType = inputData?.concreteType || result?.concreteType?.value;
+        if (concreteType?.includes('FCK 20')) {
+          notes.push('• FCK 20 MPa - Traço 1:2,5:3,5 (280kg cimento/m³): Recomendado para uso residencial leve.');
+        } else if (concreteType?.includes('FCK 25')) {
+          notes.push('• FCK 25 MPa - Traço 1:2:3 (350kg cimento/m³): Uso geral, adequado para a maioria das aplicações.');
+        } else if (concreteType?.includes('FCK 30')) {
+          notes.push('• FCK 30 MPa - Traço 1:1,5:2,5 (420kg cimento/m³): Estrutural, alta resistência.');
+        }
+        
+        notes.push('• Cura úmida: Mínimo de 7 dias para atingir resistência adequada. Manter superfície úmida constantemente.');
+        notes.push('• Slump test: Controla a trabalhabilidade do concreto fresco. Valores típicos: 8-12cm para lajes.');
+        notes.push('• Armadura CA-50: 80-100kg/m³ conforme espessura da laje e carregamento.');
+      }
+    }
+    
+    if (calculatorType.includes('Área')) {
+      notes.push('• Os cálculos seguem a NBR 12721 (ABNT) para medição de áreas em edificações.');
+      notes.push('• Para áreas irregulares, divida em formas geométricas simples e some os resultados.');
+      notes.push('• Considere desníveis e irregularidades do terreno para cálculos de volume precisos.');
+    }
+    
+    if (inputData?.material) {
+      const material = inputData.material;
+      if (material.includes('Alvenaria') || material.includes('Tijolo')) {
+        notes.push('• Tijolos cerâmicos: Dimensões padrão 14x19x29cm (6 furos) ou 9x19x19cm (macico).');
+        notes.push('• Argamassa de assentamento: Traço recomendado 1:2:8 (cimento:cal:areia) ou 1:6 (cimento:areia).');
+        notes.push('• Espessura ideal da junta: 10-15mm. Adicione cal hidratada para melhor trabalhabilidade.');
+      }
+      
+      if (material.includes('Revestimento') || material.includes('Cerâmica')) {
+        notes.push('• Argamassa colante: Rendimento ~4-5kg/m² com desempenadeira dentada 8x8mm.');
+        notes.push('• Tempo em aberto: 15-20 minutos após aplicação.');
+        notes.push('• Rejunte: Largura da junta 2-3mm (cerâmicas retificadas) ou 3-5mm (convencionais).');
+      }
+    }
+    
+    // Nota geral
+    notes.push('• Este relatório foi gerado automaticamente pelo sistema ArqCalc.');
+    notes.push('• Recomenda-se revisão técnica por profissional habilitado antes da execução.');
+    notes.push('• Os valores são estimativas e podem variar conforme condições locais e especificações do projeto.');
+    
+    return notes;
+  };
+
+  const exportToPDF = async () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     
-    // Cores do tema
-    const primaryColor: [number, number, number] = [37, 99, 235]; // Blue-600
+    // Cores profissionais tipo planilha de engenharia
+    const primaryColor: [number, number, number] = [31, 41, 55]; // Gray-800 (mais profissional)
     const secondaryColor: [number, number, number] = [107, 114, 128]; // Gray-500
-    const accentColor: [number, number, number] = [249, 115, 22]; // Orange-500
+    const accentColor: [number, number, number] = [37, 99, 235]; // Blue-600
+    const highlightColor: [number, number, number] = [34, 197, 94]; // Green-500
+    const warningColor: [number, number, number] = [249, 115, 22]; // Orange-500
     
-    // Cabeçalho com fundo colorido
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, pageWidth, 35, 'F');
+    // ========== CABEÇALHO PROFISSIONAL ==========
+    // Linha superior
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(10, 10, pageWidth - 10, 10);
     
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RELATÓRIO DE CÁLCULO', pageWidth / 2, 15, { align: 'center' });
+    // Espaço para logo da empresa (esquerda)
+    const logoAreaX = 15;
+    const logoAreaY = 12;
+    const logoAreaWidth = 30;
+    const logoAreaHeight = 15;
     
-    doc.setFontSize(11);
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+    doc.rect(logoAreaX, logoAreaY, logoAreaWidth, logoAreaHeight, 'S');
+    
+    // Texto "LOGO" ou nome da empresa
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text(calculation.calculator_type, pageWidth / 2, 25, { align: 'center' });
+    doc.setTextColor(150, 150, 150);
+    const companyName = userProfile?.company || 'LOGO DA EMPRESA';
+    const companyLines = doc.splitTextToSize(companyName, logoAreaWidth - 2);
+    doc.text(companyLines, logoAreaX + logoAreaWidth / 2, logoAreaY + logoAreaHeight / 2, { align: 'center', baseline: 'middle' });
     
-    // Reset cor do texto
-    doc.setTextColor(0, 0, 0);
-    
-    let yPosition = 45;
-    
-    // Box de Informações Gerais
-    doc.setFillColor(249, 250, 251);
-    doc.roundedRect(15, yPosition, pageWidth - 30, 28, 2, 2, 'F');
-    
-    doc.setFontSize(12);
+    // Título principal (centro)
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text('📋 INFORMAÇÕES GERAIS', 20, yPosition + 7);
+    doc.text('RELATÓRIO TÉCNICO DE CÁLCULO', pageWidth / 2, logoAreaY + 5, { align: 'center' });
     
-    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...secondaryColor);
+    doc.text(calculation.calculator_type.toUpperCase(), pageWidth / 2, logoAreaY + 10, { align: 'center' });
     
-    const infoData = [
-      ['Nome:', calculation.name || 'Sem nome'],
-      ['Data:', formatDate(calculation.created_at)],
-      ['ID:', calculation.id.slice(0, 8).toUpperCase()]
+    // Informações do documento (direita)
+    doc.setFontSize(8);
+    doc.setTextColor(...secondaryColor);
+    doc.text(`ID: ${calculation.id.slice(0, 8).toUpperCase()}`, pageWidth - 15, logoAreaY + 3, { align: 'right' });
+    doc.text(`Data: ${formatDate(calculation.created_at)}`, pageWidth - 15, logoAreaY + 7, { align: 'right' });
+    if (userProfile?.full_name) {
+      doc.text(`Responsável: ${userProfile.full_name}`, pageWidth - 15, logoAreaY + 11, { align: 'right' });
+    }
+    
+    // Linha inferior do cabeçalho
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(10, logoAreaY + logoAreaHeight + 2, pageWidth - 10, logoAreaY + logoAreaHeight + 2);
+    
+    let yPosition = logoAreaY + logoAreaHeight + 8;
+    
+    // ========== INFORMAÇÕES GERAIS (Layout tipo planilha) ==========
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text('IDENTIFICAÇÃO DO PROJETO', 15, yPosition);
+    yPosition += 5;
+    
+    // Tabela de informações
+    const infoTableData = [
+      ['Nome do Cálculo:', calculation.name || 'Sem nome'],
+      ['Tipo de Cálculo:', calculation.calculator_type],
+      ['Data de Criação:', formatDate(calculation.created_at)],
+      ['Identificador:', calculation.id.slice(0, 8).toUpperCase()]
     ];
     
-    let infoY = yPosition + 14;
-    infoData.forEach(([label, value]) => {
-      doc.setFont('helvetica', 'bold');
-      doc.text(label, 20, infoY);
-      doc.setFont('helvetica', 'normal');
-      doc.text(value, 50, infoY);
-      infoY += 5;
+    autoTable(doc, {
+      startY: yPosition,
+      body: infoTableData,
+      margin: { left: 15, right: 15 },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: [31, 41, 55],
+        cellPadding: { top: 2, bottom: 2, left: 3, right: 3 }
+      },
+      columnStyles: {
+        0: { cellWidth: 50, fontStyle: 'bold', fillColor: [249, 250, 251] },
+        1: { cellWidth: 'auto' }
+      },
+      styles: {
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      }
     });
     
-    yPosition += 35;
+    yPosition = (doc as any).lastAutoTable.finalY + 8;
     
-    // Dados de Entrada com tabela
+    // ========== DADOS DE ENTRADA (Layout tipo planilha) ==========
     if (calculation.input_data && typeof calculation.input_data === 'object') {
       const inputEntries = Object.entries(calculation.input_data)
-        .filter(([_, value]) => value !== null && value !== undefined && value !== '');
+        .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+        .filter(([key]) => !key.includes('customPrices')); // Excluir preços customizados do relatório
       
       if (inputEntries.length > 0) {
-        doc.setFontSize(12);
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...primaryColor);
-        doc.text('📝 DADOS DE ENTRADA', 20, yPosition);
-        yPosition += 2;
+        doc.text('PARÂMETROS DE ENTRADA', 15, yPosition);
+        yPosition += 5;
         
         const inputTableData = inputEntries.map(([key, value]) => [
           formatInputLabel(key),
@@ -583,152 +752,335 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
           headStyles: {
             fillColor: primaryColor,
             textColor: [255, 255, 255],
-            fontSize: 10,
+            fontSize: 9,
             fontStyle: 'bold',
-            halign: 'left'
+            halign: 'left',
+            cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }
           },
           bodyStyles: {
-            fontSize: 9,
-            textColor: [31, 41, 55]
+            fontSize: 8,
+            textColor: [31, 41, 55],
+            cellPadding: { top: 2, bottom: 2, left: 3, right: 3 }
           },
           alternateRowStyles: {
             fillColor: [249, 250, 251]
           },
           columnStyles: {
-            0: { cellWidth: 80, fontStyle: 'bold' },
+            0: { cellWidth: 70, fontStyle: 'bold' },
             1: { cellWidth: 'auto' }
+          },
+          styles: {
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
           }
         });
         
-        yPosition = (doc as any).lastAutoTable.finalY + 10;
+        yPosition = (doc as any).lastAutoTable.finalY + 8;
       }
     }
     
-    // Verificar se precisa de nova página
+    // ========== RESULTADOS PRINCIPAIS (Layout tipo planilha) ==========
     if (yPosition > pageHeight - 80) {
       doc.addPage();
       yPosition = 20;
     }
     
-    // Resultados
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text('📊 RESULTADOS', 20, yPosition);
-    yPosition += 8;
-    
-    doc.setTextColor(0, 0, 0);
+    doc.text('RESULTADOS DO CÁLCULO', 15, yPosition);
+    yPosition += 5;
     
     if (calculation.result && typeof calculation.result === 'object') {
-      // Resultados principais em destaque
+      // Resultados principais em tabela profissional
       const mainResults = [];
       
       if (calculation.result.area && !isNaN(parseFloat(calculation.result.area))) {
-        mainResults.push({
-          label: 'Área Total',
-          value: `${parseFloat(calculation.result.area).toFixed(2)} m²`,
-          color: [59, 130, 246]
-        });
+        mainResults.push([
+          'Área Total',
+          `${parseFloat(calculation.result.area).toFixed(2)} m²`
+        ]);
       }
       
       if (calculation.result.volume && !isNaN(parseFloat(calculation.result.volume))) {
-        mainResults.push({
-          label: 'Volume Total',
-          value: `${parseFloat(calculation.result.volume).toFixed(2)} m³`,
-          color: [59, 130, 246]
-        });
+        mainResults.push([
+          'Volume Total',
+          `${parseFloat(calculation.result.volume).toFixed(2)} m³`
+        ]);
       }
       
       if (calculation.result.totalCostWithBDI) {
-        mainResults.push({
-          label: 'Custo Total com BDI',
-          value: `R$ ${parseFloat(calculation.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-          color: [34, 197, 94]
-        });
+        mainResults.push([
+          'Custo Total com BDI',
+          `R$ ${parseFloat(calculation.result.totalCostWithBDI).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ]);
       }
       
       if (calculation.result.totalCost) {
-        mainResults.push({
-          label: 'Custo Total',
-          value: `R$ ${parseFloat(calculation.result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-          color: [107, 114, 128]
-        });
+        mainResults.push([
+          'Custo Total',
+          `R$ ${parseFloat(calculation.result.totalCost).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ]);
       }
       
-      // Exibir resultados principais em boxes
-      mainResults.forEach((result) => {
-        if (yPosition > pageHeight - 30) {
+      if (mainResults.length > 0) {
+        autoTable(doc, {
+          startY: yPosition,
+          body: mainResults,
+          margin: { left: 15, right: 15 },
+          bodyStyles: {
+            fontSize: 9,
+            textColor: [31, 41, 55],
+            cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }
+          },
+          columnStyles: {
+            0: { cellWidth: 80, fontStyle: 'bold', fillColor: [249, 250, 251] },
+            1: { cellWidth: 'auto', halign: 'right', fontStyle: 'bold' }
+          },
+          styles: {
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
+          }
+        });
+        
+        yPosition = (doc as any).lastAutoTable.finalY + 8;
+      }
+      
+      // Resumo de custos (se houver)
+      if (calculation.result.materialTotal || calculation.result.laborTotal || calculation.result.subtotal) {
+        if (yPosition > pageHeight - 50) {
           doc.addPage();
           yPosition = 20;
         }
         
-        doc.setFillColor(result.color[0], result.color[1], result.color[2], 0.1);
-        doc.roundedRect(15, yPosition - 5, pageWidth - 30, 15, 2, 2, 'F');
+        const summaryData = [];
         
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...secondaryColor);
-        doc.text(result.label, 20, yPosition);
+        if (calculation.result.materialTotal) {
+          summaryData.push([
+            'Total de Materiais',
+            `R$ ${calculation.result.materialTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          ]);
+        }
         
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(result.color[0], result.color[1], result.color[2]);
-        doc.text(result.value, pageWidth - 20, yPosition + 5, { align: 'right' });
+        if (calculation.result.laborTotal) {
+          summaryData.push([
+            'Total de Mão de Obra',
+            `R$ ${calculation.result.laborTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          ]);
+        }
         
-        yPosition += 20;
-      });
+        if (calculation.result.subtotal) {
+          summaryData.push([
+            'Subtotal',
+            `R$ ${calculation.result.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          ]);
+        }
+        
+        if (calculation.result.bdiAmount) {
+          summaryData.push([
+            `BDI (${calculation.result.bdi || 20}%)`,
+            `R$ ${calculation.result.bdiAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          ]);
+        }
+        
+        if (calculation.result.costPerM2) {
+          summaryData.push([
+            'Custo por m²',
+            `R$ ${calculation.result.costPerM2.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          ]);
+        }
+        
+        if (summaryData.length > 0) {
+          autoTable(doc, {
+            startY: yPosition,
+            head: [['Item', 'Valor (R$)']],
+            body: summaryData,
+            margin: { left: 15, right: 15 },
+            headStyles: {
+              fillColor: accentColor,
+              textColor: [255, 255, 255],
+              fontSize: 9,
+              fontStyle: 'bold',
+              cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }
+            },
+            bodyStyles: {
+              fontSize: 8,
+              textColor: [31, 41, 55],
+              cellPadding: { top: 2, bottom: 2, left: 3, right: 3 }
+            },
+            alternateRowStyles: {
+              fillColor: [249, 250, 251]
+            },
+            columnStyles: {
+              0: { cellWidth: 100, fontStyle: 'bold' },
+              1: { cellWidth: 'auto', halign: 'right', fontStyle: 'bold' }
+            },
+            styles: {
+              lineColor: [200, 200, 200],
+              lineWidth: 0.1
+            }
+          });
+          
+          yPosition = (doc as any).lastAutoTable.finalY + 8;
+        }
+      }
       
-      doc.setTextColor(0, 0, 0);
-      yPosition += 5;
-      
-      // Materiais com tabela detalhada
+      // Materiais com tabela detalhada (layout tipo planilha)
       if (calculation.result.materialDetails && Array.isArray(calculation.result.materialDetails)) {
-        if (yPosition > pageHeight - 60) {
+        if (yPosition > pageHeight - 80) {
           doc.addPage();
           yPosition = 20;
         }
         
-        doc.setFontSize(12);
+        // Título da seção
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...accentColor);
-        doc.text('🧱 MATERIAIS DETALHADOS', 20, yPosition);
-        yPosition += 2;
+        doc.setTextColor(...primaryColor);
+        doc.text('COMPOSIÇÃO DE MATERIAIS E INSUMOS', 15, yPosition);
+        yPosition += 6;
         
+        // Tabela de materiais com layout profissional
         const materialTableData = calculation.result.materialDetails.map((item: any) => [
           item.name,
-          `${item.quantity.toLocaleString('pt-BR')} ${item.unit}`,
-          `R$ ${item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-          `R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+          `${item.quantity.toLocaleString('pt-BR', { minimumFractionDigits: 3 })} ${item.unit}`,
+          `R$ ${item.unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         ]);
         
         autoTable(doc, {
           startY: yPosition,
-          head: [['Material', 'Quantidade', 'Preço Unit.', 'Total']],
+          head: [['Item', 'Quantidade', 'Preço Unitário', 'Total (R$)']],
           body: materialTableData,
           margin: { left: 15, right: 15 },
           headStyles: {
-            fillColor: accentColor,
+            fillColor: primaryColor,
             textColor: [255, 255, 255],
-            fontSize: 10,
+            fontSize: 9,
             fontStyle: 'bold',
-            halign: 'left'
+            halign: 'left',
+            cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }
           },
           bodyStyles: {
-            fontSize: 9,
-            textColor: [31, 41, 55]
+            fontSize: 8,
+            textColor: [31, 41, 55],
+            cellPadding: { top: 2, bottom: 2, left: 3, right: 3 }
           },
           alternateRowStyles: {
-            fillColor: [254, 243, 199]
+            fillColor: [249, 250, 251]
           },
           columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 40 },
-            2: { cellWidth: 40 },
-            3: { cellWidth: 40, fontStyle: 'bold' }
+            0: { cellWidth: 70, fontStyle: 'normal' },
+            1: { cellWidth: 45, halign: 'right' },
+            2: { cellWidth: 40, halign: 'right' },
+            3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+          },
+          styles: {
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
           }
         });
         
-        yPosition = (doc as any).lastAutoTable.finalY + 10;
+        yPosition = (doc as any).lastAutoTable.finalY + 8;
+        
+        // ========== TABELA DE CURVA ABC ==========
+        if (yPosition > pageHeight - 80) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        const abcCurve = calculateABCCurve(calculation.result.materialDetails);
+        
+        if (abcCurve.length > 0) {
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...primaryColor);
+          doc.text('ANÁLISE DE CURVA ABC - CLASSIFICAÇÃO DE MATERIAIS', 15, yPosition);
+          yPosition += 6;
+          
+          // Legenda
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...secondaryColor);
+          doc.text('Classificação: A (≤80% do custo) | B (80-95%) | C (>95%)', 15, yPosition);
+          yPosition += 5;
+          
+          const abcTableData = abcCurve.map((item: any) => {
+            const highlight = item.classification === 'A';
+            return [
+              item.rank.toString(),
+              item.name,
+              `R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              `${item.percentage.toFixed(2)}%`,
+              `${item.cumulativePercentage.toFixed(2)}%`,
+              item.classification
+            ];
+          });
+          
+          autoTable(doc, {
+            startY: yPosition,
+            head: [['#', 'Material', 'Valor Total (R$)', '% Individual', '% Acumulado', 'Class.']],
+            body: abcTableData,
+            margin: { left: 15, right: 15 },
+            headStyles: {
+              fillColor: warningColor,
+              textColor: [255, 255, 255],
+              fontSize: 8,
+              fontStyle: 'bold',
+              halign: 'center',
+              cellPadding: { top: 3, bottom: 3, left: 2, right: 2 }
+            },
+            bodyStyles: {
+              fontSize: 7,
+              textColor: [31, 41, 55],
+              cellPadding: { top: 2, bottom: 2, left: 2, right: 2 }
+            },
+            didParseCell: (data: any) => {
+              const row = data.row.index;
+              const item = abcCurve[row];
+              if (item && item.classification === 'A') {
+                data.cell.styles.fillColor = [254, 243, 199]; // Destaque amarelo para classe A
+                data.cell.styles.fontStyle = 'bold';
+              } else if (item && item.classification === 'B') {
+                data.cell.styles.fillColor = [219, 234, 254]; // Azul claro para classe B
+              }
+            },
+            columnStyles: {
+              0: { cellWidth: 10, halign: 'center' },
+              1: { cellWidth: 70, halign: 'left' },
+              2: { cellWidth: 35, halign: 'right' },
+              3: { cellWidth: 25, halign: 'right' },
+              4: { cellWidth: 25, halign: 'right' },
+              5: { cellWidth: 15, halign: 'center', fontStyle: 'bold' }
+            },
+            styles: {
+              lineColor: [200, 200, 200],
+              lineWidth: 0.1
+            }
+          });
+          
+          yPosition = (doc as any).lastAutoTable.finalY + 8;
+          
+          // Resumo da Curva ABC
+          const classA = abcCurve.filter((item: any) => item.classification === 'A');
+          const classB = abcCurve.filter((item: any) => item.classification === 'B');
+          const classC = abcCurve.filter((item: any) => item.classification === 'C');
+          
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...primaryColor);
+          doc.text('RESUMO DA CLASSIFICAÇÃO:', 15, yPosition);
+          yPosition += 4;
+          
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...secondaryColor);
+          doc.text(`Classe A: ${classA.length} itens (${classA.reduce((sum: number, item: any) => sum + item.percentage, 0).toFixed(2)}% do custo total)`, 18, yPosition);
+          yPosition += 3.5;
+          doc.text(`Classe B: ${classB.length} itens (${classB.reduce((sum: number, item: any) => sum + item.percentage, 0).toFixed(2)}% do custo total)`, 18, yPosition);
+          yPosition += 3.5;
+          doc.text(`Classe C: ${classC.length} itens (${classC.reduce((sum: number, item: any) => sum + item.percentage, 0).toFixed(2)}% do custo total)`, 18, yPosition);
+          yPosition += 6;
+        }
         
         // Resumo de custos
         if (calculation.result.materialTotal || calculation.result.laborTotal) {
@@ -910,38 +1262,88 @@ export const CalculationDetailModal: React.FC<CalculationDetailModalProps> = ({
       }
     }
     
-    // Rodapé em todas as páginas
+    // ========== NOTAS TÉCNICAS ==========
+    const technicalNotes = getTechnicalNotes(calculation.calculator_type, calculation.input_data, calculation.result);
+    
+    if (technicalNotes.length > 0) {
+      if (yPosition > pageHeight - 100) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      // Título da seção
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...primaryColor);
+      doc.text('NOTAS TÉCNICAS E OBSERVAÇÕES', 15, yPosition);
+      yPosition += 6;
+      
+      // Linha divisória
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.3);
+      doc.line(15, yPosition - 2, pageWidth - 15, yPosition - 2);
+      yPosition += 3;
+      
+      // Notas em formato de lista
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(31, 41, 55);
+      
+      const maxWidth = pageWidth - 30;
+      const lineHeight = 4;
+      
+      technicalNotes.forEach((note) => {
+        if (yPosition > pageHeight - 25) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        const lines = doc.splitTextToSize(note, maxWidth);
+        lines.forEach((line: string) => {
+          doc.text(line, 18, yPosition);
+          yPosition += lineHeight;
+        });
+        yPosition += 1; // Espaço entre notas
+      });
+    }
+    
+    // ========== RODAPÉ PROFISSIONAL ==========
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       
       // Linha superior do rodapé
-      doc.setDrawColor(229, 231, 235);
-      doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.3);
+      doc.line(10, pageHeight - 18, pageWidth - 10, pageHeight - 18);
       
       // Texto do rodapé
-      doc.setFontSize(8);
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...secondaryColor);
       
-      doc.text(
-        `Relatório gerado em ${new Date().toLocaleDateString('pt-BR', { 
-          day: '2-digit', 
-          month: 'long', 
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}`,
-        15,
-        pageHeight - 8
-      );
+      const footerLeft = `ArqCalc - Sistema de Cálculos para Arquitetura | Gerado em ${new Date().toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`;
       
+      doc.text(footerLeft, 10, pageHeight - 12);
+      
+      doc.setFont('helvetica', 'bold');
       doc.text(
         `Página ${i} de ${pageCount}`,
-        pageWidth - 15,
-        pageHeight - 8,
+        pageWidth - 10,
+        pageHeight - 12,
         { align: 'right' }
       );
+      
+      // Linha inferior
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.1);
+      doc.line(10, pageHeight - 5, pageWidth - 10, pageHeight - 5);
     }
     
     // Salvar com nome descritivo
